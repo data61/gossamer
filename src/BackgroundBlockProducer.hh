@@ -1,0 +1,102 @@
+#ifndef BACKGROUNDBLOCKPRODUCER_HH
+#define BACKGROUNDBLOCKPRODUCER_HH
+
+#ifndef BOUNDEDQUEUE_HH
+#include "BoundedQueue.hh"
+#endif
+
+template <typename Producer>
+class BackgroundBlockProducer
+{
+public:
+    typedef typename Producer::value_type value_type;
+    typedef Deque<value_type> Block;
+    typedef boost::shared_ptr<Block> BlockPtr;
+
+    class ProdWorker
+    {
+    public:
+        void operator()()
+        {
+            BlockPtr blk(new Block);
+            blk->reserve(mBlkSz);
+
+            while (mProd.valid())
+            {
+                blk->push_back(*mProd);
+                if (blk->size() == mBlkSz)
+                {
+                    mQueue.put(blk);
+                    blk = BlockPtr(new Block);
+                    blk->reserve(mBlkSz);
+                }
+                ++mProd;
+            }
+            if (blk->size() > 0)
+            {
+                mQueue.put(blk);
+                blk = BlockPtr();
+            }
+            mQueue.finish();
+        }
+
+        ProdWorker(BoundedQueue<BlockPtr>& pQueue, Producer& pProd, uint64_t pBlkSz)
+            : mQueue(pQueue), mProd(pProd), mBlkSz(pBlkSz)
+        {
+        }
+
+    private:
+        BoundedQueue<BlockPtr>& mQueue;
+        Producer& mProd;
+        uint64_t mBlkSz;
+    };
+
+    bool valid() const
+    {
+        return mValid && mItems->size();
+    }
+
+    const value_type& operator*() const
+    {
+        return mItems->front();
+    }
+
+    void operator++()
+    {
+        mItems->pop_front();
+        while (mValid && mItems->size() == 0)
+        {
+            mValid = mQueue.get(mItems);
+        }
+    }
+
+    BackgroundBlockProducer(Producer& pProd, uint64_t pNumBufItems, uint64_t pBlkSz)
+        : mQueue(pNumBufItems), mProd(mQueue, pProd, pBlkSz), mThread(mProd)
+    {
+        mValid = mQueue.get(mItems);
+        while (mValid && mItems->size() == 0)
+        {
+            mValid = mQueue.get(mItems);
+        }
+    }
+
+    ~BackgroundBlockProducer()
+    {
+        if (mValid)
+        {
+            mThread.interrupt();
+        }
+        mThread.join();
+    }
+
+private:
+    BoundedQueue<BlockPtr> mQueue;
+    ProdWorker mProd;
+    boost::thread mThread;
+    bool mValid;
+    BlockPtr mItems;
+};
+
+
+
+#endif // BACKGROUNDBLOCKPRODUCER_HH

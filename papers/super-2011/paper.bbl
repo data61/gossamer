@@ -1,0 +1,56 @@
+\begin{thebibliography}{}
+
+\bibitem[Chaisson {\em et~al.}(2009)Chaisson, Brinza, and
+  Pevzner]{Chaisson:2009p6352}
+Chaisson, M.~J., Brinza, D., and Pevzner, P.~A. (2009).
+\newblock De novo fragment assembly with short mate-paired reads: Does the read
+  length matter?
+\newblock {\em Genome Research\/}, {\bf 19}(2), 336--46.
+
+\bibitem[Conway and Bromage(2011)Conway and Bromage]{Conway:2011p17913}
+Conway, T.~C. and Bromage, A.~J. (2011).
+\newblock Succinct data structures for assembling large genomes.
+\newblock {\em Bioinformatics\/}, {\bf 27}(4), 479--86.
+
+\bibitem[Gnerre and MacCallum{\ldots}(2011)Gnerre and
+  MacCallum{\ldots}]{Gnerre:2011p20073}
+Gnerre, S. and MacCallum{\ldots}, I. (2011).
+\newblock High-quality draft assemblies of mammalian genomes from massively
+  parallel sequence data.
+\newblock {\em Proceedings of the {\ldots}\/}.
+
+\bibitem[Hernandez {\em et~al.}(2008)Hernandez, Francois, Farinelli, Osteras,
+  and Schrenzel]{Hernandez:2008p735}
+Hernandez, D., Francois, P., Farinelli, L., Osteras, M., and Schrenzel, J.
+  (2008).
+\newblock De novo bacterial genome sequencing: Millions of very short reads
+  assembled on a desktop computer.
+\newblock {\em Genome Research\/}, {\bf 18}(5), 802--809.
+
+\bibitem[Lin {\em et~al.}(2011)Lin, Li, Shen, Zhang, and
+  Papasian{\ldots}]{Lin:2011p21888}
+Lin, Y., Li, J., Shen, H., Zhang, L., and Papasian{\ldots}, C. (2011).
+\newblock Comparative studies of de novo assembly tools for next-generation
+  sequencing technologies.
+\newblock {\em {\ldots}\/}.
+
+\bibitem[Warren {\em et~al.}(2006)Warren, Sutton, Jones, and
+  Holt]{Warren:2006p741}
+Warren, R.~L., Sutton, G.~G., Jones, S. J.~M., and Holt, R.~A. (2006).
+\newblock Assembling millions of short dna sequences using ssake.
+\newblock {\em Bioinformatics\/}, {\bf 23}(4), 500--501.
+
+\bibitem[Zerbino and Birney(2008)Zerbino and Birney]{Zerbino:2008p731}
+Zerbino, D.~R. and Birney, E. (2008).
+\newblock Velvet: Algorithms for de novo short read assembly using de bruijn
+  graphs.
+\newblock {\em Genome Research\/}, {\bf 18}(5), 821--829.
+
+\bibitem[Zerbino {\em et~al.}(2009)Zerbino, McEwen, Margulies, and
+  Birney]{Zerbino:2009p11086}
+Zerbino, D.~R., McEwen, G.~K., Margulies, E.~H., and Birney, E. (2009).
+\newblock Pebble and rock band: heuristic resolution of repeats and scaffolding
+  in the velvet short-read de novo assembler.
+\newblock {\em PLoS ONE\/}, {\bf 4}(12), e8407.
+
+\end{thebibliography}

@@ -1,0 +1,4 @@
+
+#ifdef GOSS_COMBINE_TESTS
+    BOOST_AUTO_TEST_SUITE_END()
+#endif

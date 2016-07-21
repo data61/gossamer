@@ -1,0 +1,110 @@
+[NON-COMMERCIAL] SOFTWARE LICENSE AGREEMENT
+
+PLEASE READ THIS SOFTWARE LICENSE AGREEMENT CAREFULLY BEFORE DOWNLOADING,
+INSTALLING OR USING NATIONAL ICT AUSTRALIA LIMITED (NICTA) SUPPLIED SOFTWARE. BY
+DOWNLOADING, INSTALLING OR USING THE SOFTWARE YOU ARE CONSENTING TO BE BOUND BY
+THIS LICENSE. IF YOU DO NOT AGREE TO ALL OF THE TERMS OF THIS LICENSE, THEN DO
+NOT DOWNLOAD, INSTALL OR USE THE SOFTWARE. 
+
+This License Agreement is entered into between National ICT Australia Limited
+(ABN 62 102 206 173) (herein referred to as "Licensor") and you, the Licensee. 
+
+The computer program(s) and related documentation and materials (herein
+collectively referred to as "the Software") are licensed, not sold, to the
+Licensee for use only upon the terms of this license, and Licensor reserves any
+rights not expressly granted to Licensee. The following terms govern use of the
+Software by the Licensee.
+
+1.  Licensor hereby grants you a perpetual, non-exclusive, non-transferable,
+royalty free license to use the Software for academic and research purposes
+only. Licensee acknowledges that Licensee may not use the Software for
+Commercial Purposes. “Commercial purposes” and “Commercial Use” means to use
+sell, hire or otherwise exploit the Software as part of a product or process
+which is intended directly or indirectly to make a profit for the Licensee or
+any third party, or to license or sub-license the Software to any third party 
+2.  Licensee may not:
+    a.  translate, reverse engineer, decompile, decrypt, disassemble
+    (except to the extent applicable laws specifically prohibit such
+    restriction), or create derivative works based on the Software;
+    b.  copy the Software (except for back-up purposes), but subject to
+    clause 11;
+    c.  rent, lease, transfer, assign, sub-license or otherwise transfer
+    rights to the Software; 
+    d.  sell the Software to any third party; or
+    e.  remove any proprietary notices or labels on the Software.
+3.  Title, ownership rights, and intellectual property rights in and to the
+Software shall remain solely with Licensor.
+4.  To the extent permitted by law, the Software is provided on an "AS IS"
+basis, without warranty of any kind, including without limitation the warranties
+of merchantability, fitness for a particular purpose and non-infringement. The
+entire risk as to the quality and performance of the Software is borne by
+Licensee. Should the Software prove defective, Licensee assumes the entire cost
+of any service and repair. This disclaimer of warranty constitutes an essential
+part of this Agreement.
+5.  Except to the extent required by applicable law, Licensor shall not be
+under any liability (whether for breach of contract, breach of warranty or in
+tort, including negligence) to Licensee in respect of any loss or damage
+(including any direct, indirect, special, incidental or consequential loss or
+damage) howsoever caused, arising as a result of this Agreement. 
+6.  Licensee agrees to maintain and reproduce all copyright and other
+proprietary notices on all copies, in any form, of the Software in the same form
+and manner that such copyright and other proprietary notices are included on the
+Software. Licensee may make a reasonable number of copies of the Software and
+install those copies on separate machines which are owned or controlled by
+Licensee PROVIDED THAT Licensee does not redistribute the Software under any
+circumstances to any third party, and provided Licensee retains on those copies
+all copyright, confidentiality and proprietary notices that appear on the
+original.  
+7.  Licensee agrees that Licensor may request from time to time that the
+Licensee provide feedback to the Licensor on the Software. Licensee agrees that
+the Licensor owns all title, ownership rights and intellectual property rights
+in the feedback provided by Licensee.
+8.  This license will terminate automatically if Licensee fails to comply
+with the limitations described above. On termination, Licensee must destroy all
+copies of the Software in electronic or other form, including any copies on
+backup tapes or other media, and, at Licensor’s request, the Licensee, to the
+extent practicable, shall deliver to Licensor certification that all copies of
+the Software have been destroyed..
+9.  This Agreement represents the complete agreement concerning this license between
+the parties and supersedes all prior agreements and representations between
+them. It may be amended only by a writing executed by both parties. If any
+provision of this Agreement is held to be unenforceable for any reason, such
+provision shall be reformed only to the extent necessary to make it enforceable.
+This Agreement shall be governed by and construed under the laws of the State of
+New South Wales, Australia. The application of the United Nations Convention of
+Contracts for the International Sale of Goods is expressly excluded.
+10. As a condition of this license, Licensee shall ensure that any reports,
+academic papers  or published results obtained from use of the Software by
+Licensee (or by third parties who use the Software with Licensee’s permission
+under the terms of this License) will contain one or both of the following
+acknowledgements: 
+    i.  “Results obtained using Gossamer Software ©2012 National ICT
+    Australia Ltd (NICTA).” 
+    ii. "Gossamer - A Resource Efficient de novo Assembler", Thomas
+    Conway, Jeremy Wazny, Andrew Bromage, Justin Zobel and Bryan
+    Beresford-Smith, Bioinformatics 2012; doi:
+    10.1093/bioinformatics/bts297.
+11. The Licensee understands and accepts that the Software is proprietary to
+NICTA. The Licensee agrees to take all reasonable steps to ensure that all
+copies of the Software in their possession under the terms of the License are
+protected and secured from unauthorized disclosure, use, or redistribution.
+Licensee will treat the Software with at least the same level of care as
+Licensee would use to protect and secure its own proprietary computer programs
+and/or information, but using no less than a reasonable standard of care. 
+12. Licensee agrees to provide access to the Software only to any other
+person or entity who has agreed to abide by the terms of this Licence. If
+Licensee is an institution or corporation each individual person who uses the
+Software with the permission of that institution or corporation must agree to
+abide by the terms of this license. If the Licensee becomes aware of any
+unauthorized licensing, copying or use of the Software in breach of this
+License, the Licensee shall promptly do all things necessary to stop the breach
+and notify NICTA in writing. The Licensee expressly agrees to use the Software
+only in the manner and for the specific uses authorized in this Agreement.
+13. Commercial Use of the Software REQUIRES A COMMERCIAL LICENSE.  Should
+the Licensee wish to make Commercial Use of the Software, Licensee will contact
+NICTA (bioinformatics@nicta.com.au) to request an appropriate license for such
+use. In addition to the definition in clause 1 above, Commercial Use includes:
+(1) integration of all or part of the Software into a product for sale, lease or
+license by or on behalf of Licensee to third parties, or  (2) distribution of
+the Software to third parties that need it to commercialize a product sold or
+licensed by or on behalf of Licensee.

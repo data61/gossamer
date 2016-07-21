@@ -1,0 +1,19 @@
+\documentclass{article}
+
+\begin{document}
+
+Second Generation Sequencing enables the collection of large quantities of sequence data.
+While such data sets are incredibly rich, often researchers are interested in answering specific questions about the data.
+Typically, a researcher with 100s of gigabytes of RNA-Seq data may be interested in SNPs and relative expression for only a small number of specific genes.
+In such a scenario, it is unnecessarily time consuming to process the entire data set against a whole reference set of genes, only to discard most of the analysis products.
+
+Furthermore, to answer some questions detailed alignments may not be necessary. For instance, to determine relative gene expression, simply extracting and counting the relevant subset of reads may be sufficient.
+While other questions may require assembly or alignment to be performed, applying these algorithms to a subset of the total collection of reads can yield substantial computational savings, provided that the subset can be extracted efficiently.
+
+We have developed a tool, \textit{electus}, which allows the user to quickly and sensitively extract a relevant selection of reads. Using our previously published representation for \textit{k}-mer sets \cite{ConwayBromage2011}, our tool uses a \textit{k}-mer decomposition of the reference sequence(s) of interest to yield crude but effective read alignments.
+
+We have tested this approach in the analysis of a number of prostate cancer RNA-Seq data sets,
+and show that for analysis targeted to the genes involved in known fusions,
+\textit{electus} enables us to efficiently produce files containing just those reads that map to the nominated genes, allowing the fpkm \cite{fpkm} measure of gene expression to be computed quickly.
+
+\end{document}

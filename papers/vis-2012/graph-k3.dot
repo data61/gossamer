@@ -1,0 +1,39 @@
+digraph G {
+        rankdir=LR;
+
+        sACCA -> sATA;
+        sACCA -> sCTA;
+        sATA -> sAG;
+        sCTA -> sAG;
+	sACCA [shape="box", label=" ACCA" fontcolor="black"color="black"];
+	sATA  [shape="box", label=" ATA" fontcolor="black"color="black"];
+	sCTA  [shape="box", label=" CTA" fontcolor="black"color="black"];
+	sAG   [shape="box", label=" AG" fontcolor="black"color="black"];
+
+
+	AAT [shape="oval", label=" AAT" fontcolor="black"color="black"];
+	AAT -> ATA [style="setlinewidth(1)" label="" weight="1" fontcolor="black"color="black"];
+	ACC [shape="oval", label=" ACC" fontcolor="black"color="black"];
+	ACC -> CCA [style="setlinewidth(3)" label="" weight="2" fontcolor="black"color="black"];
+	ACT [shape="oval", label=" ACT" fontcolor="black"color="black"];
+	ACT -> CTA [style="setlinewidth(1)" label="" weight="1" fontcolor="black"color="black"];
+	ATA [shape="oval", label=" ATA" fontcolor="black"color="black"];
+	ATA -> TAA [style="setlinewidth(1)" label="" weight="1" fontcolor="black"color="black"];
+	CAA [shape="oval", label=" CAA" fontcolor="black"color="black"];
+	CAA -> AAT [style="setlinewidth(1)" label="" weight="1" fontcolor="black"color="black"];
+	CAC [shape="oval", label=" CAC" fontcolor="black"color="black"];
+	CAC -> ACT [style="setlinewidth(1)" label="" weight="1" fontcolor="black"color="black"];
+	CCA [shape="oval", label=" CCA" fontcolor="black"color="black"];
+	CCA -> CAA [style="setlinewidth(1)" label="" weight="1" fontcolor="black"color="black"];
+	CCA [shape="oval", label=" CCA" fontcolor="black"color="black"];
+	CCA -> CAC [style="setlinewidth(1)" label="" weight="1" fontcolor="black"color="black"];
+	CTA [shape="oval", label=" CTA" fontcolor="black"color="black"];
+	CTA -> TAA [style="setlinewidth(1)" label="" weight="1" fontcolor="black"color="black"];
+	TAA [shape="oval", label=" TAA" fontcolor="black"color="black"];
+	TAA -> AAG [style="setlinewidth(3)" label="" weight="2" fontcolor="black"color="black"];
+	AAG [shape="oval", label=" AAG" fontcolor="black"color="black"];
+
+        {rank=same; sACCA ACC}
+        {rank=same; sATA sCTA CAA CAC}
+        {rank=same; sAG TAA}
+}

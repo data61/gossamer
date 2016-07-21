@@ -1,0 +1,55 @@
+\documentclass{article}
+
+\usepackage{verbatim}
+
+\begin{document}
+
+\noindent Manuscript ID: BIOINF-2011-1674 \newline
+Title: Gossamer - A Resource Efficient de novo Assembler
+\newline
+\newline
+
+\noindent Dear Alison Hutchins,
+
+We would like to thank the reviewers of our paper and believe that we have addressed all
+of their helpful comments and suggestions in detail in what follows.
+In summary, we have replaced our original test data with, as suggested, that from the GAGE paper 
+(published after our original submission). This has in turn led to a major rewrite of the Application Note.
+As only the first few paragraphs have remained the same we haven't marked up all of the following changes in red.
+We have also changed the author order slightly.
+
+\noindent Best regards, \newline
+\noindent Bryan Beresford-Smith 
+
+\section*{Review 1}
+
+Reviewer 1 suggests that too much space is spent on secondary details of the assembly process, and recommends adding some background material on Gossamer's sparse bitmap approach. Accordingly, we have added a paragraph which outlines the bitmap representation, and gives an example comparing the actual space used by Gossamer with the theoretical minimum space required, as well as an alternative ``obvious'' representation.
+
+Reviewer 1 suggests that our results may lack credibility in light of the fact that we performed little tuning to obtain the reported figures. We have addressed this concern by replacing the original evaluation with a comparison against the results from the GAGE (Genome Assembly Gold-Standard Evaluations) study. The results we report for the alternative assemblers, SOAPdenovo and SGA, are generated from the same assembly ``recipes'' used in the GAGE publication, and represent the best efforts of a team of assembly experts to produce high-quality sequences.
+
+Reviewer 1 recommends that incidental memory should be reported in addition to required memory. We give the relevant specifications of the evaluation machine, and have added a comment to the effect that we allow the assemblers to use as much of the computational or memory capacity available. This is different from the reported, required memory, which represents the minimum amount needed for an assembler to complete.
+
+To address Reviewer 1's question about whether we are actually constructing a graph of degree $\rho$, rather than $k$, given that we extract $\rho$-mers from the data, we have added text explaining that the graph's $k$-mer nodes are implied by their incident edges.
+
+Finally, since we no longer mention {\it wgsim}, no citation has been added.
+
+\section*{Review 2}
+
+Reviewer 2 points out that the data sets originally used in our tests are small, especially in light of our claims about memory efficiency, and suggests we could instead evaluate Gossamer on the data used in the GAGE study. He/she further proposes comparing against SGA, another memory efficient assembler.
+
+We have addressed both of these points by replacing the test data sets in the original submission with the GAGE data sets for the 
+evaluation of Gossamer, and including SGA in the comparison.
+
+\section*{Review 3}
+
+Reviewer 3 points out that the coverage of the test data is quite high. This is no longer the case, given that we now compare on the GAGE data, which has significantly lower coverage -- nominally 40x in most cases, but actually as low as ~23x in some.
+
+Reviewer 3 has a question about whether Gossamer's memory efficiency is a result of the filtering of spurious edges or the graph representation. To address this, we have added a paragraph outlining the bitmap representation, which contains an example that shows Gossamer's efficiency in storing one of the complete, unfiltered data sets used for evaluation. This illustrates the fact that our memory performance is efficient in the presence of errors and therefore does not rely on filtering of edges.
+
+Reviewer 3 asks whether our reported results were for scaffolds or contigs, and questions the use of 99\% identity in evaluating scaffolds. These concerns are no longer applicable now that we employ the GAGE evaluation scripts, and clearly report independent contig and scaffold results.
+
+Reviewer 3 suggests a comparison between the theoretical minimal memory usage and the actual memory used by Gossamer, in the representation of a graph, would be illustrative. We now provide these figures for one of the data sets used in the evaluation.
+
+Reviewer 3 asks about the difference between removing erroneous graph nodes rather than edges. In a strict sense, the removal of a node can be achieved by eliminating all of its incident edges. We have added a remark to the effect that nodes are implied by edges in our representation.
+
+\end{document}

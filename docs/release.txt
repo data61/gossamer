@@ -1,0 +1,21 @@
+Release Procedure:
+
+1. Create release branch, for version X, from dev:
+    git checkout -b rel-X dev
+
+2. Change version number to X in src/Version.hh and docs/gossamerManpage.txt.
+
+3. Make any further changes, e.g. removing commands from GossApp.cc.
+
+4. Commit and push changes to the release branch:
+    git commit -a -m 'Prepared release X.'
+    git push origin rel-X
+
+5. Build the docs (from docs/):
+    . makeDocs.sh 
+
+6. Build the release binary (from src/):
+    bjam release goss
+
+7. Build the tarball (from src/):
+    . buildTarbasll.sh X

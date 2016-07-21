@@ -1,0 +1,2151 @@
+<html>
+<head>
+    <title>Gossamer graph viewer</title>
+    <link rel="stylesheet" type="text/css" href="css/standard.css"/>
+    <script src="lib/jquery-1.7.2.min.js"></script>
+    <script src="lib/raphael.js"></script>
+</head>
+<body>
+    <script>
+ 
+        // Paper
+        var R;
+
+        // Graph model
+        var allNodes = {};
+        var allRcEdges = {};
+        var allLinkEdges = {};
+        var hiddenNodes = {};
+        var hiddenRcEdges = {};
+        var hiddenLinkEdges = {};
+        var selectedNodes = {};
+
+        // Scaling
+        var horizScaleFactor = 5;
+        var vertScaleFactor = 5;
+        var edgeScaleFactor = 2;
+
+        // Background
+        var bgDragging = false;
+        var bgDragStartX;
+        var bgDragStartY;
+        var bgDragDx;
+        var bgDragDy;
+        var viewBoxWidth;
+        var viewBoxHeight;
+        var viewBox;
+        var selectBox = null;
+
+        // Layout
+        var splayDist = 100;
+
+        // Display
+        var selectedNodeFill = "#ff3";
+        var unselectedNodeFill = "#fff";
+        var unselectedNodeFillNormal = "#fff";
+        var unselectedNodeFillSpent = "#ddd";
+        var mouseOverNodeFill = "#99f";
+        var edgeStroke = "#000";
+
+        function storeLinkEdge(e) {
+            var a = e.idFrom;
+            var b = e.idTo;
+            if (!(a in allLinkEdges)) {
+                allLinkEdges[a] = {};
+            }
+
+            allLinkEdges[a][b] = e;
+        }
+
+        function linkEdgeExists(a, b) {
+            return    a in allLinkEdges
+                   && b in allLinkEdges[a];
+        }
+
+        function storeRcEdge(a, b, e) {
+            var a1 = Math.min(a, b);
+            var b1 = Math.max(a, b);
+            if (!(a1 in allRcEdges)) {
+                allRcEdges[a1] = {};
+            }
+
+            allRcEdges[a1][b1] = e;
+        }
+
+        function rcEdgeExists(a, b) {
+            if (a < b) {
+                return (a in allRcEdges) && (b in allRcEdges[a]);
+            }
+
+            return (b in allRcEdges) && (a in allRcEdges[b]);
+        }
+
+        function getRcEdge(a, b) {
+            if (a < b) {
+                return allRcEdges[a][b];
+            }
+            return allRcEdges[b][a];
+        }
+
+        // Returns the current edge threshold value.
+        // i.e. edges with counts below this should not be displayed.
+        function edgeThreshold() {
+            if (!$("#edge_threshold_check").get()[0].checked) {
+                return 0;
+            }
+            
+            var txt = $("#edge_threshold").val();
+            var thr = parseInt(txt);
+            return isNaN(thr) ? 0 : thr;
+        }
+
+        // Apply the current threshold to all edges.
+        function applyEdgeThreshold() {
+            var thr = edgeThreshold();
+            // console.log("applyEdgeThreshold " + thr);
+            for (a in allLinkEdges) {
+                for (b in allLinkEdges[a]) {
+                    var edge = allLinkEdges[a][b];
+                    if (!edge.hidden || revealChecked()) {
+                        if (edge.count < thr) {
+                            edge.shape.hide();
+                        } else {
+                            edge.shape.remove();
+                            edge.shape = linkEdgeShape(edge);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Returns the current horizontal scale value.
+        function readHorizScale() {
+            console.log("horizScale");
+            var txt = $("#horiz_scale").val();
+            console.log("txt: " + txt);
+            var s = parseInt(txt);
+            return isNaN(s) ? 5 : s;
+        }
+
+        // Apply the current horizontal scale to all nodes.
+        function applyHorizScale() {
+            console.log("applyHorizScale");
+            var s = readHorizScale();
+            console.log("horizScale: " + s);
+            horizScaleFactor = s;
+            redrawGraph();
+        }
+
+        function selectNode(nodeData) {
+            selectedNodes[nodeData.id] = nodeData;
+            addToTable(nodeData);
+            nodeData.shape.getInnerBox().attr({fill: selectedNodeFill});
+        }
+
+        function selectAllNodes() {
+            for (i in allNodes) {
+                if (!(i in selectedNodes)) {
+                    selectNode(allNodes[i]);
+                }
+            }
+        }
+
+        function deselectAllNodesExcept(thisNode) {
+            var thisRow;
+            for (n in selectedNodes) {
+                var node = selectedNodes[n];
+                if (node.id != thisNode.id) {
+                    node.shape.getInnerBox().attr({fill: node.unselectedFill});
+                    delete node["data_table_row"];
+                } else {
+                    thisRow = node["data_table_row"];
+                }
+            }
+               
+            selectedNodes = {}; 
+            selectedNodes[thisNode.id] = thisNode;
+            $("#data_table_body").empty();
+            thisRow.appendTo("#data_table_body");
+        }
+
+        function deselectNode(node) {
+            if ("data_table_row" in node) {
+                node["data_table_row"].detach();
+                delete node["data_table_row"];
+            }
+            delete selectedNodes[node.id];
+            node.shape.getInnerBox().attr({fill: node.unselectedFill});
+        }
+
+        function deselectAllNodes() {
+            for (n in selectedNodes) {
+                var node = selectedNodes[n];
+                node.shape.getInnerBox().attr({fill: node.unselectedFill});
+                delete node["data_table_row"];
+            }
+            selectedNodes = {};
+            $("#data_table_body").empty();
+        }
+
+        function revealChecked() {
+            return $("#reveal_hidden_check").get()[0].checked;
+        }
+
+        function showRcEdgesChecked() {
+            return $("#show_rc_edges_check").get()[0].checked;
+        }
+
+        function omitChaffChecked() {
+            return $("#omit_chaff_check").get()[0].checked;
+        }
+
+        // Removes the node from view.
+        function vanishNode(node) {
+            var id = node.id;
+            node.shape.hide();
+            hiddenNodes[id] = node;
+            hiddenLinkEdges[id] = [];
+            
+            // Remove table row.
+            deselectNode(node);
+
+            // Vanish edges.
+            for (x in node.edgesTo) {
+                var id_to = node.edgesTo[x];
+                if (linkEdgeExists(id, id_to)) {
+                    var edge = allLinkEdges[id][id_to];
+                    hiddenLinkEdges[id].push(edge);
+                    edge.shape.hide();
+                }
+            }
+            for (x in node.edgesFrom) {
+                var id_from = node.edgesFrom[x];
+                if (linkEdgeExists(id_from, id)) {
+                    var edge = allLinkEdges[id_from][id];
+                    hiddenLinkEdges[id].push(edge);
+                    edge.shape.hide();
+                }
+            }
+
+            var rc = node.rc;
+            if (rcEdgeExists(id, rc)) {
+                var edge = getRcEdge(id, rc);
+                edge.hide();
+                hiddenRcEdges[Math.min(id, rc)] = edge;
+            }
+        }
+
+        // Returns the node to view.
+        function materialiseNode(node) {
+            var id = node.id;
+            node.shape.show();
+            delete hiddenNodes[id];
+
+            // Create new edges.
+            var thr = edgeThreshold();
+            for (e in hiddenLinkEdges[id]) {
+                // Note: The other end of this edge cannot be hidden, because this node
+                // is visible (and either all or none of the hidden nodes are visible
+                // at the same time.)
+                var edge = hiddenLinkEdges[id][e];
+                if (edge.hidden && edge.count >= thr) {
+                    edge.shape.remove();
+                    edge.shape = linkEdgeShape(edge);
+                }
+            }
+            
+            delete hiddenLinkEdges[id];
+
+            var rc = node.rc;
+            var min = Math.min(id, rc);
+            if (min in hiddenRcEdges) {
+                var edge = hiddenRcEdges[min];
+                edge.remove();
+                storeRcEdge(id, rc, rcEdgeShape(id, rc));
+                delete hiddenRcEdges[min];
+            }
+        }
+
+        function vanishNodes() {
+            // console.log("vanish");
+            // Remove hidden nodes.
+            for (i in allNodes) {
+                var node = allNodes[i];
+                if (node.hidden) {
+                    vanishNode(node);
+                }
+            }
+        }
+
+        function materialiseNodes() {
+            // Show all hidden nodes.
+            for (i in hiddenNodes) {
+                materialiseNode(hiddenNodes[i]);
+            }
+            hiddenNodes = {};
+            hiddenRcEdges = {};
+            hiddenLinkEdges = {};
+        }
+
+        function toggleReveal() {
+            if (revealChecked()) {
+                materialiseNodes();
+            } else {
+                vanishNodes();
+            }
+        }
+
+        function toggleShowRcEdges() {
+            if (showRcEdgesChecked()) {
+                for (id in allRcEdges) {
+                    redrawRcEdge(id);
+                }
+            } else {
+                for (id in allRcEdges) {
+                    var rc = allNodes[id].rc;
+                    var shape = getRcEdge(id, rc);
+                    shape.hide();
+                }
+            }
+        }
+
+        function hideSelectedNodes() {
+            for (i in selectedNodes) {
+                var node = selectedNodes[i];
+                var id = node.id;
+                node.hidden = true;
+                node.shape.getInnerBox().attr({"stroke-dasharray": ". "});
+
+                // Hide edges.
+                for (x in node.edgesTo) {
+                    var id_to = node.edgesTo[x];
+                    if (linkEdgeExists(id, id_to)) {
+                        allLinkEdges[id][id_to].hidden = true;
+                    }
+                }
+                for (x in node.edgesFrom) {
+                    var id_from = node.edgesFrom[x];
+                    if (linkEdgeExists(id_from, id)) {
+                        allLinkEdges[id_from][id].hidden = true;
+                    }
+                }
+
+                // Vanish it!
+                if (!revealChecked()) {
+                    vanishNode(node);
+                }
+            }
+        }
+
+        function unhideSelectedNodes() {
+            for (i in selectedNodes) {
+                var node = selectedNodes[i];
+                var id = node.id;
+                node.hidden = false;
+                node.shape.getInnerBox().attr({"stroke-dasharray": ""});
+
+                // Unhide edges whose other end is not hidden!
+                for (x in node.edgesTo) {
+                    var id_to = node.edgesTo[x];
+                    if (   linkEdgeExists(id, id_to)
+                        && !(allNodes[id_to].hidden)) {
+                        console.log("unhide " + id + " " + id_to);
+                        allLinkEdges[id][id_to].hidden = false;
+                    }
+                }
+                for (x in node.edgesFrom) {
+                    var id_from = node.edgesFrom[x];
+                    if (   linkEdgeExists(id_from, id)
+                        && !(allNodes[id_from].hidden)) {
+                        console.log("unhide " + id_from + " " + id);
+                        allLinkEdges[id_from][id].hidden = false;
+                    }
+                }
+
+                // Materialise it!
+                if (!revealChecked()) {
+                    materialiseNode(node);
+                }
+            }
+        }
+
+        function deleteSelectedNodes() {
+            for (i in selectedNodes) {
+                var node = selectedNodes[i];
+                var id = node.id;
+
+                // Delete edges.
+                for (x in node.edgesTo) {
+                    var id_to = node.edgesTo[x];
+                    if (linkEdgeExists(id, id_to)) {
+                        allLinkEdges[id][id_to].shape.remove();
+                        delete allLinkEdges[id][id_to];
+                    }
+                }
+                for (x in node.edgesFrom) {
+                    var id_from = node.edgesFrom[x];
+                    if (linkEdgeExists(id_from, id)) {
+                        allLinkEdges[id_from][id].shape.remove();
+                        delete allLinkEdges[id_from][id];
+                    }
+                }
+
+                deselectNode(node);
+                node.shape.remove();
+                delete allNodes[i];
+            }
+
+            selectedNodes = {};
+        }
+
+        function Coverage(mean) {
+            this.mean = mean;
+        }
+
+        function Alignment(aln) {
+            this.name = aln.name;
+            this.start = aln.start;
+            this.end = aln.end;
+            this.matchLen = aln.matched;
+            this.dir = aln.dir;
+            this.gene = aln.gene;
+        }
+
+        function NodeData(id, rc, covMean, length, seq, aln) {
+            this.id = id;
+            this.rc = rc;
+            this.cov = new Coverage(covMean);
+            this.length = length;
+            this.edgesTo = [];
+            this.edgesFrom = [];
+
+            this.unselectedFill = unselectedNodeFillNormal;
+            this.spent = false;
+
+            this.hidden = false;
+
+            if (typeof seq !== 'undefined') {
+                this.sequence = seq;
+            }
+
+            if (typeof aln !== 'undefined') {
+                this.alignment = aln;
+            }
+
+            this.translate = function(dx, dy) { if (shape in this) { translateNodeShape(shape, dx, dy); } };
+        }
+
+        function LinkEdgeData(idFrom, idTo, count, gap) {
+            this.idFrom = idFrom;
+            this.idTo = idTo;
+            this.count = count;
+            this.gap = gap;
+
+            this.hidden = false;
+        }
+
+        function horizScale(x) {
+            var f = Math.max(horizScaleFactor, 1.0);
+            return x / f;
+        }
+
+        function nodeWidth(length) {
+            return Math.max(horizScale(length), 10.0);
+        }
+
+        function nodeHeight(covMean) {
+            var f = Math.max(vertScaleFactor, 1.0);
+            var height = f * Math.log(Math.max(covMean, 1.0)) / Math.LN2;
+            return Math.max(height, 10.0);
+        }
+        
+        function edgeWidth(count) {
+            var f = Math.max(edgeScaleFactor, 1.0);
+            var width = (Math.log(Math.max(count, 1.1)) / Math.LN2) / f;
+            return Math.max(1.0, width);
+        }
+
+        // Translates a node's shape by modifying its elements' coordinates.
+        // Calling 'translate' simply extends the list of transforms (which never seems to be collapsed.)
+        function translateNodeShape(shape, dx, dy) {
+            shape.forEach(function(el) {
+                var x0 = parseFloat(el.attrs.x);
+                var y0 = parseFloat(el.attrs.y);
+                var x1 = x0 + dx;
+                var y1 = y0 + dy;
+                el.attr({x: x1, y: y1});
+                return true;
+            });
+        }
+
+        // Returns a bounding box for the given node shape.
+        function nodeShapeBounds(shape) {
+            var attrs = shape.getInnerBox().attrs;
+            return {x: attrs.x, y: attrs.y, width: attrs.width, height: attrs.height,
+                    x2: attrs.x + attrs.width, y2: attrs.y + attrs.height};
+        }
+
+        function nodeDragStart(nodeShape) {
+            nodeShape.toFront();
+            nodeShape.oBB = nodeShapeBounds(nodeShape);
+        }
+
+        function nodeDragEnd(nodeShape) {
+        }
+
+        function nodeDrag(nodeShape, dx, dy) {
+            // Translate node
+            var bb = nodeShapeBounds(nodeShape);
+            var x = viewBoxWidth / R.width;
+            var y = viewBoxHeight / R.height;
+            dx *= x;
+            dy *= y;
+            var tx = nodeShape.oBB.x - bb.x + dx;
+            var ty = nodeShape.oBB.y - bb.y + dy;
+
+            for (n in selectedNodes) {
+                var data = selectedNodes[n];
+                translateNodeShape(data.shape, tx, ty);
+
+                // Update edges
+                var id = data.id;
+                var thr = edgeThreshold();
+                for (i in data.edgesFrom) {
+                    var id_from = data.edgesFrom[i];
+                    if (linkEdgeExists(id_from, id)) {
+                        var edge = allLinkEdges[id_from][id];
+                        if (   (!edge.hidden || revealChecked())
+                            && edge.count >= thr) {
+                            edge.shape.remove();
+                            edge.shape = linkEdgeShape(edge);
+                        }
+                    }
+                }
+                for (i in data.edgesTo) {
+                    var id_to = data.edgesTo[i];
+                    if (linkEdgeExists(id, id_to)) {
+                        var edge = allLinkEdges[id][id_to];
+                        if (   (!edge.hidden || revealChecked())
+                            && edge.count >= thr) {
+                            edge.shape.remove();
+                            edge.shape = linkEdgeShape(edge);
+                        }
+                    }
+                }
+        
+                var rc = data.rc;
+                if (   rcEdgeExists(id, rc)
+                    && !(Math.min(id, rc) in hiddenRcEdges)) {
+                    var shape = getRcEdge(id, rc);
+                    shape.remove();
+                    storeRcEdge(id, rc, rcEdgeShape(id, rc));
+                }
+            }
+        }
+
+        function nodeMouseDown(nodeShape) {
+            if (!(nodeShape.data.id in selectedNodes)) {
+                deselectAllNodes();
+                selectNode(nodeShape.data);
+            }
+            nodeShape.toFront();
+        }
+
+        function nodeMouseUp(nodeShape) {
+        }
+
+        function edgeMouseDown(idFrom, idTo) {
+            console.log("edge " + idFrom + " " + idTo);
+        }
+
+        function edgeMouseUp() {
+        }
+
+        function redrawNode(data) {
+            var shape = nodeShape(data);
+            data.shape.remove();
+            data.shape = shape;
+            shape.data = data;
+        }
+
+        function redrawAllNodes() {
+            for (i in allNodes) {
+                redrawNode(allNodes[i]);
+            }
+        }
+
+        function redrawLinkEdge(data) {
+            if (   (!data.hidden || revealChecked())
+                && data.count >= edgeThreshold()) {
+                var shape = linkEdgeShape(data);
+                data.shape.remove();
+                data.shape = shape;
+                shape.data = data;
+            }
+        }
+
+        function redrawRcEdge(id) {
+            var rc = allNodes[id].rc;
+            if (!(Math.min(id, rc) in hiddenRcEdges)) {
+                var shape = getRcEdge(id, rc);
+                shape.remove();
+                storeRcEdge(id, rc, rcEdgeShape(id, rc));
+            }
+        }
+
+        function redrawAllEdges() {
+            for (a in allLinkEdges) {
+                for (b in allLinkEdges[a]) {
+                    redrawLinkEdge(allLinkEdges[a][b]);
+                }
+            }
+            for (a in allRcEdges) {
+                redrawRcEdge(a);
+            }
+        }
+
+        function redrawGraph() {
+            redrawAllNodes();
+            redrawAllEdges();
+        }
+
+        function nodeShape(data) {
+            var x_top = 0;
+            var y_top = 0;
+            var id = data.id;
+            var w = nodeWidth(data.length)
+            var h = nodeHeight(data.cov.mean);
+            var x_mid = x_top + w / 2;
+            var y_mid = y_top + h / 2;
+
+            var st = R.set();
+            var rect = R.rect(x_top, y_top, w, h).attr({fill: data.unselectedFill});
+            st.push(rect);
+            var text = "";
+            if ($("#node_label_id").get()[0].checked) {
+                text = id;
+            } else if (   $("#node_label_ref").get()[0].checked 
+                       && typeof data.alignment != 'undefined') {
+                text = data.alignment.name;
+            } else if (   $("#node_label_gene").get()[0].checked
+                       && typeof data.alignment != 'undefined') {
+                text = data.alignment.gene;
+            }
+
+            if (text != "") {
+                var label = R.text(x_mid, y_mid, text).attr({"font-family": "Helvetica, Arial, sans-serif", "font-weight": "normal", "font-size": 12, "stroke-width": 0})
+                st.push(label);
+            }
+            st.attr({stroke: "#000", "fill-opacity": 0.8, cursor: "move"});
+            st.drag(function (dx, dy) {nodeDrag(st, dx, dy);}, 
+                    function () {nodeDragStart(st);}, 
+                    function () {nodeDragEnd(st);});
+            st.click(function (ev) {ev.stopPropagation();});
+            st.mouseup(function (ev) {nodeMouseUp(st);});
+            st.mousedown(function (ev) {ev.stopPropagation(); nodeMouseDown(st);});
+            st.mouseover(function (ev) {
+                ev.stopPropagation(); 
+                if (id in selectedNodes) {
+                    rect.attr({fill: mouseOverNodeFill});
+                    var row = st.data["data_table_row"];
+                    row.css("background-color", mouseOverNodeFill);
+                    row.get()[0].scrollIntoView();
+                    st.toFront();
+                }
+            });
+            st.mouseout(function (ev) {
+                ev.stopPropagation();
+                if (id in selectedNodes) {
+                    rect.attr({fill: selectedNodeFill});
+                    st.data["data_table_row"].css("background-color", "#fff");
+                }
+            });
+            st.getInnerBox = function() { return rect; };
+            st.translate = function() { alert("translate!"); };
+
+            // Inherit the old shape's features, if this is a replacement.
+            if (typeof data.shape != 'undefined') {
+                var old = data.shape;
+                var bb = nodeShapeBounds(old);
+                translateNodeShape(st, bb.x, bb.y);
+
+                if (data.id in selectedNodes) {
+                    rect.attr({fill: selectedNodeFill});
+                }
+                if (data.id in hiddenNodes) {
+                    st.hide();
+                }
+            }
+
+            return st;
+        }
+
+        function bbCentre(bb) {
+            return {x: bb.x + bb.width / 2, y: bb.y + bb.height / 2};
+        }
+
+        function logLine(l, msg) {
+            console.log(msg + " " + l.x0 + " " + l.y0 + " " + l.x1 + " " + l.y1);
+        }
+
+        function logBBox(bb) {
+            console.log(bb.x + " " + bb.y + " " + bb.x2 + " " + bb.y2);
+        }
+
+        // Updates line coordinates ({x0, y0, x1, y1}) by the minimum amount
+        // so that it doesn't intersect the bounding box.
+        // Returns false if the line is completely contained within the box.
+        function clipLineToBB(line, bb) {
+            var swapped = false;
+            function swapCoords(l) {
+                var tx = l.x0;
+                var ty = l.y0;
+                l.x0 = l.x1;
+                l.y0 = l.y1;
+                l.x1 = tx;
+                l.y1 = ty;
+                swapped = !swapped;
+            }
+
+            function yAtX(line, x) {
+                if (line.x0 == line.x1) {
+                    return null;
+                }
+                var dx = line.x1 - line.x0;
+                var dy = line.y1 - line.y0;
+                var t = (x - line.x0) / dx;
+                var y = t * dy + line.y0;
+                return y;
+            }
+
+            function xAtY(line, y) {
+                if (line.y0 == line.y1) {
+                    return null;
+                }
+                var dx = line.x1 - line.x0;
+                var dy = line.y1 - line.y0;
+                var t = (y - line.y0) / dy;
+                var x = t * dx + line.x0;
+                return x;
+            }
+
+            function clipAtX(line, x, clipLeftOfX) {
+                if (line.x0 == line.x1) {
+                    return;
+                }
+                var y = yAtX(line, x);
+                if (clipLeftOfX) {
+                    line.x0 = x;
+                    line.y0 = y;
+                } else {
+                    line.x1 = x;
+                    line.y1 = y;
+                }
+            }
+
+            function clipAtY(line, y, clipAboveY) {
+                if (line.y0 == line.y1) {
+                    return;
+                }
+                var x = xAtY(line, y);
+                if (clipAboveY) {
+                    line.x0 = x;
+                    line.y0 = y;
+                } else {
+                    line.x1 = x;
+                    line.y1 = y;
+                }
+            }
+
+            // Test against left and right edges.
+            if (line.x0 > line.x1) {
+                swapCoords(line);
+            }
+            var y_at_bbx = yAtX(line, bb.x);
+            if (   line.x0 < bb.x && line.x1 > bb.x 
+                && y_at_bbx >= bb.y && y_at_bbx <= bb.y2) {
+                // Line intersects box's left edge.
+                clipAtX(line, bb.x, false);
+                if (swapped) {
+                    swapCoords(line);
+                }
+                return true;
+            }
+            var y_at_bbx2 = yAtX(line, bb.x2);
+            if (   line.x0 < bb.x2 && line.x1 > bb.x2
+                && y_at_bbx2 >= bb.y && y_at_bbx2 <= bb.y2) {
+                // Line intersects box's right edge.
+                clipAtX(line, bb.x2, true);
+                if (swapped) {
+                    swapCoords(line);
+                }
+                return true;
+            }
+
+            // Test against top and bottom edges.
+            if (line.y0 > line.y1) {
+                swapCoords(line);
+            }
+            var x_at_bby = xAtY(line, bb.y);
+            if (   line.y0 < bb.y && line.y1 > bb.y
+                && x_at_bby >= bb.x && x_at_bby <= bb.x2) {
+                // Line intersects box's top edge.
+                clipAtY(line, bb.y, false);
+                if (swapped) {
+                    swapCoords(line);
+                }
+                return true;
+            }
+            var x_at_bby2 = xAtY(line, bb.y2);
+            if (   line.y0 < bb.y2 && line.y1 > bb.y2
+                && x_at_bby2 >= bb.x && x_at_bby2 <= bb.x2) {
+                // Line intersects box's bottom edge.
+                clipAtY(line, bb.y2, true);
+                if (swapped) {
+                    swapCoords(line);
+                }
+                return true;
+            }
+            
+            return false;
+        }
+
+        function noShape() {
+            return R.path("");
+        }
+
+        // Adds and returns an arrow from (x0, y0) to (x1, y1), with weight w and colour c.
+        function arrowShape(data, x0, y0, x1, y1, w, c, label) {
+
+            // Arrow head length.
+            var headLength = 15.0;
+
+            // Arrow head spread (half angle between edge line and each arrow head line.)
+            var headHalfSpread = (Math.PI / 6.0) / 2; // 17.5 degrees
+
+            var a = Math.atan2(y1 - y0, x1 - x0) + Math.PI;
+            var a0 = a - headHalfSpread;
+            var a1 = a + headHalfSpread;
+            var x_a0 = x1 + headLength * Math.cos(a0);
+            var y_a0 = y1 + headLength * Math.sin(a0);
+            var x_a1 = x1 + headLength * Math.cos(a1);
+            var y_a1 = y1 + headLength * Math.sin(a1);
+            var st = R.set();
+            st.push(R.path("M" + x0 + "," + y0 + 
+                           "L" + x1 + "," + y1),
+                    R.path("M" + x1 + "," + y1 +
+                           "L" + x_a0 + "," + y_a0 +
+                           "L" + x_a1 + "," + y_a1 +
+                           "L" + x1 + "," + y1).attr({"fill": c}));
+            st.attr({"stroke": c, "stroke-width": w});
+
+            // Label.
+            if (label != "") {
+                // Label offset (distance above the edge line.)
+                var labelOfs = 10;
+                var x_mid = (x0 + x1) / 2;
+                var y_mid = (y0 + y1) / 2;
+                var rot = a / Math.PI * 180;
+                rot = rot > 90 && rot <= 270 ? rot - 180 : rot;
+                var x_l = x_mid + labelOfs * Math.cos(Raphael.rad(rot - 90));
+                var y_l = y_mid + labelOfs * Math.sin(Raphael.rad(rot - 90));
+                var lab = R.text(x_l, y_l, label).attr({fill: "#000", stroke: "#000", "stroke-width": 0, "font-size": 12});
+                lab.transform("r " + rot);
+                st.push(lab);
+            }
+
+/*
+            st.click(function (ev) { ev.stopPropagation(); });
+            st.mouseup(function (ev) { ev.stopPropagation(); edgeMouseUp();});
+            st.mousedown(function (ev) { ev.stopPropagation(); edgeMouseDown(data.idFrom, data.idTo);});
+*/
+            return st;
+        }
+        
+        // Adds and returns an rc arrow from (x0, y0) to (x1, y1), with colour c.
+        function arrowShapeRc(x0, y0, x1, y1, c) {
+
+            // Arrow head length.
+            var headLength = 15.0;
+
+            // Arrow head spread (half angle between edge line and each arrow head line.)
+            var headHalfSpread = (Math.PI / 6.0) / 2; // 17.5 degrees
+
+            var a = Math.atan2(y1 - y0, x1 - x0) + Math.PI;
+            var a0 = a - headHalfSpread;
+            var a1 = a + headHalfSpread;
+            var x_a0 = x1 + headLength * Math.cos(a0);
+            var y_a0 = y1 + headLength * Math.sin(a0);
+            var x_a1 = x1 + headLength * Math.cos(a1);
+            var y_a1 = y1 + headLength * Math.sin(a1);
+
+            var x_b0 = x0 - headLength * Math.cos(a0);
+            var y_b0 = y0 - headLength * Math.sin(a0);
+            var x_b1 = x0 - headLength * Math.cos(a1);
+            var y_b1 = y0 - headLength * Math.sin(a1);
+
+            var st = R.set();
+            st.push(R.path("M" + x0 + "," + y0 + 
+                           "L" + x1 + "," + y1).attr({"stroke-dasharray": "- "}),
+                    R.path("M" + x1 + "," + y1 +
+                           "L" + x_a0 + "," + y_a0 +
+                           "L" + x_a1 + "," + y_a1 +
+                           "L" + x1 + "," + y1).attr({"fill": c}),
+                    R.path("M" + x0 + "," + y0 +
+                           "L" + x_b0 + "," + y_b0 +
+                           "L" + x_b1 + "," + y_b1 +
+                           "L" + x0 + "," + y0).attr({"fill": c}));                  
+            st.attr({"stroke": c, "stroke-width": 1});
+
+            return st;
+        }
+
+        // Generates the shape for a link edge.
+        function linkEdgeShape(data) {
+            var idTo = data.idTo;
+            var idFrom = data.idFrom;
+            var fromBB = nodeShapeBounds(allNodes[idFrom].shape);
+            var toBB = nodeShapeBounds(allNodes[idTo].shape);
+            var label = "";
+            if ($("#edge_label_count").get()[0].checked) {
+                label = data.count;
+            } else if ($("#edge_label_gap").get()[0].checked) {
+                label = data.gap;
+            }
+
+            var fromBBMid = bbCentre(fromBB);
+            var toBBMid = bbCentre(toBB);
+            var width = edgeWidth(data.count);
+            var line = {x0: fromBBMid.x, y0: fromBBMid.y, x1: toBBMid.x, y1: toBBMid.y};
+            if (!clipLineToBB(line, fromBB)) {
+                return noShape();
+            }
+            if (!clipLineToBB(line, toBB)) {
+                return noShape();
+            }
+            return arrowShape(data, line.x0, line.y0, line.x1, line.y1, width, edgeStroke, label);
+        }
+
+        // Generates the shape for an rc edge.
+        function rcEdgeShape(a, b) {
+            if (!showRcEdgesChecked()) {
+                return noShape();
+            }
+
+            var fromBB = nodeShapeBounds(allNodes[a].shape);
+            var toBB = nodeShapeBounds(allNodes[b].shape);
+
+            var fromBBMid = bbCentre(fromBB);
+            var toBBMid = bbCentre(toBB);
+            var line = {x0: fromBBMid.x, y0: fromBBMid.y, x1: toBBMid.x, y1: toBBMid.y};
+            if (!clipLineToBB(line, fromBB)) {
+                return noShape();
+            }
+            if (!clipLineToBB(line, toBB)) {
+                return noShape();
+            }
+            return arrowShapeRc(line.x0, line.y0, line.x1, line.y1, edgeStroke);
+        }
+
+        // Create and record a single visible edge from the given LinkEdgeData.
+        function createLinkEdge(edge) {
+            var shape = linkEdgeShape(edge);
+            shape.edge = edge;
+            edge.shape = shape;
+            storeLinkEdge(edge);
+
+            if (allNodes[edge.idFrom].hidden) {
+                edge.hidden = true;
+                if (edge.idFrom in hiddenNodes) {
+                    edge.shape.hide();
+                }
+                if (!(edge.idFrom in hiddenLinkEdges)) {
+                    hiddenLinkEdges[edge.idFrom] = [];
+                }
+                hiddenLinkEdges[edge.idFrom].push(edge);
+            } 
+            if (allNodes[edge.idTo].hidden) {
+                edge.hidden = true;
+                if (edge.idTo in hiddenNodes) {
+                    edge.shape.hide();
+                }
+                if (!(edge.idTo in hiddenLinkEdges)) {
+                    hiddenLinkEdges[edge.idTo] = [];
+                }
+                hiddenLinkEdges[edge.idTo].push(edge);
+            } 
+            if (edge.count < edgeThreshold()) {
+                edge.shape.hide();
+            }
+        }
+
+        // Create and record an rc edge.
+        function createRcEdge(a, b) {
+            var shape = rcEdgeShape(a, b);
+            storeRcEdge(a, b, shape);
+            if (a in hiddenNodes || b in hiddenNodes) {
+                shape.hide();
+                hiddenRcEdges[Math.min(a, b)] = shape;
+            }
+        }
+
+        // Create all of the given node's visible edges.
+        function createNodesEdges(data) {
+
+            var id = data.id;
+
+            function assertSpentness(node) {
+                if (node.spent) {
+                    return;
+                }
+                for (i in node.edgesTo) {
+                    var id_to = node.edgesTo[i];
+                    if (!(id_to in allNodes)) {
+                        return;
+                    }
+                }
+                for (i in node.edgesFrom) {
+                    var id_from = node.edgesFrom[i];
+                    if (!(id_from in allNodes)) {
+                        return;
+                    }
+                }
+
+                node.spent = true;
+                node.unselectedFill = unselectedNodeFillSpent;
+
+                // Update the appearance of unselected nodes immediately.
+                if (!(node.id in selectedNodes)) {
+                    node.shape.getInnerBox().attr({fill: node.unselectedFill});
+                }
+            }
+
+            $.ajax({
+                url: 'links_bck/' + id, 
+                dataType: "json",
+                error: function(jq, txt, err) { alert("err: " + txt + jq + err); },
+                success: function (links) {
+                    for (l in links) {
+                        var link = links[l];
+                        data.edgesFrom.push(link.id_from);
+                        if (link.id_from in allNodes) {
+                            assertSpentness(allNodes[link.id_from]);
+                            if (!linkEdgeExists(link.id_from, link.id_to)) {
+                                createLinkEdge(new LinkEdgeData(link.id_from, link.id_to, link.count, link.gap));
+                            }
+                        }
+                    }
+                    $.ajax({
+                        url: 'links_fwd/' + id, 
+                        dataType: "json",
+                        error: function(jq, txt, err) { alert("err: " + txt + jq + err); },
+                        success: function (links) {
+                            for (l in links) {
+                                var link = links[l];
+                                data.edgesTo.push(link.id_to);
+                                if (link.id_to in allNodes) {
+                                    assertSpentness(allNodes[link.id_to]);
+                                    if (!linkEdgeExists(link.id_from, link.id_to)) {
+                                        createLinkEdge(new LinkEdgeData(link.id_from, link.id_to, link.count, link.gap));
+                                    }
+                                }
+                            }
+                            assertSpentness(data);
+                        }
+                    });
+                }
+            });
+
+            // Create the rc edge.
+            if (data.rc in allNodes) {
+                createRcEdge(id, data.rc);
+            }
+        }
+
+        function putContigSequence(id, cont) {
+            $.ajax({
+                url: 'sequence/' + id, 
+                dataType: "json",
+                error: function(jq, txt, err) {alert("err: " + txt + jq + err); return "UNKNOWN"},
+                success: cont
+            });
+        }
+
+        function putContigAlignment(id, cont) {
+            var dummyAlignment = {id: 0, name: "", start: 0, end: 0, matched: 0, dir: "", gene: ""};
+
+            $.ajax({
+                url: 'alignment/' + id, 
+                dataType: "json",
+                // error: function(jq, txt, err) {alert("err: " + txt + jq + err)},
+                error: function () { cont(dummyAlignment); },
+                success: cont
+            });
+        }
+
+        function addContigById(id, x, y) {
+
+            x = typeof x !== 'undefined' ? x : 0
+            y = typeof y !== 'undefined' ? y : 0
+
+            // Skip if it's already around!
+            if (id in allNodes) {
+                return;
+            }
+
+            $.ajax({
+                url: 'node/' + id, 
+                dataType: "json",
+                error: function(jq, txt, err) {alert("err: " + txt + jq + err);},
+                success: function(d) {
+                        // There's no sequence - it's chaff.
+                        if (d.length == 0 && omitChaffChecked()) {
+                            return;
+                        }
+
+                        var data = new NodeData(d.id, d.rc, d.cov_mean, d.length)
+                        putContigSequence(id, function (seq) {data.sequence = seq;});
+                        putContigAlignment(id, 
+                            function (aln) {
+                                data.alignment = new Alignment(aln)
+                                var shape = nodeShape(data);
+                                var bb = nodeShapeBounds(shape);
+                                translateNodeShape(shape, x - bb.width / 2, y - bb.height / 2);
+                                data.shape = shape;
+                                shape.data = data;
+                                allNodes[d.id] = data;
+                                createNodesEdges(data);
+                            });
+                    }
+                });
+        }
+
+        // Add contigs based on the contents of the contig id text box.
+        function addContig() {
+            var x = viewBox.X + viewBoxWidth / 2;
+            var y = viewBox.Y + viewBoxHeight / 2;
+            var id = $("#add_contig_id").get(0).value;
+            // Check if it's a contig id.
+            if (!isNaN(parseInt(id))) {
+                addContigById(id, x, y);
+            } else {
+                // Assume it's a gene id.
+                $.ajax({
+                    url: 'gene/' + id,
+                    dataType: "json",
+                    error: function(jq, txt, err) {alert("err: " + txt + jq + err);},
+                    success: function(ids) {
+                        var len = Math.sqrt(ids.length);
+                        var step = 200 / len;
+                        var steps = Math.ceil(len);
+                        var x0 = x - (len - step / 2);
+                        var y0 = y - (len - step / 2);
+                        var xs = 0;
+                        var ys = 0;
+                        for (i in ids) {
+                            var id = ids[i].id;
+                            addContigById(id, x0 + xs * step, y0 + ys * step);
+                            xs += 1;
+                            if (xs >= steps) {
+                                xs = 0;
+                                ys += 1;
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Add all the "previous" linked nodes of the selected nodes.
+        function prevContig() {
+
+            var newIds = {};
+
+            // Expand the nodes around a single contig, then run the continuation.
+            function expand(ids, i) {
+                if (i < ids.length) {
+                    var id = ids[i];
+                    $.ajax({
+                        url: 'links_bck/' + id, 
+                        dataType: "json",
+                        error: function(jq, txt, err) { /* alert("err: " + txt + jq + err); */ expand(ids, i+1); },
+                        success: function (data) {
+                            var theta = Math.PI / 4;
+                            var dTheta = Math.PI / (2 * (data.length + 1));
+                            var bb = nodeShapeBounds(allNodes[id].shape);
+                            for (d in data) {
+                                theta -= dTheta;
+                                var x = bb.x - splayDist * Math.cos(theta);
+                                var y = bb.y + bb.height / 2 + splayDist * Math.sin(theta);
+                                newIds[data[d].id_from] = {x: x, y: y};
+                            }
+                            expand(ids, i+1);
+                        }
+                    });
+                } else {
+                    // Add new ids.
+                    for (id in newIds) {
+                        addContigById(id, newIds[id].x, newIds[id].y)
+                    }
+                }
+            };
+            
+            var ids = [];
+            for (id in selectedNodes) {
+                ids.push(id);
+            }
+            expand(ids, 0);
+        }
+
+        // Add all the "next" linked nodes of the selected nodes.
+        function nextContig() {
+
+            var newIds = {};
+
+            function expand(ids, i) {
+                if (i < ids.length) {
+                    var id = ids[i];
+                    $.ajax({
+                        url: 'links_fwd/' + id, 
+                        dataType: "json",
+                        error: function(jq, txt, err) { /* alert("err: " + txt + jq + err); */ expand(ids, i+1); },
+                        success: function (data) {
+                            var theta = Math.PI / 4;
+                            var dTheta = Math.PI / (2 * (data.length + 1));
+                            var bb = nodeShapeBounds(allNodes[id].shape);
+                            for (d in data) {
+                                theta -= dTheta;
+                                var x = bb.x + bb.width + splayDist * Math.cos(theta);
+                                var y = bb.y + bb.height / 2 + splayDist * Math.sin(theta);
+                                newIds[data[d].id_to] = {x: x, y: y};
+                            }
+                            expand(ids, i+1);
+                        }
+                    });
+                } else {
+                    // Add new ids.
+                    for (id in newIds) {
+                        addContigById(id, newIds[id].x, newIds[id].y)
+                    }
+                }
+            };
+
+            var ids = [];
+            for (id in selectedNodes) {
+                ids.push(id);
+            }
+            expand(ids, 0);
+        }
+
+        // Add the previous upstream aligned contig.
+        function upContig() {
+
+            var newIds = {};
+
+            function expand(alns, i) {
+                if (i < alns.length) {
+                    $.ajax({
+                        url: 'align_bck/' + alns[i].pos + alns[i].dir + alns[i].ref, 
+                        dataType: "json",
+                        error: function(jq, txt, err) { expand(alns, i+1); },
+                        success: function (data) {
+                            var bb = nodeShapeBounds(allNodes[alns[i].id].shape);
+                            var x = bb.x + bb.width - splayDist;
+                            var y = bb.y + bb.height / 2;
+                            newIds[data.id] = {x: x, y: y};
+                            expand(alns, i+1);
+                        }
+                    });
+                } else {
+                    // Add new ids.
+                    for (id in newIds) {
+                        addContigById(id, newIds[id].x, newIds[id].y)
+                    }
+                }
+            };
+
+            var alns = [];
+            for (id in selectedNodes) {
+                var node = selectedNodes[id];
+                if (typeof node.alignment !== 'undefined') {
+                    alns.push({id: id, ref: node.alignment.name, pos: node.alignment.end, dir: node.alignment.dir});
+                }
+            }
+            expand(alns, 0);
+        }
+
+        // Add the next downstream aligned contig.
+        function downContig() {
+
+            var newIds = {};
+
+            function expand(alns, i) {
+                if (i < alns.length) {
+                    $.ajax({
+                        url: 'align_fwd/' + alns[i].pos + alns[i].dir + alns[i].ref, 
+                        dataType: "json",
+                        error: function(jq, txt, err) { expand(alns, i+1); },
+                        success: function (data) {
+                            var bb = nodeShapeBounds(allNodes[alns[i].id].shape);
+                            var x = bb.x + bb.width + splayDist;
+                            var y = bb.y + bb.height / 2;
+                            newIds[data.id] = {x: x, y: y};
+                            expand(alns, i+1);
+                        }
+                    });
+                } else {
+                    // Add new ids.
+                    for (id in newIds) {
+                        addContigById(id, newIds[id].x, newIds[id].y)
+                    }
+                }
+            };
+
+            var alns = [];
+            for (id in selectedNodes) {
+                var node = selectedNodes[id];
+                if (typeof node.alignment !== 'undefined') {
+                    alns.push({id: id, ref: node.alignment.name, pos: node.alignment.start, dir: node.alignment.dir});
+                }
+            }
+            expand(alns, 0);
+        }
+
+        function addToTable(node) {
+            var seq_id = "seq_" + node.id;
+            var txt =    "<tr><td>" + node.id 
+                      + "</td><td>" + node.rc
+                      + "</td><td>" + node.cov.mean
+                      + "</td><td>" + node.length
+                      + "</td><td>" + node.alignment.name
+                      + "</td><td>" + node.alignment.start
+                      + "</td><td>" + node.alignment.end
+                      + "</td><td>" + (node.alignment.dir == "-" ? "&minus;" : node.alignment.dir)
+                      + "</td><td>" + node.alignment.gene
+                      + "</td><td id=\"" + seq_id + "\">" + node.sequence
+                      + "</td></tr>";
+            $("#data_table_body").append(txt);
+            var row = $("#data_table_body tr:last");
+            node["data_table_row"] = row;
+            row.mouseover(function () { 
+                node.shape.getInnerBox().attr({fill: mouseOverNodeFill});
+                node.shape.toFront();
+                row.css("background-color", mouseOverNodeFill);
+            });
+            row.mouseout(function () { 
+                node.shape.getInnerBox().attr({fill: selectedNodeFill});
+                row.css("background-color", "#fff");
+            });
+            row.click(function () {
+                deselectAllNodesExcept(node);
+            });
+
+            // Ignore clicks to the sequence to allow for double-click selection.
+            $("#" + seq_id).click(function (ev) {
+                ev.stopPropagation();
+                return false;
+            });
+        }
+
+        function sortTableBy(col, type) {
+            // Comparator on rows, given row indices.
+            var cmp = function(ix1, ix2) {
+                var x1 = $("#data_table_body tr:eq(" + ix1 + ") td:eq(" + col +")").text(); 
+                var x2 = $("#data_table_body tr:eq(" + ix2 + ") td:eq(" + col +")").text(); 
+
+                if (type == "num") {
+                    x1 = parseInt(x1, 10);
+                    x2 = parseInt(x2, 10);
+                }
+
+                if (x1 < x2) {
+                    return -1;
+                } else if (x1 > x2) {
+                    return 1;
+                }
+                return 0;
+            }
+
+            var numRows = $("#data_table_body tr").length;
+            var ixs = [];
+            for (i = 0; i < numRows; i++) {
+                ixs.push(i);
+            }
+
+            ixs.sort(cmp);
+            // console.log(ixs);
+
+            // Reorder rows.
+            var rows = [];
+            for (i = 0; i < numRows; i++) {
+                rows.push($("#data_table_body tr:first").detach());
+            }
+            for (i = 0; i < ixs.length; i++) {
+                rows[ixs[i]].appendTo("#data_table_body");
+            }
+        }
+
+        function pageXToGraphX(px) {
+            var x = px - $(document).scrollLeft() - $("#graph_view").offset().left;
+            var gx = viewBox.X + viewBoxWidth * (x / R.width);
+            return gx;
+        }
+
+        function pageYToGraphY(py) {
+            var y = py - $(document).scrollTop() - $("#graph_view").offset().top;
+            var gy = viewBox.Y + viewBoxHeight * (y / R.height);
+            return gy;
+        }
+
+        function bgMouseDown(e) {
+
+            // Remove any stale selection box - in case a mouse up wasn't received.
+            // (Not sure why, but this seems to happen occassionally.)
+            if (selectBox) {
+                selectBox.remove();
+                selectBox = null;
+            }
+
+            if (bgDrag()) {
+                // console.log("bgMouseDown");
+                // Ensure no element lies under the cursor.
+                if (R.getElementByPoint(e.pageX, e.pageY) != null) {
+                    return;
+                }
+                bgDragging = true;
+                bgDragStartX = e.pageX;
+                bgDragStartY = e.pageY;
+                e.stopPropagation();
+            }
+            else if (bgSelect()) {
+                deselectAllNodes();
+                var x = pageXToGraphX(e.pageX);
+                var y = pageYToGraphY(e.pageY);
+                selectBox = R.rect(x, y, 0, 0).attr({"stroke": "#f00", "stroke-width": 1.0});
+                selectBox.ox = x;
+                selectBox.oy = y;
+            }
+        }
+
+        function bgMouseUp(e) {
+            if (bgDrag()) {
+                if (bgDragging == false) {
+                    return;
+                }
+                viewBox.X += bgDragDx;
+                viewBox.Y += bgDragDy;
+                bgDragging = false;
+                e.stopPropagation();
+            } else if (bgSelect() && selectBox) {
+                var sbb = selectBox.getBBox();
+                for (n in allNodes) {
+                    // Don't select hidden nodes!
+                    if (   Raphael.isBBoxIntersect(sbb, nodeShapeBounds(allNodes[n].shape))
+                        && !(n in hiddenNodes)) {
+                        selectNode(allNodes[n]);
+                    }
+                }
+                selectBox.remove();
+                selectBox = null;
+            }
+        }
+
+        function bgMouseMove(e) {
+            if (bgDrag()) {
+                if (bgDragging == false) {
+                    return;
+                }
+                bgDragDx = bgDragStartX - e.pageX;
+                bgDragDy = bgDragStartY - e.pageY;
+                x = viewBoxWidth / R.width;
+                y = viewBoxHeight / R.height;
+                bgDragDx *= x;
+                bgDragDy *= y;
+                R.setViewBox(viewBox.X + bgDragDx, viewBox.Y + bgDragDy, viewBoxWidth, viewBoxHeight);
+                e.stopPropagation();
+            } else if (bgSelect() && selectBox) {
+                var x = pageXToGraphX(e.pageX);
+                var y = pageYToGraphY(e.pageY);
+                var dx = x - selectBox.ox;
+                var dy = y - selectBox.oy;
+                if (dx >= 0) {
+                    selectBox.attr({x: selectBox.ox, width: dx});
+                } else {
+                    selectBox.attr({x: x, width: -dx});
+                }
+                if (dy >= 0) {
+                    selectBox.attr({y: selectBox.oy, height: dy});
+                } else {
+                    selectBox.attr({y: y, height: -dy});
+                }
+            }
+        }
+
+        // Handle mouse wheel event.
+        function bgWheel(e) {
+            // if (bgDrag()) {
+            if (true) {
+                var delta = 0;
+                if (!e) {
+                    e = window.event;       // IE
+                } if (e.wheelDelta) {       // IE/Opera
+                    delta = e.wheelDelta / 120;
+                } else if (e.detail) {      // Mozilla
+                    delta = -e.detail / 3;
+                }
+                if (delta) {
+                    delta *= -1;
+                    vbHo = viewBoxHeight;
+                    vbWo = viewBoxWidth;
+                    if (delta < 0) {
+                        viewBoxWidth *= 0.95;
+                        viewBoxHeight *= 0.95;
+                    } else {
+                        viewBoxWidth *= 1.05;
+                        viewBoxHeight *= 1.05;
+                    }
+
+                    viewBox.X -= (viewBoxWidth - vbWo) / 2;
+                    viewBox.Y -= (viewBoxHeight - vbHo) / 2;
+                    R.setViewBox(viewBox.X, viewBox.Y, viewBoxWidth, viewBoxHeight);
+                }
+
+                if (e.preventDefault)
+                    e.preventDefault()
+                e.stopPropagation();
+                e.returnValue = false;
+            }
+        }
+
+        function bgDrag() {
+            return $("#bg_click_drag").get()[0].checked;
+        }
+
+        function bgSelect() {
+            return $("#bg_click_select").get()[0].checked;
+        }
+
+        function windowResize() {
+            // TODO: Implement this! It should update viewBox.X/Y, viewBoxWidth/Height, and call setViewBox().
+        }
+
+        // Switch between 'select' and 'move' mode.
+        function toggleBgClickAction() {
+            if ($("#bg_click_select").get()[0].checked) {
+                $("#bg_click_drag").get()[0].checked = true;
+                // $("#graph_view").css("cursor", "move");
+                return;
+            }
+
+            $("#bg_click_select").get()[0].checked = true;
+            // $("#graph_view").css("cursor", "auto");
+        }
+
+        // Select all nodes.
+        function selectAllNodesAction() {
+            selectAllNodes();
+        }
+
+        // Deselect all nodes.
+        function deselectAllNodesAction() {
+            deselectAllNodes();
+        }
+
+        // Adjust the position of each node by a small random amount.
+        function layoutJitter() {
+            for (i in allNodes) {
+                var node = allNodes[i];
+                if (!(node.id in hiddenNodes)) {
+                    var dx = 10 * (Math.random() - 0.5);
+                    var dy = 10 * (Math.random() - 0.5);
+                    translateNodeShape(node.shape, dx, dy);
+                }
+            }
+            redrawAllEdges();
+        }
+
+        // Spring-force layout.
+        function layoutSpring() {
+            var iters = 1;
+
+            function springForce(id0, id1, gap, f) {
+                var K = 0.1;
+
+                var n0 = allNodes[id0];
+                var n1 = allNodes[id1];
+                var bb0 = nodeShapeBounds(n0.shape)
+                var bb1 = nodeShapeBounds(n1.shape)
+                var dx = ((bb1.x + bb1.x2) / 2) - ((bb0.x + bb0.x2) / 2);
+                var dy = ((bb1.y + bb1.y2) / 2) - ((bb0.y + bb0.y2) / 2);
+                var len = Math.sqrt(dx * dx + dy * dy);
+                len = Math.max(len, 0.1);
+                var stretch = len - gap;
+                var dx_norm = dx / len;
+                var dy_norm = dy / len;
+
+                f.x += K * stretch * dx_norm;
+                f.y += K * stretch * dy_norm;
+            }
+
+            function chargeForce(id0, id1, f) {
+                var K = 100;
+                var dist = 200;
+
+                var n0 = allNodes[id0];
+                var n1 = allNodes[id1];
+                var bb0 = nodeShapeBounds(n0.shape);
+                var bb1 = nodeShapeBounds(n1.shape);
+                var dx = ((bb1.x + bb1.x2) / 2) - ((bb0.x + bb0.x2) / 2);
+                var dy = ((bb1.y + bb1.y2) / 2) - ((bb0.y + bb0.y2) / 2);
+                var len2 = dx * dx + dy * dy;
+                len2 = Math.max(len2, 0.1);
+                var len = Math.sqrt(len2);
+                var mag = dist / len2;
+                var dx_norm = dx / len;
+                var dy_norm = dy / len;
+                f.x += K * mag * dx_norm;
+                f.y += K * mag * dy_norm;
+            }
+
+            var thr = edgeThreshold();
+            for (x = 0; x < iters; x++) {
+                for (i in allNodes) {
+                    var node = allNodes[i];
+                    var id = node.id;
+                    var connected = false;
+                    if (!(id in hiddenNodes)) {
+
+                        var f = {x: 0, y: 0};
+
+                        // Attractive force.
+                        for (b in node.edgesTo) {
+                            var id_to = node.edgesTo[b];
+                            if (linkEdgeExists(id, id_to)) {
+                                var edge = allLinkEdges[id][id_to];
+                                if (edge.count >= thr) {
+                                    connected = true;
+                                    springForce(id, id_to, edge.gap, f);
+                                }
+                            }
+                        }
+                        for (a in node.edgesFrom) {
+                            var id_from = node.edgesFrom[a];
+                            if (linkEdgeExists(id_from, id)) {
+                                var edge = allLinkEdges[id_from][id];
+                                if (edge.count >= thr) {
+                                    connected = true;
+                                    springForce(id, id_from, edge.gap, f);
+                                }
+                            }
+                        }
+                        if (isNaN(f.x) || isNaN(f.y)) {
+                            alert("Nan: " + id);
+                        }
+
+
+                        // Skip nodes that have no visible edges.
+                        if (!connected) {
+                            continue;
+                        }
+
+                        // Repulsive force.
+                        // TODO: Use a spatial subdivision of some sort.
+                        for (n in allNodes) {
+                            if (n == i) {
+                                continue;
+                            }
+
+                            var other = allNodes[n];
+                            var other_id = other.id;
+                            if (other_id in hiddenNodes) {
+                                continue;
+                            }
+
+                            chargeForce(other_id, id, f);
+                        }
+
+                        // Cap magnitude.
+                        var mag2 = f.x * f.x + f.y * f.y;
+                        if (mag2 > 100) {
+                            var mag = Math.sqrt(mag2);
+                            f.x = 10 * f.x / mag;
+                            f.y = 10 * f.y / mag;
+                        }
+
+                        // Apply force.
+                        translateNodeShape(node.shape, f.x, f.y);
+                    }
+                }
+            }
+            redrawAllEdges();
+        }
+
+        // Reference-based (alignment) layout.
+        function layoutReference() {
+            var vertStride = 200;
+            var vertStrandGap = 40;
+            var maxXGap = 200;
+            var refs = {};
+            var noRef = [];
+
+            // Group nodes by reference.
+            for (i in allNodes) {
+                var node = allNodes[i];
+                if (   typeof node.alignment == 'undefined'
+                    || node.alignment.name == "") {
+                    noRef.push(node);
+                    continue;
+                }
+                var nm = node.alignment.name;
+                if (!(nm in refs)) {
+                    refs[nm] = [];
+                }
+                refs[nm].push(node);
+            }
+
+            // Sort reference groups.
+            function cmp(n0, n1) {
+                var x0 = n0.alignment.start;
+                var x1 = n1.alignment.start;
+                if (x0 < x1) {
+                    return -1;
+                } else if (x0 > x1) {
+                    return 1;
+                }
+                return 0;
+            }
+            for (i in refs) {
+                refs[i].sort(cmp);
+            }
+
+            // Run through each reference's nodes, placing them.
+            var y = 0;
+            for (i in refs) {
+                // var str = "";
+                y += vertStride;
+                var nodes = refs[i];
+                var x = 0;
+                var x_ref = nodes[0].alignment.start;
+
+                for (j in nodes) {
+                    var node = nodes[j];
+                    var x_ofs = node.alignment.start - x_ref;
+                    var gap = horizScale(x_ofs);
+                    if (gap > maxXGap) {
+                        gap = maxXGap;
+                    }
+                    x += gap;
+
+                    var bb = nodeShapeBounds(node.shape);
+                    var y_ofs = 0;
+                    if (typeof node.alignment != 'undefined') {
+                        y_ofs += node.alignment.dir == '-' ? vertStrandGap : -vertStrandGap;
+                    }
+                    translateNodeShape(node.shape, x - bb.x, y + y_ofs - bb.height / 2 - bb.y);
+
+                    x += horizScale(node.length);
+                    x_ref = node.alignment.start + node.length;
+                }
+                // var guide = R.path("M -100 " + y + " L " + (x + 100) + " " + y).attr({stroke: "#000", "stroke-width": 1, "stroke-dasharray": "-"});
+                // (function (g) { g.animate({stroke: "#fff"}, 2000, "", function () { g.remove(); }); })(guide);
+            }
+
+            // Place unaligned nodes.
+            function place(node) {
+                var id = node.id;
+                var bb = nodeShapeBounds(node.shape);
+                var done = false;
+                // Place near the first placed adjacent node.
+                for (x in node.edgesTo) {
+                    var id_to = node.edgesTo[x];
+                    if (id_to in allNodes && !(id_to in noRef)) {
+                        var edge = allLinkEdges[id][id_to];
+                        var bb_to = nodeShapeBounds(allNodes[id_to].shape);
+                        // Don't centre node on line (to indicates lack of alignment.)
+                        translateNodeShape(node.shape, bb_to.x + edge.gap - bb.x, bb_to.y - bb.y);
+                        done = true;
+                        break;
+                    }
+                }
+                if (!done) {
+                    for (x in node.edgesFrom) {
+                        var id_from = node.edgesFrom[x];
+                        if (id_from in allNodes && !(id_from in noRef)) {
+                            var edge = allLinkEdges[id_from][id];
+                            var bb_from = nodeShapeBounds(allNodes[id_from].shape);
+                            // Don't centre node on line (to indicate lack of alignment.)
+                            translateNodeShape(node.shape, bb_from.x - edge.gap - bb.x, bb_from.y - bb.y);
+                            done = true;
+                            break;
+                        }
+                    }
+                }
+                return done;
+            }
+
+            var progress;
+            do {
+                progress = false;
+                for (i in noRef) {
+                    var node = noRef[i];
+                    if (place(node)) {
+                        console.log("placed " + node.id);
+                        progress = true;
+                        delete noRef[i];
+                    }
+                }
+            } while (progress);
+
+            // Place remaining nodes at origin.
+            // They - somehow - don't have alignments or edges!
+            for (i in noRef) {
+                var node = noRef[i];
+                var bb = nodeShapeBounds(node.shape);
+                console.log("origin " + node.id);
+                translateNodeShape(node.shape, -bb.x, -bb.y);
+            }
+
+            // Update edges and viewport (TODO).
+            redrawAllEdges();
+            refitViewBox(true);
+        }
+
+        // The identity layout.
+        function layout0() {
+            for (i in allNodes) {
+                var node = allNodes[i];
+                translateNodeShape(node.shape, 0, 0);
+            }
+        }
+
+        // Update the view box to fit all nodes.
+        function refitViewBox(fitAll) {
+
+            var x0 = Number.POSITIVE_INFINITY;
+            var y0 = Number.POSITIVE_INFINITY;
+            var x1 = Number.NEGATIVE_INFINITY;
+            var y1 = Number.NEGATIVE_INFINITY;
+
+            if (!fitAll) {
+                fitAll = true;
+                for (i in selectedNodes) {
+                    fitAll = false;
+                    break;
+                }
+            }
+
+            for (i in allNodes) {
+                var node = allNodes[i];
+                if (node.id in hiddenNodes) {
+                    console.log('skipping ' + node.id);
+                    continue;
+                }
+                if (fitAll || (node.id in selectedNodes)) {
+                    var bb = nodeShapeBounds(node.shape);
+                    x0 = Math.min(x0, bb.x);
+                    y0 = Math.min(y0, bb.y);
+                    x1 = Math.max(x1, bb.x2);
+                    y1 = Math.max(y1, bb.y2);
+                }
+            }
+
+            // Bail out if there were no nodes.
+            if (x0 == Number.MAX_VALUE) {
+                return;
+            }
+
+            var w = x1 - x0;
+            var h = y1 - y0;
+
+            // Allow a 5% margin all around.
+            x0 -= 0.05 * w;
+            x1 += 0.05 * w;
+            y0 -= 0.05 * h;
+            y1 += 0.05 * h;
+            w = x1 - x0;
+            h = y1 - y0;
+  
+            var dw = w / viewBoxWidth;
+            var dh = h / viewBoxHeight;
+
+            var scale = Math.max(dw, dh);
+            viewBoxWidth *= scale;
+            viewBoxHeight *= scale;
+
+            // Centre.
+            if (dw > dh) {
+                y0 -= (viewBoxHeight - h) / 2;
+            } else {
+                x0 -= (viewBoxWidth - w) / 2;
+            }
+
+            viewBox = R.setViewBox(x0, y0, viewBoxWidth, viewBoxHeight);
+            viewBox.X = x0;
+            viewBox.Y = y0;
+        }
+
+        // Initialisation
+        function start() {
+            R = Raphael("graph_view");
+
+            // Add UI handlers.
+            $("#add_contig_button").click(addContig);
+            $("#add_contig_id").keypress(function(ev) {
+                if (ev.keyCode == 13) {
+                    ev.stopPropagation();
+                    ev.preventDefault();
+                    $("#add_contig_button").click();
+                    return false;
+                }
+            });
+
+            $("#edge_threshold").keypress(function(ev) {
+                if (ev.keyCode == 13) {
+                    ev.stopPropagation();
+                    ev.preventDefault();
+                    applyEdgeThreshold();
+                    return false;
+                }
+            });
+            $("#edge_threshold").blur(function(ev) {
+                var th = edgeThreshold();
+                $("#edge_threshold").val(th);
+                applyEdgeThreshold();
+            });
+            $("#edge_threshold_check").change(function(ev) {
+                applyEdgeThreshold();
+            });
+
+            $("#horiz_scale").keypress(function(ev) {
+                if (ev.keyCode == 13) {
+                    ev.stopPropagation();
+                    ev.preventDefault();
+                    applyHorizScale();
+                    return false;
+                }
+            });
+            $("#horiz_scale").blur(function(ev) {
+                var s = readHorizScale();
+                $("#horiz_scale").val(s);
+                applyHorizScale();
+            });
+            $("#horiz_scale").change(function(ev) {
+                applyHorizScale();
+            });
+
+            // Keyboard shortcuts.
+            $(document).keyup(function(ev) {
+                if (ev.keyCode == 32) {         // space key
+                    toggleBgClickAction();
+                } else if (ev.keyCode == 65) {  // 'a' key
+                    selectAllNodesAction();
+                } else if (ev.keyCode == 68) {  // 'd' key
+                    deselectAllNodesAction();
+                }
+                // console.log("keyCode " + ev.keyCode);
+            });
+            $("#prev_contig_button").click(prevContig);
+            $("#next_contig_button").click(nextContig);
+            $("#up_contig_button").click(upContig);
+            $("#down_contig_button").click(downContig);
+
+            $("#refit_button").click(function() {refitViewBox(false);});
+
+            $("#hide_button").click(hideSelectedNodes);
+            $("#unhide_button").click(unhideSelectedNodes);
+            $("#delete_button").click(deleteSelectedNodes);
+            $("#reveal_hidden_check").change(toggleReveal);
+            $("#show_rc_edges_check").change(toggleShowRcEdges);
+
+            $("#node_label_id").click(redrawAllNodes);
+            $("#node_label_ref").click(redrawAllNodes);
+            $("#node_label_gene").click(redrawAllNodes);
+            $("#node_label_none").click(redrawAllNodes);
+    
+            $("#edge_label_count").click(redrawAllEdges);
+            $("#edge_label_gap").click(redrawAllEdges);
+            $("#edge_label_none").click(redrawAllEdges); 
+
+            $("#id").click(function () {sortTableBy(0, "num")});
+            $("#rc").click(function () {sortTableBy(1, "num")});
+            $("#cov").click(function () {sortTableBy(2, "num")});
+            $("#len").click(function () {sortTableBy(3, "num")});
+            $("#ref").click(function () {sortTableBy(4, "str")});
+            $("#refFrom").click(function () {sortTableBy(5, "num")});
+            $("#refTo").click(function () {sortTableBy(6, "num")});
+            $("#dir").click(function () {sortTableBy(7, "str")});
+            $("#gene").click(function () {sortTableBy(8, "str")});
+            $("#seq").click(function () {sortTableBy(9, "str")});
+
+            $("#layout_jitter_button").click(layoutJitter);
+            $("#layout_spring_button").click(layoutSpring);
+            $("#layout_reference_button").click(layoutReference);
+            $("#layout_0_button").click(layout0);
+
+            // Add tooltips.
+            
+
+            // Window pan/zoom globals.
+            viewBoxWidth = R.width;
+            viewBoxHeight = R.height;
+            viewBox = R.setViewBox(0, 0, viewBoxWidth, viewBoxHeight);
+            viewBox.X = 0;
+            viewBox.Y = 0;
+            $("#graph_view").mouseup(bgMouseUp);
+            $("#graph_view").mousedown(bgMouseDown);
+            $("#graph_view").mousemove(bgMouseMove);
+            if ($("#graph_view").get()[0].addEventListener) {
+                // Mozilla
+                $("#graph_view").get()[0].addEventListener("DOMMouseScroll", bgWheel, false);
+            }
+            $("#graph_view").get()[0].onmousewheel = bgWheel;
+
+            $(window).resize(windowResize);
+        }
+
+        $(document).ready(start);
+
+    </script>
+
+    <!-- <div id="header">header</div> -->
+    <div id="container">
+        <div id="control_panel">
+        <div class="margin_box">
+            <div id="logo_box">
+                <br/>Gossamer graph&nbsp;viewer
+            </div>
+            <form>
+                <input id="add_contig_id" type="text" placeholder="contig id" title="contig id or gene"/>
+                <input id="add_contig_button" type="button" value="+" title="add this contig"/>
+                <br/>
+                <input id="up_contig_button" type="button" value="<" title="add previous upstream aligned contig"/>
+                <input id="down_contig_button" type="button" value=">" title="add next downstream aligned contig"/>
+                &nbsp;
+                <input id="prev_contig_button" type="button" value="&larr;" title="add backward linked contigs"/>
+                <input id="next_contig_button" type="button" value="&rarr;" title="add forward linked contigs"/>
+                <br/>
+                <!-- include dir: -->
+                <input id="pos_strand_check" type="checkbox" title="allow + dir contigs to be added" checked=true>
+                    <label for="pos_strand_check" title="allow + dir contigs to be added">+ &nbsp;</label>
+                </input>
+                <input id="neg_strand_check" type="checkbox" title="allow - dir contigs to be added" checked=true>
+                    <label for="neg_strand_check" title="allow - dir contigs to be added">&minus; &nbsp;</label>
+                </input>
+                <input id="omit_chaff_check" type="checkbox" title="don't add contigs without sequences" checked=true>
+                    <label for="omit_chaff_check" title="don't add contigs without sequences">omit chaff</label>
+                </input>
+            <form>
+            <hr/>
+            </form>
+            <form>
+                <input type="radio" name="bg_click_action" id="bg_click_select" checked=true>
+                    <label for="bg_click_select">select</label>
+                </input>
+                <input type="radio" name="bg_click_action" id="bg_click_drag">
+                    <label for="bg_click_drag">move</label>
+                </input>
+                &nbsp;
+                <input type="button" id="refit_button" value="refit" title="update view to fit selected nodes"/>
+            </form>
+            <hr/>
+            <form>
+                <input id="hide_button" type="button" value="hide"/>
+                <input id="unhide_button" type="button" value="unhide"/>
+                &nbsp;&nbsp;
+                <input id="delete_button" type="button" value="delete"/>
+                <br/>
+                <input id="reveal_hidden_check" type="checkbox">
+                    <label for="reveal_hidden_check">reveal hidden</label>
+                </input>
+                <br/>
+                <input id="show_rc_edges_check" type="checkbox" checked="true">
+                    <label for="show_rc_edges_check">show rc edges</label>
+                </input>
+                <br/>
+                <input id="edge_threshold_check" type="checkbox">
+                    <label for="edge_threshold_check">min edge count:</label>
+                </input>
+                <input id="edge_threshold" type="text" value="1"/>
+            </form>
+            <hr/>
+            <form>
+                horiz. scale: 1 / <input id="horiz_scale" type="text" value="5"><br>
+            </form>
+            <hr/>
+            edge label:
+            <form>
+                <input name="edge_label" id="edge_label_count" type="radio" checked="true">
+                    <label for="edge_label_count">count</label>
+                </input>
+                <input name="edge_label" id="edge_label_gap" type="radio">
+                    <label for="edge_label_gap">gap</label>
+                </input>
+                <input name="edge_label" id="edge_label_none" type="radio">
+                    <label for="edge_label_none">none</label>
+                </input>
+            </form>
+            node label:
+            <form>
+                <input name="node_label" id="node_label_id" type="radio">
+                    <label for="node_label_id">id</label>
+                </input>
+                <input name="node_label" id="node_label_ref" type="radio">
+                    <label for="node_label_ref">ref</label>
+                </input>
+                <input name="node_label" id="node_label_gene" type="radio" checked="true">
+                    <label for="node_label_gene">gene</label>
+                </input>
+                <br/>
+                <input name="node_label" id="node_label_none" type="radio">
+                    <label for="node_label_none">none</label>
+                </input>
+            </form>
+            <hr/>
+            layout:
+            <form>
+                <input id="layout_jitter_button" type="button" value="jitter"/>
+                <input id="layout_spring_button" type="button" value="spring"/>
+                <input id="layout_reference_button" type="button" value="reference"/>
+                <input id="layout_0_button" type="button" value="0"/>
+        </div>
+        </div>
+        <div id="output_container">
+            <div id="graph_view"></div>
+            <div id="data_view">
+            <div class="margin_box">
+                <div id="selected"></div>
+                <table id="data_table">
+                    <col width="20" />
+                    <col width="20" />
+                    <col width="15" />
+                    <col width="15" />
+                    <col width="20" />
+                    <col width="20" />
+                    <col width="20" />
+                    <col width="10" />
+                    <col width="20" />
+                    <col width="200" />
+                    <thead>
+                        <tr>
+                            <th id="id">id</th>
+                            <th id="rc">rc</th>
+                            <th id="cov">cov</th>
+                            <th id="len">len</th>
+                            <th id="ref">ref</th>
+                            <th id="refFrom">refFrom</th>
+                            <th id="refTo">refTo</th>
+                            <th id="dir">dir</th>
+                            <th id="gene">gene</th>
+                            <th id="seq">seq</th>
+                        </tr>
+                    </thead>
+                    <tbody id="data_table_body"></tbody>
+                </table>
+            </div>
+            </div>
+        </div>
+    </div>
+    <!-- <div id="footer">footer</div> -->
+
+</body>
+</html>

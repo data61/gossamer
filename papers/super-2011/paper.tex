@@ -1,0 +1,230 @@
+\documentclass{bioinfo}
+\copyrightyear{2011}
+\pubyear{2011}
+
+\usepackage{multirow}
+\usepackage{verbatim}
+\newcommand{\Gossamer}{\textit{Gossamer}}
+\newcommand{\SOAPdenovo}{\textit{SOAPdenovo}}
+\newcommand{\ABySS}{\textit{ABySS}}
+\newcommand{\SOAPGapCloser}{\textit{SOAPGapCloser}}
+\newcommand{\SGA}{\textit{SGA}}
+\newcommand{\Allpaths}{\textit{Allpaths}}
+\newcommand{\Quake}{\textit{Quake}}
+\newcommand{\rhomer}{$\rho$-mer}
+\newcommand{\rhomers}{$\rho$-mers}
+\newcommand{\kmer}{$k$-mer}
+\newcommand{\kmers}{$k$-mers}
+
+\newcommand{\best}[1]{\bf{#1}}
+%\newcommand{\best}[1]{#1}
+
+\renewcommand{\baselinestretch}{0.95}
+
+\begin{document}
+\firstpage{1}
+
+\title[\Gossamer{}]{\Gossamer{} - A Resource Efficient {\em de novo} Assembler}
+\author[Conway \textit{et~al}]{Thomas Conway\footnote{to whom correspondence should be addressed}\ , Jeremy Wazny, Andrew Bromage, Justin Zobel \\ and Bryan Beresford-Smith}
+\address{NICTA Victoria Research Laboratory, Department of Computer Science and Software Engineering, The University of Melbourne, Parkville, Australia\\
+}
+
+
+\history{Received on XXXXX; revised on XXXXX; accepted on XXXXX}
+
+\editor{Associate Editor: XXXXXXX}
+
+
+\maketitle
+
+\begin{abstract}
+
+\section{Motivation:}
+The \textit{de novo} assembly of short read high-throughput sequencing
+data poses significant computational challenges.
+The volume of data is huge;
+the reads are tiny compared to the underlying sequence; and
+there are significant numbers of sequencing errors.  
+There are numerous software
+packages that allow users to assemble short reads,
+but most are either limited to
+relatively small genomes (e.g., bacteria),
+or require large computing infrastructure,
+or employ greedy algorithms and thus
+often do not yield high quality results.
+
+\section{Results:}
+We have developed \Gossamer{}, an implementation
+of the de Bruijn approach to assembly that requires
+close to the theoretical minimum of memory,
+but still allows efficient processing.
+Our results show that it is space efficient,
+and produces high quality assemblies.
+
+
+\section{Availability:}
+\Gossamer{} is available for non-commercial use 
+from http://www.genomics.csse.unimelb.edu.au/product-gossamer.php.
+
+\section{Contact:} \href{tom.conway@nicta.com.au}{tom.conway@nicta.com.au}
+\end{abstract}
+
+% NOTE: The table is placed here so that it floats to the top of page 2, and NOT page 3. There doesn't appear to be any way to force this layout if the table is in the Results section.
+\begin{table*}
+
+\vspace{-1em}
+
+\begin{center}
+\footnotesize
+{\begin{tabular}[t]{ll|rr|rrrrr|rrrrr}
+\multirow{2}{*}{Data} & \multirow{2}{*}{Tool} & \multirow{2}{*}{Time (s)} & \multirow{2}{*}{Mem (MB)} & \multicolumn{5}{c}{Contigs} & \multicolumn{5}{c}{Scaffolds} \\
+ & & & & Num & N50 (kb) & E-size (kb) & Errs & N50C (kb) & Num & N50 (kb) & E-size (kb) & Errs & N50C (kb) \\
+
+\hline
+\multirow{3}{*}{SA} 
+	& Go 	& 197 	& \best{483} 	& 135 	& 48.1 	& 73.0 	& 21 	& 46.1 	& \best{31} 	& \best{828} 	& \best{612} 	& 7 	& \best{828} \\
+	& SO 	& \best{71} 	& 704 	& \best{114} 	& \best{271.5} 	& \best{218} 	& 48 	& \best{56.3} 	& 100 	& 331 	& 299 	& 4 	& 331 \\
+	& SG 	& 2,688 	& 1,293 	& 1,183 	& 4.0 	& 4.7 	& \best{11} 	& 4.0 	& 536 	& 113 	& 150 	& \best{0} 	& 113 \\
+
+\hline
+\multirow{3}{*}{RS} 
+	& Go 	& 258 	& \best{531} 	& 744 	& 12.2 	& 15.3 	& 19 	& 12.0 	& 270 	& 132 	& 131 	& 2 	& 132 \\
+	& SO 	& \best{94} 	& 833 	& \best{210} 	& \best{138.9} 	& \best{161} 	& 328 	& \best{17.6} 	& \best{174} 	& \best{667} 	& \best{478} 	& 5 	& \best{343} \\
+	& SG 	& 4,100 	& 2,089 	& 2,695 	& 2.2 	& 3.2 	& \best{11} 	& 2.2 	& 1,739 	& 47.2 	& 46 	& \best{0} 	& 42.5 \\
+
+\hline
+\multirow{3}{*}{HG} 
+	& Go 	& 7,156 	& \best{2,721} 	& \best{29,622} 	& \best{4.6} 	& \best{6.9} 	& \best{1,697} 	& \best{4.3} 	& \best{6,932} 	& 369 	& \best{681} 	& \best{172} 	& \best{182} \\
+	& SO 	& \best{1,770} 	& 8,812 	& 41,692 	& 2.2 	& 3.5 	& 4,589 	& 2.2 	& 13,436 	& \best{402} 	& 487 	& 254 	& 83 \\
+	& SG 	& \_ 	& 39,372 	& \_ 	& \_ 	& \_ 	& \_ 	& \_ 	& \_ 	& \_ 	& \_ 	& \_ 	& \_\\
+
+\hline
+\multirow{2}{*}{BI}
+	& Go 	& 48,916 	& \best{7,926} 	& \best{51,518} 	& \best{10.9} 	& \best{17.2} 	& NA 	& NA 	& 25,996 	& 240 	& 297 	& NA 	& NA \\
+	& SO 	& \best{21,664} 	& 23,730 	& 56,557 	& 9.0 	& 13.0 	& NA 	& NA 	& \best{6,013} 	& \best{1,429} 	& \best{1,728} 	& NA 	& NA \\
+\end{tabular}}
+\end{center}
+
+\caption{Comparison of assembly results for \Gossamer{} (Go), \SOAPdenovo{} (SO), and \SGA{} (SG), when run on the GAGE data sets: Staphylococcus aureus (SA), 2.9 Mb; Rhodobacter sphaeroides (RS), 4.6 Mb, Human chromosome 14 (HG), 88.3 Mb; and Bombus impatiens (BI), estimated 250 Mb.
+The columns read as follows: \emph{Num}, the number of sequences produced; \emph{N50}, the N50 statistic calculated with respect to the genome size; \emph{E-size}, the most likely size of the contig or scaffold containing some random base in the genome (see \cite{Salzberg:2011} for details); \emph{Errs}, the number of misjoins and, for the contig value, also the number of indels $>5$ bases; and \emph{N50C}, the N50 calculated after splitting all contigs/scaffolds at error locations. 
+}
+\label{Tab:results}
+
+\vspace{-2em}
+
+\end{table*}
+
+\vspace{-1.5em}
+\section{Introduction}
+
+High throughput sequencing technologies have enabled researchers to produce
+unprecedented volumes of short read data.
+The \textit{de novo} assembly of such data is a core problem in bioinformatics
+with numerous applications in the analysis of genomes, metagenomes, and transcriptomes.
+There are several common approaches to the \textit{de novo} 
+assembly of short read data, including those based on greedy extension (\cite{Warren:2006p741}), 
+overlap layout extension (\cite{Hernandez:2008p735}), and 
+de Bruijn graphs (\cite{Chaisson:2009p6352, Zerbino:2009p11086}).  
+Our assembler, \Gossamer{}, is an extension of a prototype based on the
+succinct representation of de Bruijn assembly graphs as a bitmap or 
+set of integers (\cite{Conway:2011p17913}).
+It assembles base-space paired reads such as those from an Illumina sequencing platform.
+
+\vspace{-1.5em}
+\section{Methods}
+\Gossamer{}\ operates in a series of explicit passes
+to give the user control of the assembly process.
+Broadly, assembly proceeds through the following phases: graph construction,
+graph `cleaning' to remove spurious edges,
+alignment of pairs to the Eulerian super-graph,
+Eulerian super-path lifting, scaffolding, and finally contig production.
+We have constructed a front-end shell script (\textit{gossple.sh})
+which invokes these from a single command line,
+suitable for simple assemblies.
+
+For a given $k$, we construct the de Bruijn graph 
+by extracting from the input all graph edges
+of length $\rho=k+1$, the \rhomers, and their reverse complements;
+the graph's \kmer\ nodes are implied by their incident edges.
+\Gossamer{} accepts FASTA and FASTQ input,
+and will uncompress 
+files on the fly.
+The current version of \Gossamer{}\ allows for values of $k \le 62$. 
+
+To attain its memory efficiency, \Gossamer{} uses a compressed bitmap representation of the de Bruijn graph (\cite{Conway:2011p17913}). In brief, for a collection of reads containing $m$ distinct \rhomers, the bitmap has $4^\rho$ entries, each of which is $1$ if it corresponds to a \rhomer{} from the data set and  $0$ otherwise.
+For realistic data sets, these bitmaps are extremely sparse, and the theoretical minimum number of bits required to represent them is $\mathit{log}_2 \binom{4^\rho}{m}$. The Bombus impatiens data set used in Section~\ref{Sec:results} below contains $1,119,868,977$ different \rhomers\ at $k = 45$. The theoretical minimum size for this data set according to the above definition is about 8 GB. The bitmap we construct actually requires approximately 9.2 GB of space, which is close to the minimum. By contrast, simply storing the \rhomers\ themselves, using a straightforward 2 bits-per-base representation would require almost 15.7 GB. Note that we have not considered the additional space required to store edge counts, which we also represent compactly.
+
+The figures given above represent the amount of space required to store all of the
+\rhomers\ from the example data set. Realistically, many of those will correspond to
+errors in the data.
+\Gossamer{}\ provides multiple operations for removing spurious edges from the graph, 
+both spectral and structural.
+The spectral error removal operation is the trimming of low frequency edges.
+The structural error removal operations are the pruning of \textit{tips}, and
+the elimination of \textit{bubbles}, both based on the algorithms present in
+Velvet (\cite{Zerbino:2008p731}).
+Unlike the Euler family of assemblers, \Gossamer{}\ does not 
+attempt to correct errors, and simply removes them from the graph.
+
+After these graph-cleaning passes, the resulting de Bruijn graph contains
+many fewer spurious edges, and the unbranched paths can be read off as preliminary contigs.
+Read pair information is utilized by aligning both ends of the pair to the de Bruijn graph
+to find pairs of `anchors' into parts of the graph judged to be most likely unique (i.e. copy-number one)
+in the underlying genome.
+For each pair of anchors with sufficient support,
+a search is performed to find a unique path that
+is consistent with the
+bounds defined by the distribution of insert sizes.
+Where such paths are found, an Eulerian super-path is constructed.
+In the case where a supporting path is not found, the alignment of the read pairs can be used to perform scaffolding, by inferring the relative orientation and displacement of contigs.
+
+\vspace{-1.5em}
+\section{Results}
+\label{Sec:results}
+
+We have evaluated \Gossamer{}'s performance on the data sets used in the GAGE study (\cite{Salzberg:2011}). 
+GAGE is a recent attempt to assess the capabilities of a collection of modern assemblers on 
+a range of data sets, ranging from small bacterial genomes, to a human chromosome and an entire bumblebee genome.
+For comparison with \Gossamer{}, we have rerun the most recent versions of \SOAPdenovo{} (\cite{li2010novo}) and \SGA{} (\cite{Simpson:2012ef}) on the same data sets, employing the same assembly ``recipes'' that were used in the published GAGE result. 
+
+The \SOAPdenovo{} results were generated by \SOAPdenovo{} 1.0.5, and \SOAPGapCloser{} 1.12. 
+We used version 0.9.19 of \SGA{} in combination with \ABySS{} (\cite{Simpson:2009iv}) 1.2.5, which \SGA{} requires to perform scaffolding. Running \SGA{} with a more recent version of \ABySS{} (1.3.2) yielded scaffolds with almost no improvement over the original contigs. 
+
+The GAGE data sets are available in three forms: original reads, and two varieties of corrected reads.
+Each assembler was run on all data sets, and the best result selected. We have done the same in our evaluation of \Gossamer{}.
+
+The results of the assemblies are shown in Table~\ref{Tab:results}. All figures, other than time and memory usage, were generated by the publicly available GAGE evaluation and validation scripts.
+Because no reference exists for Bombus impatiens, the number of errors and corrected N50 cannot be calculated.
+
+We report the minimum amount of memory \emph{required} by each assembler to run to completion.
+During initial graph construction, \Gossamer{} can make use of additional 
+memory to hold temporary buffers, potentially saving some writes to disk, and thereby improving runtime.
+The use of this additional memory is only incidental, however, and does not affect the assembler's output.
+For all the tests we used a single server with 8~AMD Barcelona
+cores and 32GB RAM running Ubuntu Linux, and we have configured the assemblers to use as many cores, and as much of that memory as possible.
+Note that although the published GAGE figures include a result for \SGA{} on the human chromosome 14 data set, we were unable to run the assembler satisfactorily on our machines on account of its memory usage. As mentioned in the published GAGE result, \SGA{} is not able to run on the Bombus impatiens data.
+
+For the Staphylococcus aureus and Rhodobacter sphaeroides data sets, \Gossamer{}'s scaffolds contain a number of errors which have no significant bearing on the N50 score. \SOAPdenovo{}'s Staph. aureus result has the same feature, but for the larger genomes the drop in quality is significant.
+Where it was able to run, \SGA{} has produced the shortest contigs, but with the fewest errors. 
+
+Overall, \Gossamer{} requires consistently less memory for assembly than do \SOAPdenovo{} and \SGA{}. This is especially significant for the larger genomes. \SOAPdenovo{} was, without exception, the quickest of the assemblers tested, while \SGA{}'s memory usage and runtimes are significantly higher than the other assemblers'.
+
+The large difference between assemblers in the Bombus impatiens results requires further investigation.
+Without a reference, we cannot be sure of the quality of the generated sequences. We note that, at least for the other data assemblies, \Gossamer{}'s N50 results appear more stable in the presence of assembly errors, and so \Gossamer{}'s N50 for the Bombus impatiens data set may be a more reliable indicator of the actual assembly quality.
+
+\vspace{-1.5em}
+\section*{Acknowledgement}
+
+National ICT Australia (NICTA) is funded by the Australian Government's Department of Communications; 
+Information Technology and the Arts;  
+Australian Research Council through Backing Australia's Ability; 
+ICT Centre of Excellence programs.
+
+\bibliographystyle{natbib}
+
+
+\vspace{-1.5em}
+\bibliography{paper}
+
+
+\end{document}

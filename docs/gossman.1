@@ -1,0 +1,973 @@
+.TH goss 1 "September 26, 2011" "Gossamer User Manual"
+.SH NAME
+.PP
+goss - a tool for \f[I]de novo\f[] assembly of high throughput
+sequencing data.
+.PP
+Version 1.1.0
+.SH SYNOPSIS
+.PP
+goss build-graph -k 27 -i in.fastq -O graph
+.PP
+goss merge-graphs -G graph1 -G graph2 -O graph-merged
+.PP
+goss trim-graph -G graph -O graph-trimmed
+.PP
+goss prune-tips -G graph -O graph-pruned
+.PP
+goss print-contigs \[em]min-coverage 10 \[em]min-length 100 -G
+graph-pruned > paths.fa
+.PP
+goss pop-bubbles -G graph-pruned -O graph-popped
+.PP
+goss build-entry-edge-set -G graph-popped
+.PP
+goss build-supergraph -C 10 -G graph-popped
+.PP
+goss thread-pairs -G graph-popped \[em]expected-coverage 70
+\[em]insert-expected-length 300
+.PP
+goss thread-reads -G graph-popped \[em]expected-coverage 70
+.SH DESCRIPTION
+.PP
+Gossamer is an application for doing \f[I]de novo\f[] assembly of high
+throughput sequencing data.
+It is a memory efficient assembler based on the \f[I]de Bruijn\f[]
+graph.
+.PP
+The advantage of Gossamer is that large data sets can be assembled on
+computers with small amounts of memory.
+The fundamental parameter to \f[I]de Bruijn\f[] graph based methods is
+k, the size of substrings used in the construction of the graph.
+These substrings are referred to as k-mers and correspond to nodes in
+the graph.
+Edges in the graph correspond to (k+1)-mers which are called rho-mers.
+It should be noted that larger values of k will require larger memory
+sizes because the size of the rho-mer space is larger.
+Another point to note is that by using a small cluster of small memory
+computers the time can be easily and substantially reduced by building
+subsections of the graph in parallel.
+.PP
+Input files are base-space reads in FASTA or FASTQ format or in a format
+with one read per line and in either plain text or compressed format
+(i.e.\ gzip).
+.SS Using Gossamer
+.PP
+Gossamer runs in several phases and each phase will produce a new graph
+or additional information for an existing graph.
+Graphs are represented as a collection of files with a common prefix
+which may include a filesystem path.
+For example, the files composing a graph object with prefix
+\[lq]graph\[rq] are:
+.IP
+.nf
+\f[C]
+graph-counts-hist.txt
+graph-counts.ord0
+graph-counts.ord1
+graph-counts.ord1p.classes
+graph-counts.ord1p.class-sum
+graph-counts.ord1p.header
+graph-counts.ord1p.offsets
+graph-counts.ord1p.offset-sum
+graph-counts.ord2
+graph-counts.ord2p.classes
+graph-counts.ord2p.class-sum
+graph-counts.ord2p.header
+graph-counts.ord2p.offsets
+graph-counts.ord2p.offset-sum
+graph-edges-d0
+graph-edges-d1
+graph-edges.header
+graph-edges.high-bits
+graph-edges.low-bits.lwr
+graph-edges.low-bits.upr
+graph.header
+\f[]
+.fi
+.PP
+It is currently up to the user to organize the names of graphs in a
+meaningful way.
+See the example of the common phases of \f[I]goss\f[] given below.
+.PP
+Any graph can be processed to find the contigs in the graph and to
+output those contigs to a FASTA file (or stdout).
+Various statistics for each contig are included in the contig
+description line, including the identifier of the contig, its length and
+information about the rho-mer coverage.
+The rho-mer coverage is the number of times the rho-mer occurs in the
+set of reads and for each printed contig the minimum, maximum, mean and
+standard deviation of the coverage in the contig is given.
+.PP
+One of the files representing the graph is a text file called
+\f[I]<prefix>-counts-hist.txt\f[], each line of which consists of a pair
+(x, y) where y is the number of different rho-mers which occur exactly x
+times.
+This information is useful for determining the minimum multiplicity to
+use for trimming the graph (see below).
+.PP
+As an example of using gossamer, suppose the sequenced reads are in four
+files, three of which are FASTQ files (one of which is compressed) and
+one of which is a FASTA file: in1.fastq, in2.fastq.gz, in3.fastq and
+in4.fasta.
+.PP
+The common phases of gossamer are:
+.IP \[bu] 2
+Build the complete \f[I]de Bruijn\f[] graph for some k-mer size using
+all of the read data
+.RS 2
+.IP \[bu] 2
+If the data consists of several files e.g.\ from different lanes of
+sequencing then it is recommended that \f[I]goss build-graph\f[] be run
+on each file separately and the resulting graphs merged using \f[I]goss
+merge-graphs\f[].
+.PP
+goss build-graph -k 27 -i in1.fastq -i in2.fastq.gz -O graph1
+.PP
+goss build-graph -k 27 -i in3.fastq -I in4.fasta -O graph2
+.PP
+goss merge-graphs -G graph1 -G graph2 -O graph12-merged
+.RE
+.IP \[bu] 2
+Trim all rho-mers with low frequency from the complete graph.
+.RS 2
+.IP \[bu] 2
+Rho-mers with low frequency arise overwhelmingly from sequencing errors,
+at least if there is good genome coverage.
+By default, Gossamer will automatically choose an appropriate cut-off
+frequency which eliminates as many of these incorrect rho-mers while
+keeping as it can while keeping as many correct rho-mers as possible.
+.IP \[bu] 2
+Under some circumstances, for example if the coverage is low, the user
+may need to supply an appropriate cut-off frequency using the -C
+parameter.
+To pick an appropriate cut-off frequency, it may be necessary to inspect
+the histogram of rho-mer counts in the graph which has been built from
+all of the reads.
+For this example, the file containing this histogram would be called
+graph12-merged-counts-hist.txt.
+.PP
+goss trim-graph -G graph12-merged -O graph12-merged-trimmed
+.RE
+.IP \[bu] 2
+Prune the tips of the trimmed graph using \f[I]goss\f[] prune-tips, to
+clean up additional edges resulting from sequencing errors.
+.RS 2
+.PP
+goss prune-tips -G graph12-merged-trimmed -O
+graph12-merged-trimmed-pruned1
+.RE
+.IP \[bu] 2
+Repeat the pruning since one step of pruning can create further tips
+which can be removed.
+This can be done until sufficiently small numbers of new tips are
+discovered, or even until no more tips are discovered.
+.RS 2
+.PP
+goss prune-tips -G graph12-merged-trimmed-pruned1 -O
+graph12-merged-trimmed-pruned2
+.RE
+.IP \[bu] 2
+Output the contigs to a FASTA file.
+.RS 2
+.IP \[bu] 2
+At this stage of the assembly, all of the read data has been
+incorporated into a \f[I]de Bruijn\f[] graph and that graph has been
+substantially cleaned of features arising from read errors.
+It is now possible to print all of the unbranched paths in the graph
+even though further steps in the assembly process will most likely
+substantially improve the overall lengths of the contigs.
+In fact, at any point in the graph building, e.g.\ after pruning, these
+contigs can be printed.
+.PP
+goss print-contigs \[em]min-coverage 10 \[em]min-length 100 -G
+graph12-merged-trimmed-pruned2 -o paths.fa
+.RE
+.IP \[bu] 2
+Pop the \[lq]bubbles\[rq] in the graph.
+.RS 2
+.IP \[bu] 2
+A \[lq]bubble\[rq] is a graph structure with two similar, alternative
+paths between a start and an end for which the paths are not too long.
+These paths may arise, for example, because of the heterozygous nature
+of a diploid genome, sequencing errors, or by variants such as SNPs or
+cloning artifacts.
+It can be beneficial during the assembly process to remove one of the
+two alternative paths.
+The pop-bubbles command detects such \[lq]bubbles\[rq] and removes them
+from the graph.
+.PP
+goss pop-bubbles -G graph12-merged-trimmed-pruned2 -O
+graph12-merged-trimmed-pruned2-popped
+.RE
+.IP \[bu] 2
+Build the graph edge entry sets.
+.RS 2
+.IP \[bu] 2
+After the initial filtering steps described above, pairs of reads can be
+used to extend the contigs by resolving repeat structures.
+A new graph which we call a supergraph is constructed and manipulated
+during this process.
+The supergraph structure, which is not itself a \f[I]de Bruijn\f[]
+graph, is stored beside the original \f[I]de Bruijn\f[] graph, which
+remains unmodified.
+.PP
+There are three stages to this process: 1.
+Build the entry edge sets.
+2.
+Build a supergraph from the established linear segments.
+3.
+Resolve paths corresponding to pairs of reads.
+.PP
+As a first stage, a set of entry edge sets is constructed for the graph.
+These identify the beginnings of (unbranching) linear segments in the
+\f[I]de Bruijn\f[] graph.
+.PP
+goss build-entry-edge-sets -G graph12-merged-trimmed-pruned2-popped
+.RE
+.IP \[bu] 2
+Build the initial supergraph.
+.RS 2
+.IP \[bu] 2
+Once the entry edge sets have been constructed the information can be
+used to build the \f[I]de Bruijn\f[] graph's supergraph.
+Note that no explicit name is provided for the new graph: in later
+commands, the supergraph is identified by reference to the \f[I]de
+Bruijn\f[] graph from which it was generated.
+.PP
+goss build-supergraph -G graph12-merged-trimmed-pruned2-popped
+.RE
+.IP \[bu] 2
+Use read pairs to resolve repeat structures.
+.RS 2
+.IP \[bu] 2
+The initial supergraph represents all of the unbranching segments of the
+\f[I]de Bruijn\f[] graph.
+Paired read information can be used to establish which of the many
+possible paths through the graph correspond to true sequences of the
+original genome.
+Gossamer requires read pairs to be supplied as a pair of files; the nth
+reads of the first and the second input files make up the nth read pair.
+Both paired-end and mate-pair formats are supported.
+Additionally, the estimated genome coverage of the original \f[I]de
+Bruijn\f[] graph, and the expected pair insert size must be provided.
+The result of \[lq]threading\[rq] pairs is a supergraph which is updated
+in-place.
+The pair threading step may be run multiple times, with different inputs
+and metadata, resulting in a more refined supergraph after each step.
+Note that, at any stage the supergraph can be restored to its initial
+state by re-running the build-supergraph command.
+.PP
+goss thread-pairs -G graph12-merged-trimmed-pruned2 -i in1.fastq -i
+in2.fastq \[em]insert-expected-size 200 \[em]expected-coverage 70
+.RE
+.IP \[bu] 2
+Use individual reads to resolve remaining small-scale repeat structures
+.RS 2
+.IP \[bu] 2
+Just as read pairs are used to join distant contigs, individual reads
+may be used to connect contigs which are spanned by individual reads.
+The read threading step operates on the same supergraph, updating it in
+place, in the same way as pair threading.
+It also requires an expected coverage estimate.
+.PP
+goss thread-reads -G graph12-merged-trimmed-pruned2 -i in1.fastq -i
+in2.fastq \[em]expected-coverage 70
+.RE
+.IP \[bu] 2
+Print the supergraph contigs.
+.RS 2
+.IP \[bu] 2
+Once the supergraph has been built, including after any pair or read
+threading step, the contigs can be printed in FASTA format, along with
+information about each contig.
+.PP
+goss print-contigs \[em]min-length 100 -G
+graph12-merged-trimmed-pruned2-popped -o supergraphContigs.fa
+.RE
+.SH OPTIONS COMMON TO ALL COMMANDS
+.PP
+The following options can be used with all of the \f[I]goss\f[] commands
+and are therefore not listed separately for each command.
+.TP
+.B -h, --help
+Show a help message.
+.RS
+.RE
+.TP
+.B -l \f[I]FILE\f[], --log-file \f[I]FILE\f[]
+Place to write progress messages.
+Messages are only written if the -v flag is used.
+If omitted, messages are written to stderr.
+.RS
+.RE
+.TP
+.B -T \f[I]INT\f[], --num-threads \f[I]INT\f[]
+The maximum number of \f[I]worker\f[] threads to use.
+The actual number of threads used during the algorithms depends on each
+implementation.
+\f[I]goss\f[] may use a small number of additional threads for
+performing non cpu-bound operations, such as file I/O.
+.RS
+.RE
+.TP
+.B --tmp-dir \f[I]DIRECTORY\f[]
+A directory to use for temporary files.
+This flag may be repeated in order to nominate multiple temporary
+directories.
+.RS
+.RE
+.TP
+.B -v, --verbose
+Show progress messages.
+.RS
+.RE
+.TP
+.B -V, --version
+Show the software version.
+.RS
+.RE
+.TP
+.B -D \f[I]arg\f[], --debug \f[I]arg\f[]
+Enable particular debugging output.
+.RS
+.RE
+.SH COMMANDS AND OPTIONS
+.SS goss build-graph
+.PP
+goss build-graph [-B \f[I]INT\f[]] [-S \f[I]INT\f[]] -k \f[I]INT\f[] {-I
+\f[I]FASTA-filename\f[] | -i \f[I]FASTQ-filename\f[] | \[em]line-in
+\f[I]filename\f[]}+ -O \f[I]PREFIX\f[]
+.PP
+Build the \f[I]de Bruijn\f[] graph from the reads contained in the given
+FASTA and FASTQ files and output the resulting graph object as a set of
+files with the given \f[I]PREFIX\f[].
+Both FASTA and FASTQ input files are supported, with options \f[I]-I\f[]
+and \f[I]-i\f[] respectively.
+.PD 0
+.P
+.PD
+In addition, files with one read per line are also supported.
+The input files can be compressed with the compression method implied by
+the file suffix as follows:
+.IP \[bu] 2
+\f[I]\&.gz\f[] Compressed using gzip.
+.PP
+For large projects (such as sequencing the human genome with high
+coverage) several separate \f[I]goss build-graph\f[] commands may be
+done on different files in parallel (e.g.\ on files from different lanes
+of an Illumina GAII), followed by a sequence of merging steps using
+\f[I]goss merge-graphs\f[].
+Even in the absence of a cluster, building parts and merging is usually
+faster than building a large graph with all the input files in one go.
+Future releases may do this automatically.
+.PP
+\f[I]OPTIONS\f[]
+.TP
+.B -S \f[I]INT\f[], --log-hash-slots \f[I]INT\f[]
+S is the log (base 2) of the number of slots in the hash table used
+during build-graph (default is 24).
+The memory used by the hash table is H=2^(S+4) Gigabytes.
+For example, S=26 implies H=1 Gigabyte, S=30 implies H=16 Gigabytes,
+S=35 implies H=512 Gigabytes.
+.RS
+.PP
+Build-graph will actually use slightly more RAM than H so, for example,
+on a machine with a total of 32 Gigabytes of RAM the maximum value of S
+which can be used is S=30.
+.PP
+Specifying small S allows build-graph to be run on machines with a small
+amount of memory.
+However, for large data sets larger values for \f[I]S\f[] will improve
+performance.
+.PD 0
+.P
+.PD
+ The optimal value for the buffer-size is related to a number of
+factors, including the final graph size.
+.RE
+.TP
+.B -B \f[I]INT\f[], --buffer-size \f[I]INT\f[]
+Maximum buffer-size for in-memory buffers is \f[I]INT\f[] Gigabytes
+(defults to 2).
+This is a convenient way of setting the maximum amount of RAM which will
+be used by build-graph and
+.PD 0
+.P
+.PD
+ allows build-graph to be run on machines with a small amount of memory.
+.PD 0
+.P
+.PD
+ For large data sets, however, larger values for \f[I]B\f[] will improve
+performance.
+For example, for a data set with a large number (e.g.\ 70 million) of
+reads of length 100, a typical value of B would be 24 (i.e.\ use 24 Gb
+buffers).
+The actual optimal value for the buffer-size is related to the final
+graph size.
+If this B parameter is used then a value of S (see previous parameter)
+is calculated.
+A typical value for B would be the amount of machine RAM, in Gigabytes.
+The calculated value of S (see below) would be floor(log2(RAM/16)).
+.RS
+.RE
+.TP
+.B -I \f[I]FILE\f[], --fasta-in \f[I]FILE\f[]
+Input file in FASTA format.
+.RS
+.RE
+.TP
+.B -i \f[I]FILE\f[], --fastq-in \f[I]FILE\f[]
+Input file in FASTQ format.
+.RS
+.RE
+.TP
+.B \[em]line-in \f[I]FILE\f[]
+Input file with one read per line and no other annotation.
+.RS
+.RE
+.TP
+.B -O \f[I]PREFIX\f[], --graph-out \f[I]PREFIX\f[]
+Use \f[I]PREFIX\f[] as the prefix name of the output graph object.
+The \f[I]PREFIX\f[] must be a valid file name prefix.
+.RS
+.RE
+.TP
+.B -k \f[I]INT\f[], --kmer-size \f[I]INT\f[]
+The k-mer size to use for building the graph: in version 0.3.0 this
+\f[I]must be an integer strictly less than 63\f[].
+.RS
+.RE
+.SS goss help
+.PP
+goss help
+.PP
+Prints a summary of all of the gossamer commands.
+.SS goss lint-graph
+.PP
+goss lint-graph {-G | \[em]graph-in} \f[I]PREFIX\f[]
+.PP
+Report any inconsistencies in the graph.
+This includes a check of the symmetry of paths and their reverse
+complements in the graph.
+.PP
+\f[I]OPTIONS\f[]
+.TP
+.B -G \f[I]PREFIX\f[], --graph-in \f[I]PREFIX\f[]
+The name of the graph object.
+This is the string used as the prefix for the names of the files making
+up a graph object.
+.RS
+.RE
+.SS goss merge-graphs
+.PP
+goss merge-graphs {-G \f[I]PREFIX\f[]}+ -O \f[I]PREFIX\f[]
+.PP
+Create a new graph by merging one or more other graphs.
+.PP
+Merging uses a small, constant amount of memory per graph; very likey
+less than 1 GB of memory in total.
+.PP
+\f[I]OPTIONS\f[]
+.TP
+.B -G \f[I]PREFIX\f[], --graph-in \f[I]PREFIX\f[]
+The name of the graph object.
+This is the string used as the prefix for the names of the files making
+up a graph object.
+When merging several graphs this parameter is repeated for each graph,
+as demonstrated in the example above.
+.RS
+.RE
+.TP
+.B -O \f[I]PREFIX\f[], --graph-out \f[I]PREFIX\f[]
+Use \f[I]PREFIX\f[] as the prefix name of the output graph object.
+The \f[I]PREFIX\f[] must be a valid file name prefix.
+.RS
+.RE
+.SS goss print-contigs
+.PP
+goss print-contigs -G \f[I]PREFIX\f[] [\[em]min-coverage \f[I]INT\f[]]
+[\[em]min-length \f[I]INT\f[]] [-o \f[I]FILE\f[]] [\[em]no-sequence]
+.PP
+Print all of the non-branching paths in a given graph.
+By default, contigs will be printed from the supergraph if it is
+present, otherwise the \f[I]de Bruijn\f[] graph will be used.
+The paths are printed in FASTA format with the composition of the
+descriptor line for each contig depending on whether the underlying
+graph is a \f[I]de Bruijn\f[] graph or a supergraph.
+In the case of a \f[I]de Bruijn\f[] graph, the descriptor line contains
+the following information (separated by colons ':'):
+.IP \[bu] 2
+Path Number
+.IP \[bu] 2
+Path Length
+.IP \[bu] 2
+Minimum Path Coverage
+.IP \[bu] 2
+Maximum Path Coverage
+.IP \[bu] 2
+Average Path Coverage
+.IP \[bu] 2
+Standard Deviation of Path Coverage
+.PP
+The coverage of a rho-mer is defined to be the number of times it occurs
+in all reads.
+The minimum path coverage is the minimum coverage of all of the rho-mers
+in the path.
+.PP
+For contigs generated from a supergraph, the descriptor line is made up
+of the following fields (separated by commas ','):
+.IP \[bu] 2
+Path Number
+.IP \[bu] 2
+Path Length
+.IP \[bu] 2
+List of Segment Lengths (separated by colons ':')
+.IP \[bu] 2
+Minimum Path Coverage
+.IP \[bu] 2
+Maximum Path Coverage
+.IP \[bu] 2
+Average Path Coverage
+.IP \[bu] 2
+Standard Deviation of Path Coverage
+.PP
+\f[I]OPTIONS\f[]
+.TP
+.B -G \f[I]PREFIX\f[], --graph-in \f[I]PREFIX\f[]
+The name of the graph object.
+This is the string used as the prefix for the names of the files making
+up a graph object.
+.RS
+.RE
+.TP
+.B \[em]min-coverage \f[I]INT\f[]
+Only print those paths which have a minimum rho-mer coverage >= C.
+This flag is only used when printing contigs from a \f[I]de Bruijn\f[]
+graph.
+Defaults to 0.
+.RS
+.RE
+.TP
+.B --min-length \f[I]INT\f[]
+Only print those paths which have a length >= the specified minimum
+length.
+Defaults to 0.
+.RS
+.RE
+.TP
+.B -o \f[I]FILE\f[], --output-file \f[I]FILE\f[]
+The name of the FASTA output file for the printed paths.
+Use '-' to output to standard output.
+The \f[I]FILE\f[] must be a valid file name.
+Defaults to standard output.
+.RS
+.RE
+.TP
+.B --no-sequence
+Suppresses the printing of the actual contig sequences.
+Instead, only the information present in the descriptor lines will be
+printed in a tab separated format.
+The default is to print sequences.
+.RS
+.RE
+.TP
+.B --print-linear-segments
+Only print linear segments, ignoring the supergraph if it is present.
+The default is to use the supergraph if available.
+.RS
+.RE
+.SS goss prune-tips
+.PP
+Create a new graph by pruning the tips in the input graph.
+Pruning tips is the process of removing short dead-ends in the graph.
+It is probable that such graph features arise from errors in the reads.
+.PP
+goss prune-tips -G \f[I]PREFIX\f[] -O \f[I]PREFIX\f[]
+.PP
+\f[I]OPTIONS\f[]
+.TP
+.B -G \f[I]PREFIX\f[], --graph-in \f[I]PREFIX\f[]
+The name of the input graph.
+This is the string used as the prefix for the names of the files making
+up a graph object.
+.RS
+.RE
+.TP
+.B -O \f[I]PREFIX\f[], --graph-out \f[I]PREFIX\f[]
+The name of the output graph.
+Use \f[I]PREFIX\f[] as the prefix name of the output graph object.
+The \f[I]PREFIX\f[] must be a valid file name prefix.
+.RS
+.RE
+.SS goss trim-graph
+.PP
+goss trim-graph [-C \f[I]INT\f[]] -G \f[I]PREFIX\f[] -O \f[I]PREFIX\f[]
+.PP
+Create a new graph by trimming the input graph.
+Trimming is the process of removing all edges in the graph which occur
+less than times.
+This is used to remove those edges which most likely arose from errors.
+.PP
+\f[I]OPTIONS\f[]
+.TP
+.B -G \f[I]PREFIX\f[], --graph-in \f[I]PREFIX\f[]
+The name of the input graph.
+This is the string used as the prefix for the names of the files making
+up a graph object.
+.RS
+.RE
+.TP
+.B -O \f[I]PREFIX\f[], --graph-out \f[I]PREFIX\f[]
+The name of the output graph.
+Use \f[I]PREFIX\f[] as the prefix name of the output graph object.
+The \f[I]PREFIX\f[] must be a valid file name prefix.
+.RS
+.RE
+.TP
+.B -C \f[I]INT\f[], --cutoff \f[I]INT\f[]
+Edges with coverage at or below this value are removed.
+.RS
+.RE
+.SS goss pop-bubbles
+.PP
+goss pop-bubbles [\[em]max-edit-distance \f[I]INT\f[]]
+[\[em]max-=error-rate \f[I]FLOAT\f[]] [\[em]max-sequence-length
+\f[I]INT\f[]] -G \f[I]PREFIX\f[] -O \f[I]PREFIX\f[]
+.PP
+A \[lq]bubble\[rq] is a graph structure with two alternative paths
+between a start and an end vertex for which the paths are similar but
+not too long.
+These paths may arise, for example, because of the heterozygous nature
+of a diploid genome, sequencing errors, or by variants such as SNPs or
+cloning artifacts.
+It can be beneficial during the assembly process to remove one of the
+two alternative paths.
+pop-bubbles detects \[lq]bubbles\[rq] and removes them from the graph.
+.PP
+\f[I]OPTIONS\f[]
+.TP
+.B -G \f[I]PREFIX\f[], --graph-in \f[I]PREFIX\f[]
+The name of the input graph.
+This is the string used as the prefix for the names of the files making
+up a graph object.
+.RS
+.RE
+.TP
+.B -O \f[I]PREFIX\f[], --graph-out \f[I]PREFIX\f[]
+The name of the output graph.
+Use \f[I]PREFIX\f[] as the prefix name of the output graph object.
+The \f[I]PREFIX\f[] must be a valid file name prefix.
+.RS
+.RE
+.TP
+.B --max-edit-distance \f[I]INT\f[]
+The maximum edit distance to qualify as a bubble.
+.RS
+.RE
+.TP
+.B --max-error-rate \f[I]FLOAT\f[]
+The maximum error rate to qualify as a bubble.
+.RS
+.RE
+.TP
+.B --max-sequence-length \f[I]INT\f[]
+the maximum length of a sequence to consider.
+.RS
+.RE
+.SS goss build-entry-edge-set
+.PP
+goss build-entry-edge-sets -G \f[I]PREFIX\f[]
+.PP
+Build the graph entry edge sets.
+The entries are represented by files with prefix
+\f[I]PREFIX\f[]-entries.
+.PP
+\f[I]OPTIONS\f[]
+.TP
+.B -G \f[I]PREFIX\f[], --graph-in \f[I]PREFIX\f[]
+The name of the input graph.
+This is the string used as the prefix for the names of the files making
+up a graph object.
+.RS
+.RE
+.SS goss build-supergraph
+.PP
+goss build-supergraph -G \f[I]PREFIX\f[]
+.PP
+Build the supergraph.
+The graph with the specified prefix is augmented with further files
+representing the supergraph.
+.PP
+\f[I]OPTIONS\f[]
+.TP
+.B -G \f[I]PREFIX\f[], --graph-in \f[I]PREFIX\f[]
+The name of the input graph.
+This is the string used as the prefix for the names of the files making
+up a graph object.
+.RS
+.RE
+.SS goss thread-pairs
+.PP
+goss thread-pairs -G \f[I]PREFIX\f[] {-I \f[I]FASTA-filename\f[] | -i
+\f[I]FASTQ-filename\f[] | \[em]line-in \f[I]filename\f[]}+
+\[em]expected-coverage \f[I]INT\f[] \[em]insert-expected-size
+\f[I]INT\f[] [\[em]insert-size-std-dev \f[I]FLOAT\f[]]
+[\[em]insert-size-tolerance \f[I]FLOAT\f[]] [\[em]min-link-count
+\f[I]INT\f[]] [\[em]search-radius \f[I]INT\f[]] [\[em]edge-cache-rate
+\f[I]INT\f[]] [\[em]paired-ends] [\[em]mate-pairs]
+.PP
+This command locates pairs of reads on the supergraph and uses them to
+join sequences of branching segments into new, longer contigs.
+The first step is to identify pairs of contigs related by read pairs.
+\f[I]goss\f[] finds and stores the supergraph location of both reads in
+each pair.
+We call each pair of reads which connects a pair of contigs, as well the
+position of those reads within the contigs, a link.
+Using the position information within a link, the distance between
+linked contigs is estimated.
+Pairs can be supplied in either paired-end or mate-pairs format.
+.PP
+Once all read pairs have been anchored to the graph, any contig pairs
+which do not have at least a minimal number of links are removed from
+consideration.
+For the remaining pairs, \f[I]goss\f[] will attempt to find paths in the
+supergraph which join both sides of the pair.
+Only paths with lengths near the insert size are considered.
+The range of valid path lengths is specified by providing: the expected
+insert size; the size of a standard deviation, as a percentage of the
+insert size; and a tolerance value, which indicates the number of
+standard deviations in range.
+For example, specifying an insert size of 200 bases, a standard
+deviation of 10% and a tolerance of 2.0 standard deviations, means that
+only paths of length in the range [160,240] bases are considered.
+By default, \f[I]goss\f[] will attempt to find all paths, between linked
+contigs, within the distance bounds.
+When a unique qualifying path is found, it is used to join the two sides
+of the corresponding contig pair, yielding a new, longer contig in their
+place.
+To improve performance, the area of the graph which is searched can be
+limited to within some distance of the target contig.
+.PP
+The result of running thread-pairs is a new supergraph, which is written
+over the top of the original.
+This command can be repeated for multiple sets of pairs, each of which
+will modify the same supergraph in-place.
+.PP
+\f[I]OPTIONS\f[]
+.TP
+.B -G \f[I]PREFIX\f[], --graph-in \f[I]PREFIX\f[]
+The name of the input graph.
+This is the string used as the prefix for the names of the files making
+up a graph object.
+.RS
+.RE
+.TP
+.B -I \f[I]FILE\f[], --fasta-in \f[I]FILE\f[]
+Input file in FASTA format.
+.RS
+.RE
+.TP
+.B -i \f[I]FILE\f[], --fastq-in \f[I]FILE\f[]
+Input file in FASTQ format.
+.RS
+.RE
+.TP
+.B \[em]line-in \f[I]FILE\f[]
+Input file with one read per line and no other annotation.
+.RS
+.RE
+.TP
+.B \[em]expected-coverate \f[I]INT\f[]
+The expected genome coverage of the reads used to build the underlying
+\f[I]de Bruijn\f[] graph.
+These may or may not be the same as the read pairs used in this stage.
+This flag is mandatory.
+.RS
+.RE
+.TP
+.B \[em]insert-expected-size \f[I]INT\f[]
+The insert size for the given pairs.
+i.e.\ the distance, in bases, between extreme ends of the pairs when
+mapped to the genome.
+This value must be supplied.
+.RS
+.RE
+.TP
+.B \[em]insert-size-std-dev \f[I]FLOAT\f[]
+The standard deviation for allowed insert sizes, as a percentage.
+The default is 10%.
+.RS
+.RE
+.TP
+.B \[em]insert-size-tolerance \f[I]FLOAT\f[]
+The range of valid insert sizes, in standard deviations.
+This defaults to 2.0.
+.RS
+.RE
+.TP
+.B \[em]min-link-coverage \f[I]INT\f[]
+Disregard pairs of contigs which are linked by fewer than this number of
+read pairs.
+The default value is 10.
+.RS
+.RE
+.TP
+.B \[em]search-radius \f[I]INT\f[]
+When searching for a path from one contig to another, limit the search
+to within this number of linear segments from the target.
+A radius value of 0 means that the search is not constrained to any
+region of the graph.
+Restricting path finding to an area of the graph is likely to decrease
+search times.
+There may be no noticeable benefit for relatively small graphs, however.
+The default value is 10.
+.RS
+.RE
+.TP
+.B \[em]edge-cache-rate \f[I]INT\f[]
+To efficiently locate read pairs within the supergraph, \f[I]goss\f[]
+builds a data structure for caching the positions of \f[I]de Bruijn\f[]
+graph edge within the supergraph edges that contain them.
+In order to save memory, this information is stored for only a
+proportion of the complete set of \f[I]de Bruijn\f[] graph edges.
+For a value of n, position information is stored for one edge out of
+every 2^n, where each entry takes 16 bytes.
+High values will reduce memory usage, at the expense of an increased
+runtime, while lower values will lower the runtime, but require more
+memory.
+The default is 4, which implies that the edge cache requires one byte of
+memory for each edge.
+.RS
+.RE
+.TP
+.B \[em]paired-ends
+The input read pairs are in paired-end format.
+This is the default.
+.RS
+.RE
+.TP
+.B \[em]mate-pairs
+The read pairs are in mate-pair format.
+.RS
+.RE
+.SS goss thread-reads
+.PP
+goss thread-reads -G \f[I]PREFIX\f[] {-I \f[I]FASTA-filename\f[] | -i
+\f[I]FASTQ-filename\f[] | \[em]line-in \f[I]filename\f[]}+
+\[em]expected-coverage \f[I]INT\f[] [\[em]min-link-count \f[I]INT\f[]]
+[\[em]edge-cache-rate \f[I]INT\f[]]
+.PP
+The thread-reads command takes each individual read from the given
+input, and identifies the sequence of superpath segments that read runs
+through.
+Any pair of segments which is unambiguously linked by a sufficient
+number of reads, is then joined into a new, longer segment.
+Two segments are considered to be linked unambiguously if every read
+going through the first also runs through the second.
+.PP
+\f[I]OPTIONS\f[]
+.TP
+.B -G \f[I]PREFIX\f[], --graph-in \f[I]PREFIX\f[]
+The name of the input graph.
+This is the string used as the prefix for the names of the files making
+up a graph object.
+.RS
+.RE
+.TP
+.B -I \f[I]FILE\f[], --fasta-in \f[I]FILE\f[]
+Input file in FASTA format.
+.RS
+.RE
+.TP
+.B -i \f[I]FILE\f[], --fastq-in \f[I]FILE\f[]
+Input file in FASTQ format.
+.RS
+.RE
+.TP
+.B \[em]line-in \f[I]FILE\f[]
+Input file with one read per line and no other annotation.
+.RS
+.RE
+.TP
+.B \[em]expected-coverate \f[I]INT\f[]
+The expected genome coverage of the reads used to build the underlying
+\f[I]de Bruijn\f[] graph.
+These may or may not be the same as the read pairs used in this stage.
+This flag is mandatory.
+.RS
+.RE
+.TP
+.B \[em]min-link-coverage \f[I]INT\f[]
+Disregard pairs of contigs which are linked by fewer than this number of
+reads.
+The default value is 10.
+.RS
+.RE
+.TP
+.B \[em]edge-cache-rate \f[I]INT\f[]
+To efficiently locate reads within the supergraph, \f[I]goss\f[] builds
+a data structure for caching the positions of \f[I]de Bruijn\f[] graph
+edge within the supergraph edges that contain them.
+In order to save memory, this information is stored for only a
+proportion of the complete set of \f[I]de Bruijn\f[] graph edges.
+For a value of n, position information is stored for one edge out of
+every 2^n, where each entry takes 16 bytes.
+High values will reduce memory usage, at the expense of an increased
+runtime, while lower values will lower the runtime, but require more
+memory.
+The default is 4, which implies that the edge cache requires one byte of
+memory for each edge.
+.RS
+.RE
+.PP
+\[em]
+.SH LIMITATIONS
+.PP
+Version 1.1.0 is a prototype assembler.
+Only the steps described above are supported.
+It has been tested on very large data sets of Illumina reads for human
+genome assembly.
+.PP
+In summary, this version can be used to:
+.IP \[bu] 2
+Build the \f[I]de Bruijn\f[] graph from the specified input reads for
+k-mer size k < 63.
+Merging graphs is supported, allowing parallel tree-based construction
+of graphs from sets of reads.
+.IP \[bu] 2
+Trim low frequency rho-mers from the graph.
+.IP \[bu] 2
+Prune the tips (short dead-ends) in the graph.
+.IP \[bu] 2
+Pop-bubbles in the graph.
+.IP \[bu] 2
+Resolve some repeat structures by threading pairs and individual reads
+through the graph and constructing a \[lq]supergraph\[rq].
+.IP \[bu] 2
+Printing contigs from either the \f[I]de Bruijn\f[] graph or from the
+supergraph.
+.PP
+The following limitations apply:
+.IP \[bu] 2
+SOLiD reads in colour space are not supported in this release.
+.IP \[bu] 2
+Bzip-compressed input is not supported in this release due to a bug in
+an external library.
+.SH FUTURE RELEASES
+.PP
+Bzip support will be re-introduced.
+.PP
+A future release will also support colour space reads.
+.SH Publication
+.PP
+Please reference the original gossamer paper:
+.PP
+Thomas C Conway, Andrew J Bromage, \[lq]Succinct data structures for
+assembling large genomes\[rq], Bioinformatics, 2011 vol.\ 27 (4)
+pp.\ 479\[en]86
+GossamerPaper (http://bioinformatics.oxfordjournals.org/content/27/4/479.abstract)
+.SH AUTHORS
+Bryan Beresford-Smith, Andrew Bromage, Thomas Conway, Jeremy Wazny,
+Justin Zobel.

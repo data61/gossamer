@@ -1,0 +1,35 @@
+#ifndef GOSSCMDREG_HH
+#define GOSSCMDREG_HH
+
+#ifndef STD_MAP
+#include <map>
+#define STD_MAP
+#endif
+
+#ifndef STD_STRING
+#include <string>
+#define STD_STRING
+#endif
+
+#ifndef GOSSCMD_HH
+#include "GossCmd.hh"
+#endif
+
+class GossCmdReg
+{
+public:
+    static std::map<std::string,GossCmdFactoryPtr>* cmds;
+
+    GossCmdReg(const std::string& pName, GossCmdFactoryPtr pFactory)
+    {
+        if (!cmds)
+        {
+            cmds = new std::map<std::string,GossCmdFactoryPtr>();
+        }
+        std::map<std::string,GossCmdFactoryPtr>::const_iterator i = cmds->find(pName);
+        BOOST_ASSERT(i == cmds->end());
+        (*cmds)[pName] = pFactory;
+    }
+};
+
+#endif // GOSSCMDREG_HH

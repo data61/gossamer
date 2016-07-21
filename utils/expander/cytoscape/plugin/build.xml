@@ -1,0 +1,104 @@
+<!-- =================================================================== -->
+<!-- Plugin build file     -->
+<!-- =================================================================== -->
+
+<project name="expand" default="jar" basedir=".">
+
+  <!-- =================================================================== -->
+  <!-- Initialization target                                               -->
+  <!-- =================================================================== -->
+  <target name="init">
+    <property name="plugin_name" value="expand"/>
+    <property name="plugin_class" value="cytoscape.expand.Expand"/>  	  	
+    <property name="project.jar" value="${plugin_name}.jar"/>  	
+  	<property name="version" value="1.1"/>
+    <property name="year" value="2008"/>
+  	
+    <echo message="Building plugin ${plugin_name} version ${version}..."/>
+
+    <!-- Define the plugin directories -->
+  	<property name="root.dir" value="."/>
+    <property name="src.dir" value="${root.dir}/src"/>
+  	<property name="build.dir" value="${root.dir}/build"/>
+    <property name="images.dir" value="${root.dir}/images"/>
+    <property name="manifest.dir" value="${root.dir}/manifest"/>
+    <property name="lib.dir" value="${root.dir}/lib"/>
+
+  	<!-- Define the Cytoscape directories -->
+    <property name="cytoscape.dir" value="../cytoscape"/>
+  	<property name="cytoscape.lib.dir" value="${cytoscape.dir}/lib"/>
+    <property name="cytoscape.plugin.dir" value="${cytoscape.dir}/plugins"/>
+
+    <!-- Inheritable properties -->
+    <property name="debug" value="on"/>
+    <property name="optimize" value="off"/>
+    <property name="deprecation" value="on"/>
+    <property name="nowarn" value="true"/>
+    <property name="fork" value="false"/>
+  	
+    <!-- Check the availability of some files -->  	
+ 	<available file="${cytoscape.dir}/cytoscape.jar" property="cytoscape.present"/> 
+  	<available file="${root.dir}/plugin.props" property="plugin.prop.present"/>
+  	<available file="${images.dir}" property="images.dir.present"/>
+
+    <!-- Define the java class path -->
+    <path id="project.class.path">
+      <pathelement location="${cytoscape.dir}/cytoscape.jar"/>
+      <pathelement path="${java.class.path}/"/>
+    </path>
+
+  </target>
+
+  <!-- =================================================================== -->
+  <!-- Compiles the project                                           -->
+  <!-- =================================================================== -->
+  <target name="compile" depends="init"  >
+
+   <echo message="COMPILE ${plugin_name} ..."/>
+    
+    <mkdir dir="${build.dir}"/>
+    <javac srcdir="${src.dir}"
+           excludes="${excludes}"
+           classpathref="project.class.path"
+           destdir="${build.dir}"
+           debug="${debug}"
+           nowarn="${nowarn}"
+           deprecation="${deprecation}" 
+           optimize="${optimize}"
+           fork="${fork}"/>
+  </target>
+
+  <!-- =================================================================== -->
+  <!-- Creates the plugin jar file                                           -->
+  <!-- =================================================================== -->
+  <target name="jar" depends="compile, copy_plugin_prop, copy_images"  >
+  	
+    <jar destfile="${project.jar}">
+      <manifest> <attribute name="Cytoscape-Plugin" value="${plugin_class}"/> </manifest>
+      <fileset dir="${build.dir}" includes="**"/>
+    </jar>
+
+  </target>
+
+  <!-- If plugin.prop exist, copy it to build directory  -->	
+  <target name="copy_plugin_prop" if="plugin.prop.present">
+		<copy todir="${build.dir}/cytoscape/expand" file="${root.dir}/plugin.props"/>	
+  </target>
+
+  <!-- If there are any image files, copy them to build directory  -->	
+  <target name="copy_images" if="images.dir.present">
+		<copy todir="${build.dir}">
+	        <fileset dir="${images.dir}"/> 
+		</copy>
+  </target>
+
+  <!-- =================================================================== -->
+  <!-- Clean up, get back to original state                                -->
+  <!-- =================================================================== -->
+  <target name="clean" depends="init">
+  	<delete dir="${build.dir}"/>
+  </target>
+
+</project>
+
+<!-- End of file -->
