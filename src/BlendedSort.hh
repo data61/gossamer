@@ -129,7 +129,7 @@ public:
                 }
                 //BlendedSort<T>::sort(pItems, pShift - 1, pBegin + p, pBegin + p + counts[i], pCmp, pTmp);
                 //std::cerr << "queuing " << (pBegin + p) << "\t" << (pBegin + p + counts[i]) << std::endl;
-                WorkQueue::Item itm = boost::bind(&BlendedSort<T>::template rsort<Cmp>, pQueue, pItems, pUpShift, pDownShift - 1, pBegin + p, pBegin + p + counts[i], pCmp);
+                WorkQueue::Item itm = std::bind(&BlendedSort<T>::template rsort<Cmp>, pQueue, pItems, pUpShift, pDownShift - 1, pBegin + p, pBegin + p + counts[i], pCmp);
                 pQueue->push_back(itm);
 
                 p += counts[i];

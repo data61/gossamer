@@ -9,9 +9,9 @@
 #include "SuperPath.hh"
 #endif
 
-#ifndef BOOST_UNORDERED_MAP_HPP
-#include <boost/unordered_map.hpp>
-#define BOOST_UNORDERED_MAP_HPP
+#ifndef STD_UNORDERED_MAP
+#include <unordered_map>
+#define STD_UNORDERED_MAP
 #endif
 
 #ifndef STD_SET
@@ -35,7 +35,7 @@ class SuperGraph
     friend class PathIterator;
 
 public:
-    static const uint64_t version = 2011082301ULL;
+    static constexpr uint64_t version = 2011082301ULL;
     // Version history
     // 2011062101   - introduce version tracking
     // 2011082301   - simplified structures and API
@@ -71,15 +71,15 @@ public:
             ++mCurr;
         }
 
-        NodeIterator(const boost::unordered_map<Node,SuperPathIds>::const_iterator& pCurr,
-                     const boost::unordered_map<Node,SuperPathIds>::const_iterator& pEnd)
+        NodeIterator(const std::unordered_map<Node,SuperPathIds>::const_iterator& pCurr,
+                     const std::unordered_map<Node,SuperPathIds>::const_iterator& pEnd)
             : mCurr(pCurr), mEnd(pEnd)
         {
         }
 
     private:
-        boost::unordered_map<Node,SuperPathIds>::const_iterator mCurr;
-        boost::unordered_map<Node,SuperPathIds>::const_iterator mEnd;
+        std::unordered_map<Node,SuperPathIds>::const_iterator mCurr;
+        std::unordered_map<Node,SuperPathIds>::const_iterator mEnd;
     };
 
     class PathIterator
@@ -249,7 +249,7 @@ public:
      */
     uint64_t numOut(const Node& pNode) const
     {
-        boost::unordered_map<Node, SuperPathIds>::const_iterator i(mSucc.find(pNode));
+        std::unordered_map<Node, SuperPathIds>::const_iterator i(mSucc.find(pNode));
         if (i != mSucc.end())
         {
             return i->second.size();
@@ -262,7 +262,7 @@ public:
      */
     SuperPathId onlyOut(const Node& pNode) const
     {
-        boost::unordered_map<Node, SuperPathIds>::const_iterator i(mSucc.find(pNode));
+        std::unordered_map<Node, SuperPathIds>::const_iterator i(mSucc.find(pNode));
         BOOST_ASSERT(i != mSucc.end());
         BOOST_ASSERT(i->second.size() == 1);
         return i->second.front();
@@ -494,7 +494,7 @@ private:
     EntryEdgeSet mEntries;
     uint64_t mNextId;
     uint64_t mCount;
-    boost::unordered_map<Node, SuperPathIds> mSucc;
+    std::unordered_map<Node, SuperPathIds> mSucc;
     std::vector<SuperPath::Segments> mSegs;
     std::vector<uint64_t> mRCs;
 };

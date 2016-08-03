@@ -5,6 +5,10 @@
 #include "BoundedQueue.hh"
 #endif
 
+#ifndef THREADGROUP_HH
+#include "ThreadGroup.hh"
+#endif
+
 template <typename T>
 class BackgroundMultiConsumer
 {
@@ -16,7 +20,7 @@ public:
     public:
         virtual ~Holder() {}
     };
-    typedef boost::shared_ptr<Holder> HolderPtr;
+    typedef std::shared_ptr<Holder> HolderPtr;
 
     template <typename Consumer>
     class PushBackConsHolder : public Holder
@@ -78,7 +82,7 @@ public:
     void wait()
     {
         end();
-        mThreads.join_all();
+        mThreads.join();
         mJoined = true;
     }
 
@@ -93,7 +97,7 @@ public:
     {
         HolderPtr h(new PushBackConsHolder<Consumer>(mQueue, pCons));
         mHolders.push_back(h);
-        mThreads.create_thread(static_cast<PushBackConsHolder<Consumer>&>(*h));
+        mThreads.create(static_cast<PushBackConsHolder<Consumer>&>(*h));
     }
 
     template <typename Consumer>
@@ -101,7 +105,7 @@ public:
     {
         HolderPtr h(new ApplyConsHolder<Consumer>(mQueue, pCons));
         mHolders.push_back(h);
-        mThreads.create_thread(static_cast<ApplyConsHolder<Consumer>&>(*h));
+        mThreads.create(static_cast<ApplyConsHolder<Consumer>&>(*h));
     }
     
     void sync(uint64_t pNumConsumers)
@@ -122,13 +126,13 @@ public:
         }
         if (!mJoined)
         {
-            mThreads.join_all();
+            mThreads.join();
         }
     }
 
 private:
     BoundedQueue<value_type,true> mQueue;
-    boost::thread_group mThreads;
+    ThreadGroup mThreads;
     std::vector<HolderPtr> mHolders;
     bool mFinished;
     bool mJoined;

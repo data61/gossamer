@@ -5,6 +5,8 @@
 using namespace boost;
 using namespace std;
 
+constexpr uint64_t EdgeIndex::version;
+
 namespace { // anonymous
     class EdgeCollector
     {
@@ -64,7 +66,7 @@ namespace { // anonymous
         vector<uint64_t> mRanks;
     };
 
-    typedef boost::shared_ptr<SegmentIndexer> SegmentIndexerPtr;
+    typedef std::shared_ptr<SegmentIndexer> SegmentIndexerPtr;
 
 } // namespace anonymous
 

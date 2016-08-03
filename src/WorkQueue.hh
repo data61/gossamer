@@ -2,16 +2,29 @@
 #define WORKQUEUE_HH
 
 #include <boost/function.hpp>
-#include <boost/thread.hpp>
+#include <thread>
 #include <deque>
-
-//#include <iostream>
+#include "ThreadGroup.hh"
 
 class WorkQueue
 {
 public:
     typedef boost::function<void (void)> Item;
     typedef std::deque<Item> Items;
+
+private:
+    class Worker;
+    friend class Worker;
+    typedef std::shared_ptr<Worker> WorkerPtr;
+
+    std::mutex mMutex;
+    std::condition_variable mCond;
+    Items mItems;
+    uint64_t mWaiters;
+    bool mFinished;
+    bool mJoined;
+    std::vector<WorkerPtr> mWorkers;
+    ThreadGroup mThreads;
 
     class Worker
     {
@@ -22,43 +35,40 @@ public:
             {
                 Item itm;
                 {
-                    boost::unique_lock<boost::mutex> lock(mMutex);
-                    while (mItems.empty() && !mFinished)
+                    std::unique_lock<std::mutex> lock(mQueue.mMutex);
+                    while (mQueue.mItems.empty() && !mQueue.mFinished)
                     {
                         //std::cerr << "waiting...." << std::endl;
-                        ++mWaiters;
-                        mCond.wait(lock);
-                        --mWaiters;
+                        ++mQueue.mWaiters;
+                        mQueue.mCond.wait(lock);
+                        --mQueue.mWaiters;
                     }
-                    if (mItems.empty() && mFinished)
+                    if (mQueue.mItems.empty() && mQueue.mFinished)
                     {
                         return;
                     }
                     //std::cerr << "evaluating...." << std::endl;
-                    itm = mItems.front();
-                    mItems.pop_front();
+                    itm = mQueue.mItems.front();
+                    mQueue.mItems.pop_front();
                 }
                 itm();
             }
         }
 
-        Worker(boost::mutex& pMutex, boost::condition_variable& pCond, Items& pItems, uint64_t& pWaiters, bool& pFinished)
-            : mMutex(pMutex), mCond(pCond), mItems(pItems), mWaiters(pWaiters), mFinished(pFinished)
+        Worker(WorkQueue& pQueue)
+            : mQueue(pQueue)
         {
         }
 
     private:
-        boost::mutex& mMutex;
-        boost::condition_variable& mCond;
-        Items& mItems;
-        uint64_t& mWaiters;
-        bool& mFinished;
+        WorkQueue& mQueue;
     };
-    typedef boost::shared_ptr<Worker> WorkerPtr;
+
+public:
 
     void push_back(const Item& pItem)
     {
-        boost::unique_lock<boost::mutex> lock(mMutex);
+        std::unique_lock<std::mutex> lock(mMutex);
         mItems.push_back(pItem);
         if (mWaiters > 0)
         {
@@ -69,11 +79,11 @@ public:
     void wait()
     {
         {
-            boost::unique_lock<boost::mutex> lock(mMutex);
+            std::unique_lock<std::mutex> lock(mMutex);
             mFinished = true;
             mCond.notify_all();
         }
-        mThreads.join_all();
+        mThreads.join();
         mJoined = true;
     }
 
@@ -81,10 +91,12 @@ public:
         : mWaiters(0), mFinished(false), mJoined(false)
     {
         //std::cerr << "creating WorkQueue with " << pNumThreads << " threads." << std::endl;
+        mWorkers.reserve(pNumThreads);
         for (uint64_t i = 0; i < pNumThreads; ++i)
         {
-            mWorkers.push_back(WorkerPtr(new Worker(mMutex, mCond, mItems, mWaiters, mFinished)));
-            mThreads.create_thread(*mWorkers.back());
+            auto w = std::shared_ptr<Worker>(new Worker(*this));
+            mWorkers.push_back(w);
+            mThreads.create(*w);
         }
     }
 
@@ -95,16 +107,6 @@ public:
             wait();
         }
     }
-
-private:
-    boost::mutex mMutex;
-    boost::condition_variable mCond;
-    Items mItems;
-    uint64_t mWaiters;
-    bool mFinished;
-    bool mJoined;
-    std::deque<WorkerPtr> mWorkers;
-    boost::thread_group mThreads;
 };
 
 #endif // WORKQUEUE_HH

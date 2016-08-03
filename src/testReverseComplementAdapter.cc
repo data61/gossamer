@@ -26,7 +26,7 @@ BOOST_AUTO_TEST_CASE(test1)
 
     GossReadParserFactory fastaParserFac(FastaParser::create);
     GossReadSequenceFactoryPtr seqFac
-        = make_shared<GossReadSequenceBasesFactory>();
+        = std::make_shared<GossReadSequenceBasesFactory>();
     LineSourceFactory lineSrcFac(PlainLineSource::create);
 
     std::deque<GossReadSequence::Item> items;

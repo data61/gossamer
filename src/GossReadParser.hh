@@ -1,9 +1,9 @@
 #ifndef GOSSREADPARSER_HH
 #define GOSSREADPARSER_HH
 
-#ifndef BOOST_SHARED_PTR_HPP
-#include <boost/shared_ptr.hpp>
-#define BOOST_SHARED_PTR_HPP
+#ifndef STD_MEMORY
+#include <memory>
+#define STD_MEMORY
 #endif
 
 #ifndef GOSSREAD_HH
@@ -39,9 +39,9 @@ public:
 };
 
 
-typedef boost::shared_ptr<GossReadParser> GossReadParserPtr;
+typedef std::shared_ptr<GossReadParser> GossReadParserPtr;
 
-typedef boost::function<GossReadParserPtr (const LineSourcePtr&)>
+typedef std::function<GossReadParserPtr (const LineSourcePtr&)>
     GossReadParserFactory;
 
 

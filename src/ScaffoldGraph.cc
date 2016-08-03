@@ -3,6 +3,8 @@
 using namespace std;
 using namespace boost;
 
+constexpr uint64_t ScaffoldGraph::version;
+
 namespace // anonymous
 {
     class LinkReader
@@ -145,7 +147,7 @@ namespace // anonymous
         Link mCur;
         bool mValid;
     };
-    typedef boost::shared_ptr<LinkReader> LinkReaderPtr;
+    typedef std::shared_ptr<LinkReader> LinkReaderPtr;
 
 }
 // namespace anonymous

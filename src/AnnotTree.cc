@@ -5,7 +5,6 @@
 #include <boost/assert.hpp>
 
 using namespace std;
-using namespace boost;
 
 namespace // anonymous
 {

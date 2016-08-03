@@ -1,5 +1,6 @@
 #include "MultithreadedBatchTask.hh"
 #include "ProgressMonitor.hh"
+#include "ThreadGroup.hh"
 
 using namespace std;
 using namespace boost;
@@ -23,11 +24,11 @@ MultithreadedBatchTask::MonitorThread::operator()()
         return;
     }
 
-    thread_group grp;
+    ThreadGroup grp;
     for (uint64_t i = 0; i < mThreads.size(); ++i)
     {
         WorkThread* thr = mThreads[i].get();
-        grp.create_thread(boost::bind(&WorkThread::run, thr));
+        grp.create(std::bind(&WorkThread::run, thr));
     }
 
     bool everyoneFinished;
@@ -77,7 +78,7 @@ MultithreadedBatchTask::MonitorThread::operator()()
         mProgressMon.tick(progress);
     }  while (!everyoneFinished);
 
-    grp.join_all();
+    grp.join();
 
     // If a thread threw an exception, rethrow it here.  If several
     // did, we rethrow only the first.

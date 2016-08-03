@@ -58,4 +58,65 @@ BOOST_AUTO_TEST_CASE(testClz)
     }
 }
 
+
+static void
+check_bounds(int* b, int* e, int v)
+{
+    // The simplest way to test the binary search operations is to
+    // see if they return the same thing as the platinum-iridium
+    // implementation. Hopefully the C++ standard library is bug-free.
+
+    auto lb = Gossamer::lower_bound(b, e, v);
+    auto lb16 = Gossamer::tuned_lower_bound<int*,int,std::less<int>,16>(b, e, v, std::less<int>());
+    auto lb200 = Gossamer::tuned_lower_bound<int*,int,std::less<int>,200>(b, e, v, std::less<int>());
+    auto pilb = std::lower_bound(b, e, v);
+    BOOST_CHECK_EQUAL(lb, pilb);
+    BOOST_CHECK_EQUAL(lb16, pilb);
+    BOOST_CHECK_EQUAL(lb200, pilb);
+
+    auto ub = Gossamer::upper_bound(b, e, v);
+    auto ub16 = Gossamer::tuned_upper_bound<int*,int,std::less<int>,16>(b, e, v, std::less<int>());
+    auto ub200 = Gossamer::tuned_upper_bound<int*,int,std::less<int>,200>(b, e, v, std::less<int>());
+    auto piub = std::upper_bound(b, e, v);
+    BOOST_CHECK_EQUAL(ub, piub);
+    BOOST_CHECK_EQUAL(ub16, piub);
+    BOOST_CHECK_EQUAL(ub200, piub);
+}
+
+BOOST_AUTO_TEST_CASE(testUpperLowerBound)
+{
+    int c[100];
+    for (unsigned i = 0; i < 100; ++i)
+    {
+        c[i] = i;
+    }
+
+    check_bounds(&c[0], &c[0], -1);
+    check_bounds(&c[0], &c[0], 0);
+    check_bounds(&c[0], &c[0], 100);
+
+    check_bounds(&c[0], &c[100], -1);
+    check_bounds(&c[0], &c[100], 0);
+    check_bounds(&c[0], &c[100], 3);
+    check_bounds(&c[0], &c[100], 29);
+    check_bounds(&c[0], &c[100], 99);
+    check_bounds(&c[0], &c[100], 100);
+
+    for (unsigned i = 0; i < 100; ++i)
+    {
+        c[i] = (i & ~(int)1) + 1;
+    }
+
+    check_bounds(&c[0], &c[100], -1);
+    check_bounds(&c[0], &c[100], 0);
+    check_bounds(&c[0], &c[100], 1);
+    check_bounds(&c[0], &c[100], 2);
+    check_bounds(&c[0], &c[100], 3);
+    check_bounds(&c[0], &c[100], 29);
+    check_bounds(&c[0], &c[100], 49);
+    check_bounds(&c[0], &c[100], 50);
+    check_bounds(&c[0], &c[100], 51);
+    check_bounds(&c[0], &c[100], 52);
+}
+
 #include "testEnd.hh"

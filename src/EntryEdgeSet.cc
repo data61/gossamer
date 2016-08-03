@@ -7,7 +7,7 @@
 
 #include <boost/lambda/bind.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include <boost/math/special_functions/round.hpp>
 #include <istream>
 
@@ -84,7 +84,7 @@ struct BatchBuilder
             }
         }
         
-        boost::unique_lock<boost::mutex> lk(mMutex);
+        std::unique_lock<std::mutex> lk(mMutex);
         ++mNumDone;
         mCond.notify_one();
     }
@@ -100,7 +100,7 @@ struct BatchBuilder
     }
 
     BatchBuilder(const Graph& pGraph, uint64_t pBegin, uint64_t pEnd,
-                 boost::mutex& pMutex, boost::condition_variable& pCond, uint64_t& pNumDone)
+                 std::mutex& pMutex, std::condition_variable& pCond, uint64_t& pNumDone)
         : mGraph(pGraph), mBegin(pBegin), mEnd(pEnd),
           mEdges(pEnd - pBegin), mCounts(), mLengths(), mRCs(), mHist(),
           mNumDone(pNumDone), mMutex(pMutex), mCond(pCond)
@@ -116,11 +116,11 @@ struct BatchBuilder
     vector<uint64_t> mRCs;
     map<uint64_t, uint64_t> mHist;
     uint64_t& mNumDone;
-    boost::mutex& mMutex;
-    boost::condition_variable& mCond;
+    std::mutex& mMutex;
+    std::condition_variable& mCond;
 };
 
-typedef boost::shared_ptr<BatchBuilder> BatchBuilderPtr;
+typedef std::shared_ptr<BatchBuilder> BatchBuilderPtr;
 
 } // namespace anonymous
 
@@ -148,8 +148,8 @@ EntryEdgeSet::build(const Graph& pGraph, const string& pBaseName,
                     FileFactory& pFactory, Logger& pLog, uint64_t pThreads)
 {
     Logger& log(pLog);
-    boost::mutex mtx;
-    boost::condition_variable cnd;
+    std::mutex mtx;
+    std::condition_variable cnd;
 
     LOG(log, info) << "Locating entry edges";
     const uint64_t numBatches(64 * pThreads);
@@ -162,12 +162,12 @@ EntryEdgeSet::build(const Graph& pGraph, const string& pBaseName,
         uint64_t begin = i * batchSize;
         uint64_t end = i == (numBatches - 1) ? pGraph.count() : (i + 1) * batchSize;
         batches.push_back(BatchBuilderPtr(new BatchBuilder(pGraph, begin, end, mtx, cnd, numDone)));
-        q.push_back(boost::bind<void>(boost::ref(*batches.back())));
+        q.push_back(std::bind<void>(std::ref(*batches.back())));
     }
 
     {
         uint64_t prevDone = 0;
-        boost::unique_lock<boost::mutex> lk(mtx);
+        std::unique_lock<std::mutex> lk(mtx);
         while (numDone < numBatches)
         {
             cnd.wait(lk);

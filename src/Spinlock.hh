@@ -37,12 +37,6 @@ public:
 #elif defined(GOSS_WINDOWS_X64)
         while (_InterlockedCompareExchange64(&mLock, 1, 0) != 0)
         {
-            // inline assembly ( __ams ) not supported on windows x64 platform
-            //__asm {
-            //    pause
-            //}
-
-            // This macro is supported on all windows platforms.
             YieldProcessor;
         }
 #else

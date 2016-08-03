@@ -94,14 +94,6 @@ namespace
             istream& i(**ip);
             i.read(reinterpret_cast<char*>(&pHeader), sizeof(pHeader));
         }
-        else if (version >= Graph::versionWithoutFlags)
-        {
-            Graph::HeaderWithoutFlags oldHeader;
-            istream& i(**ip);
-            i.read(reinterpret_cast<char*>(&oldHeader), sizeof(oldHeader));
-            pHeader.version = Graph::version;
-            pHeader.K = oldHeader.K;
-        }
         else
         {
             uint64_t v = Graph::version;

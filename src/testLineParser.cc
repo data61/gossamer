@@ -15,12 +15,12 @@ getLinesReader(StringFileFactory& fac, const char* filename)
 {
     GossReadParserFactory lineParserFac(LineParser::create);
     GossReadSequenceFactoryPtr seqFac
-        = make_shared<GossReadSequenceBasesFactory>();
+        = std::make_shared<GossReadSequenceBasesFactory>();
     LineSourceFactory lineSrcFac(PlainLineSource::create);
 
     std::deque<GossReadSequence::Item> items;
     items.push_back(GossReadSequence::Item(filename, lineParserFac, seqFac));
-    return boost::make_shared<ReadSequenceFileSequence>(items, fac, lineSrcFac);
+    return std::make_shared<ReadSequenceFileSequence>(items, fac, lineSrcFac);
 }
 
 BOOST_AUTO_TEST_CASE(test1)

@@ -289,7 +289,7 @@ App::main(int argc, char* argv[])
         else
         {
             string logName = optsMap["log-file"].as<string>();
-            theLogger = boost::shared_ptr<Logger>(new Logger(logName, *theFileFactory, sev));
+            theLogger = std::make_shared<Logger>(logName, *theFileFactory, sev);
         }
 
         if (optsMap.count("debug"))

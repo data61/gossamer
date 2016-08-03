@@ -11,7 +11,7 @@ class BackgroundSafeBlockConsumer
 public:
     typedef typename Consumer::value_type value_type;
     typedef std::vector<value_type> block_type;
-    typedef boost::shared_ptr<block_type> block_ptr_type;
+    typedef std::shared_ptr<block_type> block_ptr_type;
 
     class ConsBlockWorker
     {
@@ -41,7 +41,7 @@ public:
 
     void push_back(const value_type& pVal)
     {
-        boost::unique_lock<boost::mutex> lock(mMutex);
+        std::unique_lock<std::mutex> lock(mMutex);
         mCurrBlock->push_back(pVal);
         if (mCurrBlock->size() == mBlkSize)
         {
@@ -102,11 +102,11 @@ public:
 
 private:
     const uint64_t mBlkSize;
-    boost::mutex mMutex;
+    std::mutex mMutex;
     BoundedQueue<block_ptr_type> mQueue;
     block_ptr_type mCurrBlock;
     ConsBlockWorker mCons;
-    boost::thread mThread;
+    std::thread mThread;
     bool mFinished;
     bool mJoined;
 };

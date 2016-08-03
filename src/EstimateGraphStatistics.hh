@@ -11,9 +11,9 @@
 #define STD_MAP
 #endif
 
-#ifndef BOOST_SHARED_PTR_HPP
-#include <boost/shared_ptr.hpp>
-#define BOOST_SHARED_PTR_HPP
+#ifndef STD_MEMORY
+#include <memory>
+#define STD_MEMORY
 #endif
 
 #ifndef LOGGER_HH
@@ -37,7 +37,7 @@ public:
 
 private:
     struct Impl;
-    boost::shared_ptr<Impl> mPImpl;
+    std::shared_ptr<Impl> mPImpl;
 };
 
 
@@ -54,7 +54,7 @@ public:
 
 private:
     struct Impl;
-    boost::shared_ptr<Impl> mPImpl;
+    std::shared_ptr<Impl> mPImpl;
 };
 
 #endif // ESTIMATEGRAPHSTATISTICS_HH

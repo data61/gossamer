@@ -20,9 +20,9 @@
 #include <stdint.h>
 #endif
 
-#ifndef BOOST_SHARED_PTR_HPP
-#include <boost/shared_ptr.hpp>
-#define BOOST_SHARED_PTR_HPP
+#ifndef STD_MEMORY
+#include <memory>
+#define STD_MEMORY
 #endif
 
 //#ifndef BOOST_UUID_HPP
@@ -81,7 +81,7 @@ public:
 
         virtual ~InHolder() {}
     };
-    typedef boost::shared_ptr<InHolder> InHolderPtr;
+    typedef std::shared_ptr<InHolder> InHolderPtr;
     
     class OutHolder
     {
@@ -90,7 +90,7 @@ public:
 
         virtual ~OutHolder() {}
     };
-    typedef boost::shared_ptr<OutHolder> OutHolderPtr;
+    typedef std::shared_ptr<OutHolder> OutHolderPtr;
 
     class MappedHolder
     {
@@ -101,7 +101,7 @@ public:
 
         virtual ~MappedHolder() {}
     };
-    typedef boost::shared_ptr<MappedHolder> MappedHolderPtr;
+    typedef std::shared_ptr<MappedHolder> MappedHolderPtr;
 
     class TmpFileHolder
     {
@@ -122,7 +122,7 @@ public:
         FileFactory& mFactory;
         const std::string mName;
     };
-    typedef boost::shared_ptr<TmpFileHolder> TmpFileHolderPtr;
+    typedef std::shared_ptr<TmpFileHolder> TmpFileHolderPtr;
 
     // Open a file for reading
     virtual InHolderPtr in(const std::string& pFileName) const = 0;
@@ -232,6 +232,6 @@ public:
     }
 };
 
-typedef boost::shared_ptr<FileFactory> FileFactoryPtr;
+typedef std::shared_ptr<FileFactory> FileFactoryPtr;
 
 #endif // FILEFACTORY_HH

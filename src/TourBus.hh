@@ -9,8 +9,9 @@
 #include "Logger.hh"
 #endif
 
-#ifndef BOOST_SHARED_PTR_HPP
-#include <boost/shared_ptr.hpp>
+#ifndef STD_MEMORY
+#include <memory>
+#define STD_MEMORY
 #endif
 
 class TourBus
@@ -32,12 +33,9 @@ public:
 
     void writeModifiedGraph(Graph::Builder& pBuilder) const;
 
-    /// For debugging purposes.
-    bool puzzlingCaseEncountered() const;
-
 private:
-    class Impl;
-    boost::shared_ptr<Impl> mPImpl;
+    struct Impl;
+    std::shared_ptr<Impl> mPImpl;
 };
 
 #endif

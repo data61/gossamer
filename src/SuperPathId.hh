@@ -8,14 +8,14 @@
 struct SuperPathIdTag {};
 typedef TaggedNum<SuperPathIdTag> SuperPathId;
 
-namespace boost
+namespace std
 {
     template <>
     struct hash<SuperPathId>
     {
         uint64_t operator()(const SuperPathId& pId) const
         {
-            return hash<uint64_t>()(pId.value());
+            return std::hash<uint64_t>()(pId.value());
         }
     };
 }

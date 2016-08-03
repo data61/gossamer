@@ -15,7 +15,7 @@ public:
     class Iterator;
     friend class Iterator;
 
-    static const uint64_t version = 2011101701ULL; 
+    static constexpr uint64_t version = 2011101701ULL; 
     // Version history
     // 2011101701 Initial Version.
 
@@ -104,7 +104,7 @@ public:
 
         std::pair<Edge,uint32_t> operator*() const
         {
-            return std::make_pair(*mKmersItr, 1);
+            return std::make_pair<Edge,uint32_t>(Edge(*mKmersItr), 1);
         }
 
         void operator++()
@@ -116,8 +116,8 @@ public:
             : mKmersItr(pKmerSet.mKmers.iterator())
         {
         }
-    private:
 
+    private:
         SparseArray::Iterator mKmersItr;
     };
 

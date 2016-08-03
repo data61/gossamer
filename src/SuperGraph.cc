@@ -6,6 +6,8 @@
 using namespace std;
 using namespace boost;
 
+constexpr uint64_t SuperGraph::version;
+
 namespace // anonymous
 {
     void print(ostream& pOut, const string& pStr, uint64_t pCols)
@@ -259,7 +261,7 @@ namespace // anonymous
         const bool mVerboseHeaders;
     };
 
-    typedef boost::shared_ptr<ContigPrinter> ContigPrinterPtr;
+    typedef std::shared_ptr<ContigPrinter> ContigPrinterPtr;
 
     // TODO: Fix in light of gap segments!
     bool entails(const SuperPath::Segments& pLhs, const SuperPath::Segments& pRhs)

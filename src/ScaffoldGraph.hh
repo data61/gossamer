@@ -34,9 +34,14 @@
 #define STD_STRING
 #endif
 
-#ifndef BOOST_UNORDERED_MAP_HPP
-#include <boost/unordered_map.hpp>
-#define BOOST_UNORDERED_MAP_HPP
+#ifndef STD_UNORDERED_MAP
+#include <unordered_map>
+#define STD_UNORDERED_MAP
+#endif
+
+#ifndef STD_UNORDERED_SET
+#include <unordered_set>
+#define STD_UNORDERED_SET
 #endif
 
 #ifndef STD_VECTOR
@@ -47,7 +52,7 @@
 class ScaffoldGraph
 {
 public:
-    static const uint64_t version = 2012032701ULL;
+    static constexpr uint64_t version = 2012032701ULL;
     // Version history
     //  2012032701  - introduce version tracking
 
@@ -119,18 +124,18 @@ public:
 
     void getNodes(std::vector<SuperPathId>& pNodes) const;
 
-    void getNodes(boost::unordered_set<SuperPathId>& pNodes) const;
+    void getNodes(std::unordered_set<SuperPathId>& pNodes) const;
 
-    void getNodesAndRcs(const SuperGraph& pSg, boost::unordered_set<SuperPathId>& pNodes) const;
+    void getNodesAndRcs(const SuperGraph& pSg, std::unordered_set<SuperPathId>& pNodes) const;
 
     // Collects the nodes reachable via forward and backward edges from pNode.
-    void getConnectedNodes(SuperPathId pNode, boost::unordered_set<SuperPathId>& pNodes) const;
+    void getConnectedNodes(SuperPathId pNode, std::unordered_set<SuperPathId>& pNodes) const;
 
     // Collects the nodes reachable via forward edges from pNode.
-    void getNodesFrom(SuperPathId pNode, boost::unordered_set<SuperPathId>& pNodes) const;
+    void getNodesFrom(SuperPathId pNode, std::unordered_set<SuperPathId>& pNodes) const;
 
     // Collects the nodes which can reach pNode via forward edges.
-    void getNodesTo(SuperPathId pNode, boost::unordered_set<SuperPathId>& pNodes) const;
+    void getNodesTo(SuperPathId pNode, std::unordered_set<SuperPathId>& pNodes) const;
 
     const Edges& getFroms(SuperPathId pTo) const;
 

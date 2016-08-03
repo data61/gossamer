@@ -10,10 +10,10 @@
 #define STD_VECTOR
 #endif // STD_VECTOR
 
-#ifndef BOOST_THREAD_HPP
-#include <boost/thread.hpp>
-#define BOOST_THREAD_HPP
-#endif // BOOST_THREAD_HPP
+#ifndef STD_THREAD
+#include <thread>
+#define STD_THREAD
+#endif // STD_THREAD
 
 #ifndef BOOST_STATIC_ASSERT_HPP
 #include <boost/static_assert.hpp>
@@ -29,7 +29,7 @@ class MultithreadedBatchTask : private boost::noncopyable
 {
 public:
     class WorkThread;
-    typedef boost::shared_ptr<WorkThread> WorkThreadPtr;
+    typedef std::shared_ptr<WorkThread> WorkThreadPtr;
 
     class MonitorThread : private boost::noncopyable
     {
@@ -42,8 +42,8 @@ public:
         ProgressMonitorBase& mProgressMon;
         std::vector<WorkThreadPtr> mThreads;
 
-        boost::mutex mMutex;
-        boost::condition_variable mCondVar;
+        std::mutex mMutex;
+        std::condition_variable mCondVar;
         bool mThreadSignalled;
 
         void addThread(const WorkThreadPtr& pThread)
@@ -82,7 +82,7 @@ public:
         };
 
         uint64_t mThreadId;
-        boost::mutex mReportDataMutex;
+        std::mutex mReportDataMutex;
         uint64_t mWorkDone;
         bool mDone;
         bool mAbortRequested;
@@ -100,11 +100,11 @@ public:
     }
 
     template<typename T>
-    void addThread(const boost::shared_ptr<T>& pThread)
+    void addThread(const std::shared_ptr<T>& pThread)
     {
         // T must be derived from WorkThread.
         BOOST_STATIC_ASSERT((boost::is_base_of<WorkThread,T>::value));
-        mMonThread.addThread(boost::static_pointer_cast<WorkThread>(pThread));
+        mMonThread.addThread(std::static_pointer_cast<WorkThread>(pThread));
     }
 
     void operator()()

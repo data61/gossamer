@@ -31,7 +31,7 @@ private:
 class StringOutHolder : public FileFactory::OutHolder
 {
 private:
-    typedef boost::shared_ptr<ostringstream> OutPtr;
+    typedef std::shared_ptr<ostringstream> OutPtr;
 
 public:
     virtual ostream& operator*()

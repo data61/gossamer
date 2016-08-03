@@ -4,7 +4,9 @@
  */
 
 #include "BoundedQueue.hh"
+#include "ThreadGroup.hh"
 #include <vector>
+#include <chrono>
 #include <boost/random.hpp>
 
 
@@ -28,7 +30,7 @@ public:
         {
             mQueue.put(i);
 
-            boost::this_thread::sleep(boost::posix_time::milliseconds(gen()));
+            std::this_thread::sleep_for(std::chrono::milliseconds(gen()));
         }
         mQueue.finish();
     }
@@ -58,7 +60,7 @@ public:
         {
             BOOST_CHECK(p < x);
 
-            boost::this_thread::sleep(boost::posix_time::milliseconds(gen()));
+            std::this_thread::sleep_for(std::chrono::milliseconds(gen()));
         }
     }
 
@@ -77,10 +79,10 @@ BOOST_AUTO_TEST_CASE(testEmpty)
     BoundedQueue<uint64_t> q(10);
     Writer w(q, 19);
     Reader r(q, 23);
-    boost::thread_group g;
-    g.create_thread(r);
-    g.create_thread(w);
-    g.join_all();
+    ThreadGroup g;
+    g.create(r);
+    g.create(w);
+    g.join();
 }
 
 #include "testEnd.hh"

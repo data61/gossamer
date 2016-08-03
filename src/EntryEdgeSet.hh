@@ -127,14 +127,14 @@ private:
     IntegerArray& mEnds;
 };
 
-// boost::hash
-namespace boost {
+// std::hash
+namespace std {
     template<>
     struct hash<EntryEdgeSet::Node>
     {
         std::size_t operator()(const EntryEdgeSet::Node& pValue) const
         {
-            return boost::hash<Gossamer::position_type>()(pValue.value());
+            return std::hash<Gossamer::position_type>()(pValue.value());
         }
     };
 }

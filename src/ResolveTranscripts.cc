@@ -10,8 +10,8 @@
 #include <boost/ptr_container/ptr_deque.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <boost/dynamic_bitset.hpp>
-#include <boost/unordered_map.hpp>
-#include <boost/unordered_set.hpp>
+#include <unordered_map>
+#include <unordered_set>
 #include <boost/pending/disjoint_sets.hpp>
 #include <boost/iterator/counting_iterator.hpp>
 #include <set>
@@ -593,7 +593,7 @@ struct ResolveTranscripts::Impl
 
                 fetchOutEdges(f, outEdges);
                 bool fromNodeOK = false;
-                BOOST_FOREACH(edge_t oe, outEdges)
+                for (edge_t oe: outEdges)
                 {
                     fromNodeOK |= oe == e;
                 }
@@ -601,7 +601,7 @@ struct ResolveTranscripts::Impl
 
                 fetchInEdges(t, inEdges);
                 bool toNodeOK = false;
-                BOOST_FOREACH(edge_t ie, inEdges)
+                for (edge_t ie: inEdges)
                 {
                     toNodeOK |= ie == e;
                 }
@@ -617,12 +617,12 @@ struct ResolveTranscripts::Impl
                 inDegreeSum += inEdges.size();
                 outDegreeSum += outEdges.size();
 
-                BOOST_FOREACH(edge_t e, inEdges)
+                for (edge_t e: inEdges)
                 {
                     BOOST_ASSERT(to(e) == n);
                 }
 
-                BOOST_FOREACH(edge_t e, outEdges)
+                for (edge_t e: outEdges)
                 {
                     BOOST_ASSERT(from(e) == n);
                 }
@@ -696,7 +696,7 @@ struct ResolveTranscripts::Impl
             return;
         }
         pGraph.seq(pGraph.from(pGraph.select(pPath[0])), pVec);
-        BOOST_FOREACH(rank_type edge, pPath)
+        for (rank_type edge: pPath)
         {
             pVec.push_back(pGraph.select(edge).value() & 3);
         }
@@ -764,7 +764,7 @@ struct ResolveTranscripts::Impl
         {
             const Component& comp = *mImpl.mComponent;
             mSubcomponent.resize(comp.nodeCount());
-            BOOST_FOREACH(node_t n, pSubcomponent)
+            for (node_t n: pSubcomponent)
             {
                 mSubcomponent[comp.nodeRank(n)] = true;
             }
@@ -959,7 +959,7 @@ struct ResolveTranscripts::Impl
             : mImpl(pImpl)
         {
             init();
-            BOOST_FOREACH(node_t v, pSubcompByNodes)
+            for (node_t v: pSubcompByNodes)
             {
                scc(v);
             }
@@ -988,9 +988,9 @@ struct ResolveTranscripts::Impl
 
     vector<uint32_t> mReadKmerCount;
 
-    boost::shared_ptr<Build> mBuild;
+    std::shared_ptr<Build> mBuild;
 
-    boost::shared_ptr<Component> mComponent;
+    std::shared_ptr<Component> mComponent;
 
     vector< vector<node_t> > sccs() const;
 
@@ -1018,7 +1018,7 @@ struct ResolveTranscripts::Impl
     {
         const uint64_t K = mGraph.K();
         mMinRhomers = mMinLength < K ? 0 : mMinLength - K + 1;
-        mBuild = boost::make_shared<Build>(mGraph.count());
+        mBuild = std::make_shared<Build>(mGraph.count());
     }
 
     uint64_t readMaps(const SmallBaseVector& pRead) const
@@ -1230,7 +1230,7 @@ ResolveTranscripts::Impl::Component::dumpByEdge(
 
     set<Graph::Node> ns;
     pOut << "digraph G {\n";
-    BOOST_FOREACH(edge_t e, pComponent)
+    for (edge_t e: pComponent)
     {
         BOOST_ASSERT(edgeRank(e) < edgeCount());
         uint64_t i = mKmers.select(edgeRank(e));
@@ -1250,7 +1250,7 @@ ResolveTranscripts::Impl::Component::dumpByEdge(
 #endif
     }
 
-    BOOST_FOREACH(const Graph::Node& n, ns)
+    for (const Graph::Node& n: ns)
     {
         SmallBaseVector vec;
         mGraph.seq(n, vec);
@@ -1274,7 +1274,7 @@ ResolveTranscripts::Impl::Component::dumpByVert(
 
     set<edge_t> es;
     pOut << "digraph G {\n";
-    BOOST_FOREACH(node_t n, pComponent)
+    for (node_t n: pComponent)
     {
         Graph::Node nn = underlyingNode(n);
         SmallBaseVector vec;
@@ -1287,18 +1287,18 @@ ResolveTranscripts::Impl::Component::dumpByVert(
         fetchInEdges(n, inEdges);
         fetchOutEdges(n, outEdges);
 
-        BOOST_FOREACH(edge_t e, inEdges)
+        for (edge_t e: inEdges)
         {
             es.insert(e);
         }
 
-        BOOST_FOREACH(edge_t e, outEdges)
+        for (edge_t e: outEdges)
         {
             es.insert(e);
         }
     }
 
-    BOOST_FOREACH(edge_t e, es)
+    for (edge_t e: es)
     {
         BOOST_ASSERT(edgeRank(e) < mKmers.count());
         uint64_t i = mKmers.select(edgeRank(e));
@@ -1326,7 +1326,7 @@ ResolveTranscripts::Impl::dumpGraphByComponents(
     const std::string& pStage, ostream& pOut) const
 {
     pOut << "# BEGIN Graph at stage " << pStage << '\n';
-    BOOST_FOREACH(const vector<edge_t>& component, componentsByEdge())
+    for (auto& component: componentsByEdge())
     {
         mComponent->dumpByEdge(component, pOut);
     }
@@ -1355,9 +1355,9 @@ ResolveTranscripts::Impl::commitEdgeRemove()
         }
     }
 
-    mComponent = boost::shared_ptr<Component>();
+    mComponent = std::shared_ptr<Component>();
     denseArrayFromBitmap(sComponentKmersName, mStringFac, newEdges);
-    mComponent = boost::shared_ptr<Component>(new Component(mGraph, mStringFac, newCounts.begin(), newCounts.end()));
+    mComponent = std::shared_ptr<Component>(new Component(mGraph, mStringFac, newCounts.begin(), newCounts.end()));
 }
 
 
@@ -1396,7 +1396,7 @@ ResolveTranscripts::Impl::ShortestPaths::shortestPathsFrom(node_t pFrom)
     vector<edge_t> outEdges;
     outEdges.reserve(sMaxEdgesPerNode);
     comp.fetchOutEdges(pFrom, outEdges);
-    BOOST_FOREACH(edge_t e, outEdges)
+    for (edge_t e: outEdges)
     {
         node_t node = comp.to(e);
         if (mSubcomponent[comp.nodeRank(node)])
@@ -1421,7 +1421,7 @@ ResolveTranscripts::Impl::ShortestPaths::shortestPathsFrom(node_t pFrom)
         seen[comp.nodeRank(v)] = true;
 
         comp.fetchOutEdges(v, outEdges);
-        BOOST_FOREACH(edge_t e, outEdges)
+        for (edge_t e: outEdges)
         {
             node_t v2 = comp.to(e);
             if (seen[comp.nodeRank(v2)] || !mSubcomponent[comp.nodeRank(v2)])
@@ -1476,7 +1476,7 @@ ResolveTranscripts::Impl::ShortestPaths::shortestPath(
     vector<edge_t> outEdges;
     outEdges.reserve(sMaxEdgesPerNode);
     comp.fetchOutEdges(pFrom, outEdges);
-    BOOST_FOREACH(edge_t e, outEdges)
+    for (edge_t e: outEdges)
     {
         node_t v = comp.to(e);
         if (mSubcomponent[comp.nodeRank(v)])
@@ -1507,7 +1507,7 @@ ResolveTranscripts::Impl::ShortestPaths::shortestPath(
 
         comp.fetchOutEdges(v, outEdges);
 
-        BOOST_FOREACH(edge_t e, outEdges)
+        for (edge_t e: outEdges)
         {
             node_t v2 = comp.to(e);
             if (!mSubcomponent[comp.nodeRank(v2)])
@@ -1626,11 +1626,11 @@ ResolveTranscripts::Impl::componentsByVertex() const
     mLog(info, "    Component sizes:");
     typedef map<uint64_t,uint64_t> histo_map_t;
     histo_map_t histo;
-    BOOST_FOREACH(uint64_t size, sizes)
+    for (auto size: sizes)
     {
         ++histo[size];
     }
-    BOOST_FOREACH(const histo_map_t::value_type& h, histo)
+    for (auto& h: histo)
     {
         mLog(info, "      " + lexical_cast<string>(h.first) + "\t"
             + lexical_cast<string>(h.second));
@@ -1734,11 +1734,11 @@ ResolveTranscripts::Impl::componentsByEdge() const
     mLog(info, "    Component sizes:");
     typedef map<uint64_t,uint64_t> histo_map_t;
     histo_map_t histo;
-    BOOST_FOREACH(uint64_t size, sizes)
+    for (auto size: sizes)
     {
         ++histo[size];
     }
-    BOOST_FOREACH(const histo_map_t::value_type& h, histo)
+    for (auto& h: histo)
     {
         mLog(info, "      " + lexical_cast<string>(h.first) + "\t"
             + lexical_cast<string>(h.second));
@@ -1773,7 +1773,7 @@ ResolveTranscripts::Impl::verifyReads()
     mReadKmerCount.clear();
     mReadKmerCount.resize(comp.edgeCount());
 
-    BOOST_FOREACH(const MappedRead& r, mReads)
+    for (auto& r: mReads)
     {
         vector<rank_type>::const_iterator beg = r.mEdges.begin();
         vector<rank_type>::const_iterator end = r.mEdges.begin();
@@ -1862,7 +1862,7 @@ ResolveTranscripts::Impl::extractTranscripts()
 #ifdef MORE_INTERNAL_PROGRESS
     mLog(info, "  Looping over " + lexical_cast<string>(components.size()) + " components");
 #endif
-    BOOST_FOREACH(const vector<node_t>& component, components)
+    for (auto& component: components)
     {
         if (component.size() < 2 || component.size() + 1 < mMinRhomers)
         {
@@ -1903,7 +1903,7 @@ ResolveTranscripts::Impl::extractTranscriptsComponent(
     {
         Component& comp = *mComponent;
 
-        BOOST_FOREACH(node_t v, pComponent)
+        for (node_t v: pComponent)
         {
             uint64_t inDegree = comp.countInEdges(v);
 #ifdef FULL_SANITY_CHECK
@@ -2011,7 +2011,7 @@ ResolveTranscripts::Impl::extractTranscriptsLinear(
     node_t n;
     bool startNodeFound = false;
 
-    BOOST_FOREACH(node_t v, pComponent)
+    for (node_t v: pComponent)
     {
         if (!comp.countInEdges(v))
         {
@@ -2063,7 +2063,7 @@ ResolveTranscripts::Impl::extractTranscriptsYshapeIn(
     node_t n;
     bool startNodeFound = false;
 
-    BOOST_FOREACH(node_t v, pComponent)
+    for (node_t v: pComponent)
     {
         comp.fetchOutEdges(v, outEdges);
         if (outEdges.size() == 2)
@@ -2154,7 +2154,7 @@ ResolveTranscripts::Impl::extractTranscriptsYshapeOut(
     node_t n;
     bool startNodeFound = false;
 
-    BOOST_FOREACH(node_t v, pComponent)
+    for (node_t v: pComponent)
     {
         if (comp.countInEdges(v) == 2)
         {
@@ -2244,7 +2244,7 @@ ResolveTranscripts::Impl::extractTranscriptsSimpleBubble(
     node_t n;
     bool startNodeFound = false;
 
-    BOOST_FOREACH(node_t v, pComponent)
+    for (node_t v: pComponent)
     {
         if (comp.countOutEdges(v) == 2)
         {
@@ -2348,7 +2348,7 @@ void
 ResolveTranscripts::Impl::makeTranscriptsFromPathBundle(
     ptr_deque<Transcript>& pTranscripts, const PathBundle& pBundle)
 {
-    BOOST_FOREACH(const vector<rank_type>& path, pBundle.mPaths)
+    for (auto& path: pBundle.mPaths)
     {
         makeTranscriptFromPath(pTranscripts, path);
     }
@@ -2372,7 +2372,7 @@ ResolveTranscripts::Impl::trimPathBundle(PathBundle& pBundle,
     }
 
     uint64_t totalReadSupp = 0;
-    BOOST_FOREACH(const ReadSuppEntry& rs, pBundle.mReadSupport)
+    for (auto& rs: pBundle.mReadSupport)
     {
         uint64_t thisReadSupp = mVReads[rs.mRead].mCount;
         pathSupport[rs.mPath].mSupport += thisReadSupp;
@@ -2417,7 +2417,7 @@ ResolveTranscripts::Impl::trimPathBundle(PathBundle& pBundle,
         }
 #endif
     }
-    BOOST_FOREACH(const ReadSuppEntry& rs, pBundle.mReadSupport)
+    for (auto& rs: pBundle.mReadSupport)
     {
         if (pathsToKeep[rs.mPath])
         {
@@ -2464,7 +2464,7 @@ ResolveTranscripts::Impl::extractTranscriptsComplex(
     paths_t paths;
 
     // Add edges from the start/end nodes.
-    BOOST_FOREACH(node_t v, pComponent)
+    for (node_t v: pComponent)
     {
         comp.fetchInEdges(v, inEdges);
         comp.fetchOutEdges(v, outEdges);
@@ -2548,7 +2548,7 @@ ResolveTranscripts::Impl::extractTranscriptsComplex(
             {
 #ifdef DEBUG_EXTRACTION
                 std::cerr << "Some paths reach here.\n";
-                BOOST_FOREACH(const PathBundle& bundle, pathsIt->second.mBundles)
+                for (auto& bundle: pathsIt->second.mBundles)
                 {
                     std::cerr << "    " << bundle.mPaths.size() << '\n';
                 }
@@ -2612,7 +2612,7 @@ ResolveTranscripts::Impl::extractTranscriptsComplex(
 #ifdef DEBUG_EXTRACTION
                 std::cerr << "This is an interesting node, so dumping transcripts.\n";
 #endif
-                BOOST_FOREACH(const PathBundle& bundle, pathsReachingV.mBundles)
+                for (auto& bundle: pathsReachingV.mBundles)
                 {
                     makeTranscriptsFromPathBundle(newTranscripts, bundle);
                 }
@@ -2635,7 +2635,7 @@ ResolveTranscripts::Impl::extractTranscriptsComplex(
             // This is a linear path if V has only one out edge.
             linearPath = outEdges.size() == 1
                     && !interestingNodes[comp.nodeRank(v)];
-            BOOST_FOREACH(edge_t e, outEdges)
+            for (edge_t e: outEdges)
             {
                 rank_type mappedE = comp.subsetSelect(e);
                 node_t u = comp.to(e);
@@ -2738,7 +2738,7 @@ ResolveTranscripts::Impl::extractTranscriptsComplex(
                 vector<uint64_t> readSupport(numPrevPaths);
                 BOOST_ASSERT(readSupport.size() == numPrevPaths);
 
-                BOOST_FOREACH(const ReadSuppEntry& rs, prevBundle.mReadSupport)
+                for (auto& rs: prevBundle.mReadSupport)
                 {
                     uint64_t readNo = rs.mRead;
                     uint32_t readPos = rs.mPos;
@@ -2829,7 +2829,7 @@ ResolveTranscripts::Impl::extractTranscriptsComplex(
 
                     bool addU = true;
                     comp.fetchInEdges(u, inEdges);
-                    BOOST_FOREACH(edge_t e, inEdges)
+                    for (edge_t e: inEdges)
                     {
                         node_t fromNode = comp.from(e);
 
@@ -2864,7 +2864,7 @@ ResolveTranscripts::Impl::extractTranscriptsComplex(
         const uint64_t K = mGraph.K();
         const uint64_t minLength = mMinLength < K ? 1 : mMinLength - K;
 
-        typedef boost::unordered_multimap<rank_type,uint64_t> init_kmer_map_t;
+        typedef std::unordered_multimap<rank_type,uint64_t> init_kmer_map_t;
         init_kmer_map_t initialKmerMap;
         deque<init_kmer_map_t::iterator> entriesToRemove;
 
@@ -2905,7 +2905,7 @@ ResolveTranscripts::Impl::extractTranscriptsComplex(
 
             if (!entriesToRemove.empty())
             {
-                BOOST_FOREACH(init_kmer_map_t::iterator ii, entriesToRemove)
+                for (auto& ii: entriesToRemove)
                 {
                     initialKmerMap.erase(ii);
                 }
@@ -2939,9 +2939,9 @@ ResolveTranscripts::Impl::quantifyTranscripts()
         vector<uint64_t> countsInTranscripts(comp.edgeCount());
 
         // Count kmers in transcripts.
-        BOOST_FOREACH(Transcript& transcript, mTranscripts)
+        for (auto& transcript: mTranscripts)
         {
-            BOOST_FOREACH(rank_type edge, transcript.mEdges)
+            for (rank_type edge: transcript.mEdges)
             {
                 ++countsInTranscripts[comp.edgeRank(comp.subsetRank(edge))];
             }
@@ -2949,10 +2949,10 @@ ResolveTranscripts::Impl::quantifyTranscripts()
 
         // Compute FPKM for transcript
         uint64_t k = mGraph.K();
-        BOOST_FOREACH(Transcript& transcript, mTranscripts)
+        for (auto& transcript: mTranscripts)
         {
             double mappedReadFragments = 0;
-            BOOST_FOREACH(rank_type edge, transcript.mEdges)
+            for (rank_type edge: transcript.mEdges)
             {
                 uint64_t rnk = comp.edgeRank(comp.subsetRank(edge));
                 mappedReadFragments
@@ -3016,13 +3016,13 @@ ResolveTranscripts::Impl::clampExtremelyHighEdgeCounts()
         comp.fetchOutEdges(to, outEdges);
 
         uint64_t inFlow = 0;
-        BOOST_FOREACH(edge_t edge, inEdges)
+        for (edge_t& edge: inEdges)
         {
             inFlow += comp.coverage(edge);
         }
 
         uint64_t outFlow = 0;
-        BOOST_FOREACH(edge_t edge, outEdges)
+        for (edge_t& edge: outEdges)
         {
             outFlow += comp.coverage(edge);
         }
@@ -3064,18 +3064,18 @@ ResolveTranscripts::Impl::trimLowCoverageEdges()
         }
 
         uint64_t inFlow = 0;
-        BOOST_FOREACH(edge_t edge, inEdges)
+        for (auto& edge: inEdges)
         {
             inFlow += comp.coverage(edge);
         }
 
         uint64_t outFlow = 0;
-        BOOST_FOREACH(edge_t edge, outEdges)
+        for (auto& edge: outEdges)
         {
             outFlow += comp.coverage(edge);
         }
 
-        BOOST_FOREACH(edge_t in, inEdges)
+        for (auto& in: inEdges)
         {
             if (comp.scheduledForRemove(in))
             {
@@ -3091,7 +3091,7 @@ ResolveTranscripts::Impl::trimLowCoverageEdges()
             }
         }
 
-        BOOST_FOREACH(edge_t out, outEdges)
+        for (auto& out: outEdges)
         {
             if (comp.scheduledForRemove(out))
             {
@@ -3124,11 +3124,11 @@ ResolveTranscripts::Impl::cullComponents()
 #ifdef MORE_INTERNAL_PROGRESS
     mLog(info, "  Before size: " + lexical_cast<string>(mComponent->edgeCount()));
 #endif
-    BOOST_FOREACH(const vector<edge_t>& component, componentsByEdge())
+    for (auto& component: componentsByEdge())
     {
         if (component.size() < mMinRhomers)
         {
-            BOOST_FOREACH(edge_t e, component)
+            for (auto& e: component)
             {
                 mComponent->scheduleForRemove(e);
                 changed = true;
@@ -3165,7 +3165,7 @@ ResolveTranscripts::Impl::breakCycles()
         {
             node_t n = comp.nodeSelect(i);
             comp.fetchOutEdges(n, outEdges);
-            BOOST_FOREACH(edge_t e, outEdges)
+            for (auto& e: outEdges)
             {
                 if (n == comp.to(e))
                 {
@@ -3199,7 +3199,7 @@ ResolveTranscripts::Impl::breakCycles()
 
         bool invariantsBroken = false;
 
-        BOOST_FOREACH(const vector<node_t>& component, sccs())
+        for (auto& component: sccs())
         {
             if (component.size() <= 1)
             {
@@ -3256,7 +3256,7 @@ ResolveTranscripts::Impl::breakCircularComponent(
 
     Component& comp = *mComponent;
 
-    BOOST_FOREACH(node_t v, pComponent)
+    for (auto& v: pComponent)
     {
         comp.fetchOutEdges(v, outEdges);
         if (outEdges.size() != 1)
@@ -3303,23 +3303,23 @@ ResolveTranscripts::Impl::breakCyclesComponent(BreakCyclesContext& pCtx)
     outEdges.reserve(sMaxEdgesPerNode);
 
     dynamic_bitset<uint64_t> componentAsSet(comp.nodeCount());
-    BOOST_FOREACH(node_t v, pCtx.mComponent)
+    for (auto& v: pCtx.mComponent)
     {
         componentAsSet[comp.nodeRank(v)] = true;
     }
 
     deque<node_t> joinNodes;
-    BOOST_FOREACH(node_t v, pCtx.mComponent)
+    for (auto& v: pCtx.mComponent)
     {
         comp.fetchInEdges(v, inEdges);
         comp.fetchOutEdges(v, outEdges);
 
-        BOOST_FOREACH(edge_t e, inEdges)
+        for (auto& e: inEdges)
         {
             edges.insert(e);
         }
 
-        BOOST_FOREACH(edge_t e, outEdges)
+        for (auto& e: outEdges)
         {
             edges.insert(e);
         }
@@ -3327,7 +3327,7 @@ ResolveTranscripts::Impl::breakCyclesComponent(BreakCyclesContext& pCtx)
         if (inEdges.size() != 1 || outEdges.size() != 1)
         {
             joinNodes.push_back(v);
-            BOOST_FOREACH(edge_t e, outEdges)
+            for (auto& e: outEdges)
             {
                 node_t toNode = comp.to(e);
                 if (componentAsSet[comp.nodeRank(toNode)])
@@ -3372,7 +3372,7 @@ ResolveTranscripts::Impl::breakCyclesComponent(BreakCyclesContext& pCtx)
         edge_t minEdge;
         uint32_t minEdgeCov = ~(uint32_t)0;
 
-        BOOST_FOREACH(edge_t e, inEdges)
+        for (auto& e: inEdges)
         {
             uint32_t cov = comp.coverage(e);
             node_t n = comp.from(e);
@@ -3383,7 +3383,7 @@ ResolveTranscripts::Impl::breakCyclesComponent(BreakCyclesContext& pCtx)
             }
         }
 
-        BOOST_FOREACH(edge_t e, outEdges)
+        for (auto& e: outEdges)
         {
             uint32_t cov = comp.coverage(e);
             node_t n = comp.to(e);
@@ -3423,10 +3423,10 @@ ResolveTranscripts::Impl::breakCyclesComponent(BreakCyclesContext& pCtx)
 
     dynamic_bitset<uint64_t> edgesToRemove(comp.edgeCount());
 
-    BOOST_FOREACH(node_t v, joinNodes)
+    for (auto& v: joinNodes)
     {
         comp.fetchOutEdges(v, outEdges);
-        BOOST_FOREACH(edge_t e, outEdges)
+        for (auto& e: outEdges)
         {
             node_t w = comp.to(e);
             if (componentAsSet[comp.nodeRank(w)])
@@ -3480,7 +3480,7 @@ ResolveTranscripts::Impl::breakCyclesSubcomponent(BreakCyclesContext& pCtx)
     outEdges.reserve(sMaxEdgesPerNode);
 
     uint64_t joinPoints = 0;
-    BOOST_FOREACH(node_t v, pCtx.mComponent)
+    for (auto& v: pCtx.mComponent)
     {
         if (comp.countInEdges(v) <= 1)
         {
@@ -3489,7 +3489,7 @@ ResolveTranscripts::Impl::breakCyclesSubcomponent(BreakCyclesContext& pCtx)
         ++joinPoints;
 
         comp.fetchOutEdges(v, outEdges);
-        BOOST_FOREACH(edge_t edge, outEdges)
+        for (auto& edge: outEdges)
         {
             node_t v2 = comp.to(edge);
             if (!shortestPaths.distance(v2, v))
@@ -3514,12 +3514,12 @@ ResolveTranscripts::Impl::breakCyclesSubcomponent(BreakCyclesContext& pCtx)
         return changed;
     }
 
-    typedef unordered_map<edge_t,uint64_t> num_loops_t;
+    typedef std::unordered_map<edge_t,uint64_t> num_loops_t;
     num_loops_t numLoops;
 
-    BOOST_FOREACH(const set<edge_t>& loopPath, loops)
+    for (auto& loopPath: loops)
     {
-        BOOST_FOREACH(edge_t e, loopPath)
+        for (auto& e: loopPath)
         {
             ++numLoops[e];
         }
@@ -3541,7 +3541,7 @@ ResolveTranscripts::Impl::breakCyclesSubcomponent(BreakCyclesContext& pCtx)
     // Visit edges in descending order of number of participating loops.
     typedef deque< pair<uint64_t,edge_t> > pq_t;
     pq_t pq;
-    BOOST_FOREACH(const num_loops_t::value_type& nl, numLoops)
+    for (auto& nl: numLoops)
     {
         pq.push_back(make_pair(nl.second, nl.first));
     }
@@ -3560,7 +3560,7 @@ ResolveTranscripts::Impl::breakCyclesSubcomponent(BreakCyclesContext& pCtx)
         {
             bool loopRelevant = false;
 
-            BOOST_FOREACH(edge_t edge, *ii)
+            for (auto& edge: *ii)
             {
                 if (edge == e)
                 {
@@ -3576,13 +3576,13 @@ ResolveTranscripts::Impl::breakCyclesSubcomponent(BreakCyclesContext& pCtx)
 
             loopsToRemove.push_back(ii);
 
-            BOOST_FOREACH(edge_t edge, *ii)
+            for (auto& edge: *ii)
             {
                 --numLoops[edge];
             }
         }
 
-        BOOST_FOREACH(loops_t::iterator it, loopsToRemove)
+        for (auto it: loopsToRemove)
         {
             loops.erase(it);
         }
@@ -3590,7 +3590,7 @@ ResolveTranscripts::Impl::breakCyclesSubcomponent(BreakCyclesContext& pCtx)
 
         pq_t pqtemp;
         pqtemp.swap(pq);
-        BOOST_FOREACH(const pq_t::value_type& ce, pqtemp)
+        for (auto& ce: pqtemp)
         {
             uint64_t nl = numLoops[ce.second];
             if (nl > 0)
@@ -3679,8 +3679,8 @@ ResolveTranscripts::Impl::constructGraph()
         builder.end(mGraph.count());
     }
 
-    mBuild = boost::shared_ptr<Build>();
-    mComponent = boost::shared_ptr<Component>(new Component(mGraph, mStringFac, coverage.begin(), coverage.end()));
+    mBuild = std::shared_ptr<Build>();
+    mComponent = std::make_shared<Component>(std::ref(mGraph), std::ref(mStringFac), coverage.begin(), coverage.end());
 }
 
 

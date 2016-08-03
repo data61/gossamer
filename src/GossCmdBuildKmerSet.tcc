@@ -29,15 +29,12 @@
 
 #ifndef STD_UTILITY
 #include <utility>
+#define STD_UTILITY
 #endif
 
 #ifndef STD_VECTOR
 #include <vector>
-#endif
-
-#ifndef BOOST_SHARED_PTR_HPP
-#include <boost/shared_ptr.hpp>
-#define BOOST_SHARED_PTR_HPP
+#define STD_VECTOR
 #endif
 
 #ifndef BOOST_LEXICAL_CAST_HPP
@@ -48,7 +45,7 @@
 namespace {
 
     typedef std::vector<Gossamer::edge_type> KmerBlock;
-    typedef boost::shared_ptr<KmerBlock> KmerBlockPtr;
+    typedef std::shared_ptr<KmerBlock> KmerBlockPtr;
     static const uint64_t blkSz = 1024;
 
     class BackyardConsumer

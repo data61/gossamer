@@ -1,9 +1,9 @@
 #ifndef BOUNDEDQUEUE_HH
 #define BOUNDEDQUEUE_HH
 
-#ifndef BOOST_THREAD_HPP
-#include <boost/thread.hpp>
-#define BOOST_THREAD_HPP
+#ifndef STD_THREAD
+#include <thread>
+#define STD_THREAD
 #endif
 
 #ifndef BOOST_PTR_CONTAINER_PTR_DEQUE_HPP
@@ -45,7 +45,7 @@ public:
     {
         Profile::Context pc("BoundedQueue::put");
         {
-            boost::unique_lock<boost::mutex> lock(mMutex);
+            std::unique_lock<std::mutex> lock(mMutex);
             while (mItems.size() == mMaxItems)
             {
                 Profile::Context pc("BoundedQueue::put::wait");
@@ -69,7 +69,7 @@ public:
     bool get(T& pItem)
     {
         Profile::Context pc("BoundedQueue::get");
-        boost::unique_lock<boost::mutex> lock(mMutex);
+        std::unique_lock<std::mutex> lock(mMutex);
         while (mItems.size() == 0 && !mFinished)
         {
             Profile::Context pc("BoundedQueue::get::wait");
@@ -102,7 +102,7 @@ public:
      */
     void finish()
     {
-        boost::unique_lock<boost::mutex> lock(mMutex);
+        std::unique_lock<std::mutex> lock(mMutex);
         mFinished = true;
         mEmptyCond.notify_all();
     }
@@ -113,7 +113,7 @@ public:
     void sync(uint64_t pNumConsumers)
     {
         BOOST_ASSERT(W);
-        boost::unique_lock<boost::mutex> lock(mMutex);
+        std::unique_lock<std::mutex> lock(mMutex);
         while (mWaiters < pNumConsumers)
         {
             mWaitersCond.wait(lock);
@@ -140,10 +140,10 @@ private:
     const uint64_t mMaxItems;
     Deque<T> mItems;
     bool mFinished;
-    boost::mutex mMutex;
-    boost::condition_variable mFullCond;
-    boost::condition_variable mEmptyCond;
-    boost::condition_variable mWaitersCond;
+    std::mutex mMutex;
+    std::condition_variable mFullCond;
+    std::condition_variable mEmptyCond;
+    std::condition_variable mWaitersCond;
     uint64_t mFullWaits;
     uint64_t mEmptyWaits;
     uint64_t mWaiters;

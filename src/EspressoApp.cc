@@ -20,7 +20,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#include <boost/thread.hpp>
+#include <thread>
 #include <boost/random.hpp>
 
 #include "GossCmdBuildKmerSet.hh"

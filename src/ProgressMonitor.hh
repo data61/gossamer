@@ -30,6 +30,11 @@
 #define STD_SSTREAM
 #endif
 
+#ifndef STD_CHRONO
+#include <chrono>
+#define STD_CHRONO
+#endif
+
 #ifndef BOOST_TIMER_HPP
 #include <boost/timer.hpp>
 #define BOOST_TIMER_HPP
@@ -107,6 +112,8 @@ private:
 class ProgressMonitorNew : public ProgressMonitorBase
 {
 private:
+    typedef std::chrono::steady_clock monotonic_clock;
+
     Logger& mLog;
     const uint64_t mN;
     const double mInvN;
@@ -116,7 +123,7 @@ private:
     uint64_t mInitStage;
     double mTicksPerSec;
 
-    double mStartTime;
+    monotonic_clock::time_point mStartTime;
     uint64_t mPrev;
     uint64_t mNext;
     double mPrec;
@@ -129,7 +136,9 @@ private:
 
     void recalculateNext()
     {
-        double thisTime = Gossamer::monotonicRealTimeClock();
+        using namespace std::chrono;
+
+        auto thisTime = monotonic_clock::now();
 
         if (mInitialising)
         {
@@ -142,12 +151,14 @@ private:
                 return;
             }
             mInitialising = false;
-            mTicksPerSec = mX / (thisTime - mStartTime);
+            mTicksPerSec = mX * 1.0e6
+                / duration_cast<microseconds>(thisTime - mStartTime).count();
             mNext = mX + std::floor(mTicksPerSec * mUpdateTime);
             return;
         }
 
-        double ticksPerSec = mX / (thisTime - mStartTime);
+        double ticksPerSec = mX * 1.0e6
+            / duration_cast<microseconds>(thisTime - mStartTime).count();
         double newPrec = std::max(0.0,
                 (double)std::ceil(-std::log10(mInvN * (mX - mPrev)) - 2));
 
@@ -160,10 +171,17 @@ private:
 
     bool timeToReport() const
     {
-        return mInitialising
-            ? Gossamer::monotonicRealTimeClock() >=
-                mStartTime + mUpdateTime * mInitStage
-            : mX >= mNext;
+        if (mInitialising) {
+            using namespace std::chrono;
+
+            double rightNow = 1.0e-6 * duration_cast<microseconds>(
+                monotonic_clock::now() - mStartTime
+            ).count();
+            return rightNow >= mUpdateTime * mInitStage;
+        }
+        else {
+            return mX >= mNext;
+        }
     }
 
     void log(double p) const
@@ -208,7 +226,7 @@ public:
           mTicksPerSec(1.0 / pUpdateTime),
           mPrev(0), mNext(0), mPrec(0)
     {
-        mStartTime = Gossamer::monotonicRealTimeClock();
+        mStartTime = monotonic_clock::now();
     }
 };
 

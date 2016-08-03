@@ -3,7 +3,7 @@
 #include "LineSource.hh"
 #include "GossReadSequenceBases.hh"
 #include "ReadSequenceFileSequence.hh"
-#include <boost/make_shared.hpp>
+#include <memory>
 
 #define GOSS_TEST_MODULE TestFastqParser
 #include "testBegin.hh"
@@ -16,12 +16,12 @@ getFastqReader(StringFileFactory& fac, const char* filename)
 {
     GossReadParserFactory fastqParserFac(FastqParser::create);
     GossReadSequenceFactoryPtr seqFac
-        = make_shared<GossReadSequenceBasesFactory>();
+        = std::make_shared<GossReadSequenceBasesFactory>();
     LineSourceFactory lineSrcFac(PlainLineSource::create);
 
     std::deque<GossReadSequence::Item> items;
     items.push_back(GossReadSequence::Item(filename, fastqParserFac, seqFac));
-    return boost::make_shared<ReadSequenceFileSequence>(items, fac, lineSrcFac);
+    return std::make_shared<ReadSequenceFileSequence>(items, fac, lineSrcFac);
 }
 
 

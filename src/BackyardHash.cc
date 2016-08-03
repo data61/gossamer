@@ -2,7 +2,7 @@
 #include "BlendedSort.hh"
 
 #include <iostream>
-#include <boost/unordered_map.hpp>
+#include <unordered_map>
 
 using namespace std;
 using namespace boost;
@@ -176,7 +176,7 @@ BackyardHash::insert(const value_type& pItem)
     if (0)
     {
         SpinlockHolder lk(mOtherMutex);
-        boost::unordered_map<value_type,uint64_t>::iterator i = mOther.find(pItem);
+        std::unordered_map<value_type,uint64_t>::iterator i = mOther.find(pItem);
         if (i != mOther.end())
         {
             i->second++;
@@ -189,7 +189,7 @@ BackyardHash::insert(const value_type& pItem)
     ++mSize;
     value_type k = pItem;
     uint64_t c = 1;
-    uint64_t j = (++mRandom).get() % J;
+    uint64_t j = (++mRandom) % J;
     for (uint64_t i = 0; i < S; ++i)
     {
         Hash h = hash(p, j);
@@ -230,7 +230,7 @@ BackyardHash::insert(const value_type& pItem)
         ++mPanics;
     }
     mOther[k] += c;
-    BOOST_ASSERT(mPanics.get() + mSpills.get() == mOther.size());
+    BOOST_ASSERT(mPanics + mSpills == mOther.size());
 }
 
 void

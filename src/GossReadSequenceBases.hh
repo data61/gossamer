@@ -69,7 +69,7 @@ public:
             LOG(*pLogger, info) << "parsing sequences from "
                 << pParserPtr->in().filename();
         }
-        return make_shared<GossReadSequenceBases>(pParserPtr);
+        return std::make_shared<GossReadSequenceBases>(pParserPtr);
     }
 };
 

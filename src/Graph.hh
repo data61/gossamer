@@ -139,12 +139,11 @@ public:
         }
 
         MarkSeen(const Graph& pGraph, boost::dynamic_bitset<>& pSeen)
-            : mGraph(pGraph), mSeen(pSeen)
+            : mSeen(pSeen)
         {
         }
 
     private:
-        const Graph& mGraph;
         boost::dynamic_bitset<>& mSeen;
     };
 
@@ -629,14 +628,14 @@ private:
 };
 
 
-namespace boost
+namespace std
 {
     template <>
     struct hash<Graph::Edge>
     {
         uint64_t operator()(const Graph::Edge& pEdge) const
         {
-            return hash<Gossamer::position_type>()(pEdge.value());
+            return std::hash<Gossamer::position_type>()(pEdge.value());
         }
     };
 
@@ -645,7 +644,7 @@ namespace boost
     {
         uint64_t operator()(const Graph::Node& pNode) const
         {
-            return hash<Gossamer::position_type>()(pNode.value());
+            return std::hash<Gossamer::position_type>()(pNode.value());
         }
     };
 }

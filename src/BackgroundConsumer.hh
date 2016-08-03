@@ -78,7 +78,7 @@ public:
 private:
     BoundedQueue<value_type> mQueue;
     ConsWorker mCons;
-    boost::thread mThread;
+    std::thread mThread;
     bool mFinished;
     bool mJoined;
 };

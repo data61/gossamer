@@ -194,15 +194,3 @@ void gettimeofday(timeval* t, void *)
 }
 
 
-double
-Gossamer::monotonicRealTimeClock()
-{
-#if _WIN32_WINNT < 0x0600
-#error "GetTickCount64() not supported here."
-#else
-    // Windows Server 2008 and higher supports GetTickCount64().
-    return GetTickCount64() * 1.0e-3;
-#endif
-}
-
-

@@ -179,7 +179,6 @@ doTest(uint64_t pK, const char* pGenome, const char* pReads[])
 #endif // DUMP_GRAPHS
     TourBus tourBus(g, log);
     tourBus.pass();
-    BOOST_CHECK(!tourBus.puzzlingCaseEncountered());
 
     {
         Graph::Builder b(pK, "y", fac, k1mers.size() - tourBus.removedEdgesCount());

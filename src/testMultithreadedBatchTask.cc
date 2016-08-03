@@ -9,7 +9,7 @@
 #include "StringFileFactory.hh"
 #include <vector>
 #include <deque>
-#include <queue>
+#include <chrono>
 
 using namespace boost;
 using namespace std;
@@ -20,10 +20,7 @@ using namespace std;
 namespace {
     void sleepFor100msec()
     {
-        boost::system_time timeout
-            = boost::get_system_time()
-            + boost::posix_time::milliseconds(100);
-        boost::thread::sleep(timeout);
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 }
 
@@ -120,7 +117,7 @@ BOOST_AUTO_TEST_CASE(testOneThread)
 
     MultithreadedBatchTask task(progress);
 
-    boost::shared_ptr<WorkingWorker> thr(new WorkingWorker(task, workToDo));
+    std::shared_ptr<WorkingWorker> thr(new WorkingWorker(task, workToDo));
     task.addThread(thr);
 
     task();
@@ -138,8 +135,8 @@ BOOST_AUTO_TEST_CASE(testTwoThreads)
 
     MultithreadedBatchTask task(progress);
 
-    boost::shared_ptr<WorkingWorker> thr1(new WorkingWorker(task, workToDo));
-    boost::shared_ptr<WorkingWorker> thr2(new WorkingWorker(task, workToDo));
+    std::shared_ptr<WorkingWorker> thr1(new WorkingWorker(task, workToDo));
+    std::shared_ptr<WorkingWorker> thr2(new WorkingWorker(task, workToDo));
     task.addThread(thr1);
     task.addThread(thr2);
 
@@ -159,8 +156,8 @@ BOOST_AUTO_TEST_CASE(testExceptionDelivery)
 
     MultithreadedBatchTask task(progress);
 
-    boost::shared_ptr<InfinitelyLoopingWorker> thr1(new InfinitelyLoopingWorker(task));
-    boost::shared_ptr<ExceptionThrowingWorker> thr2(new ExceptionThrowingWorker(task, 2));
+    std::shared_ptr<InfinitelyLoopingWorker> thr1(new InfinitelyLoopingWorker(task));
+    std::shared_ptr<ExceptionThrowingWorker> thr2(new ExceptionThrowingWorker(task, 2));
     // shared_ptr<InfinitelyLoopingWorker> thr3(new InfinitelyLoopingWorker(task));
     task.addThread(thr1);
     task.addThread(thr2);

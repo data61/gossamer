@@ -24,10 +24,10 @@ namespace {
         // Logger& log(pCxt.log);
         FileFactory& fac(pCxt.fac);
 
-        vector<shared_ptr<KmerSet::LazyIterator> > itrs;
+        vector<std::shared_ptr<KmerSet::LazyIterator> > itrs;
         for (uint64_t i = 0; i < pIns.size(); ++i)
         {
-            shared_ptr<KmerSet::LazyIterator> itr(new KmerSet::LazyIterator(pIns[i], fac));
+            std::shared_ptr<KmerSet::LazyIterator> itr(new KmerSet::LazyIterator(pIns[i], fac));
             if (itr->valid())
             {
                 itrs.push_back(itr);

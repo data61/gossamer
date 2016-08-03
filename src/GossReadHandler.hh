@@ -32,6 +32,6 @@ public:
     virtual ~GossReadHandler() {}
 };
 
-typedef boost::shared_ptr<GossReadHandler> GossReadHandlerPtr;
+typedef std::shared_ptr<GossReadHandler> GossReadHandlerPtr;
 
 #endif // GOSSREADHANDLER_HH

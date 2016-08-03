@@ -17,8 +17,6 @@
 #include "Spinlock.hh"
 #include "SimpleHashSet.hh"
 
-#include <boost/foreach.hpp>
-
 #include <iostream>
 #include <map>
 #include <algorithm>
@@ -80,7 +78,9 @@ namespace // anonymous
     }
 
 
-    double log_fac(uint64_t n)
+    static
+    double
+    log_fac(uint64_t n)
     {
         return logE10 * log_fac_inner(n);
     }
@@ -94,6 +94,7 @@ namespace // anonymous
     }
 
 
+    static
     double
     log_choose(uint64_t n, uint64_t k)
     {
@@ -109,6 +110,7 @@ namespace // anonymous
     }
 
 
+    static
     double
     log_binom_eq(double p, uint64_t n, uint64_t k)
     {
@@ -116,6 +118,7 @@ namespace // anonymous
     }
 
 
+    static
     double
     log_binom_le(double p, uint64_t n, uint64_t k)
     {
@@ -142,6 +145,7 @@ namespace // anonymous
     }
 
 
+    static
     double
     logBinGE(double logP, uint64_t n, uint64_t k)
     {
@@ -166,12 +170,16 @@ namespace // anonymous
         return logE10 * r;
     }
 
-    double logPoissonE(double pLam, uint64_t pK)
+    static
+    double
+    logPoissonE(double pLam, uint64_t pK)
     {
         return pK * pLam - pLam - log_fac_inner(pK);
     }
 
-    double logPoissonLT(double pLam, uint64_t pK)
+    static
+    double
+    logPoissonLT(double pLam, uint64_t pK)
     {
         double r = logPoissonE(pLam, 0);
         for (uint64_t i = 1; i < pK; ++i)
@@ -191,7 +199,9 @@ namespace // anonymous
         return logE10 * r;
     }
 
-    double logPoissonLE(double pLam, uint64_t pK)
+    static
+    double
+    logPoissonLE(double pLam, uint64_t pK)
     {
         double r = logPoissonE(pLam, 0);
         for (uint64_t i = 1; i <= pK; ++i)
@@ -211,7 +221,9 @@ namespace // anonymous
         return logE10 * r;
     }
 
-    double logPoissonGE(double pLam, uint64_t pK)
+    static
+    double
+    logPoissonGE(double pLam, uint64_t pK)
     {
         if (pK == 0)
         {
@@ -372,7 +384,7 @@ namespace // anonymous
         map<uint32_t,uint64_t>& mResults;
         const Phylogeny& mPhylo;
     };
-    typedef boost::shared_ptr<ReadAligner> ReadAlignerPtr;
+    typedef std::shared_ptr<ReadAligner> ReadAlignerPtr;
 
     uint64_t counts(Phylogeny& pPhylo, uint32_t pNode, const map<uint32_t,uint64_t>& pCounts)
     {
@@ -437,22 +449,22 @@ GossCmdClassifyReads::operator()(const GossCmdContext& pCxt)
 
     {
         GossReadSequenceFactoryPtr seqFac
-            = make_shared<GossReadSequenceBasesFactory>();
+            = std::make_shared<GossReadSequenceBasesFactory>();
 
         GossReadParserFactory lineParserFac(LineParser::create);
-        BOOST_FOREACH(const std::string& f, mLines)
+        for (auto& f: mLines)
         {
             items.push_back(GossReadSequence::Item(f, lineParserFac, seqFac));
         }
 
         GossReadParserFactory fastaParserFac(FastaParser::create);
-        BOOST_FOREACH(const std::string& f, mFastas)
+        for (auto& f: mFastas)
         {
             items.push_back(GossReadSequence::Item(f, fastaParserFac, seqFac));
         }
 
         GossReadParserFactory fastqParserFac(FastqParser::create);
-        BOOST_FOREACH(const std::string& f, mFastqs)
+        for (auto& f: mFastqs)
         {
             items.push_back(GossReadSequence::Item(f, fastqParserFac, seqFac));
         }

@@ -90,7 +90,7 @@ public:
     static GossReadParserPtr
     create(const LineSourcePtr& pLineSrcPtr)
     {
-        return boost::make_shared<FastaParser>(pLineSrcPtr);
+        return std::make_shared<FastaParser>(pLineSrcPtr);
     }
 
 private:

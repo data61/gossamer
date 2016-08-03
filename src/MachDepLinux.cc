@@ -197,35 +197,6 @@ MachineAutoSetup::setupMachineSpecific()
 {
     Gossamer::Linux::probeCpu();
     Gossamer::Linux::installSignalHandlers();
-
-    {
-        // The real-time clock should most closely approximate what you
-        // would get if you had a perfect clock sitting outside the
-        // machine. We do not use this for absolute times, only relative
-        // times.
-#ifndef _POSIX_MONOTONIC_CLOCK
-#error "This platform doesn't appear to support POSIX monotonic clocks."
-#else
-        struct timespec spec;
-        if (!clock_gettime(CLOCK_MONOTONIC, &spec))
-        {
-            Gossamer::Linux::sMonotonicClockId = CLOCK_MONOTONIC;
-        }
-#ifdef CLOCK_MONOTONIC_RAW
-        else if (!clock_gettime(CLOCK_MONOTONIC_RAW, &spec))
-        {
-            // CLOCK_MONOTONIC_RAW is not subject to NTP adjustments.
-            // It's not ideal, but probably good enough.
-            Gossamer::Linux::sMonotonicClockId = CLOCK_MONOTONIC_RAW;
-        }
-#endif
-        else
-        {
-            std::cerr << "This system does not appear to support a monotonic clock.\n";
-            exit(1);
-        }
-#endif
-    }
 }
 
 
@@ -233,15 +204,6 @@ uint32_t
 Gossamer::logicalProcessorCount()
 {
     return Gossamer::Linux::sLogicalProcessorCount;
-}
-
-
-double
-Gossamer::monotonicRealTimeClock()
-{
-    struct timespec spec;
-    clock_gettime(Gossamer::Linux::sMonotonicClockId, &spec);
-    return spec.tv_sec + spec.tv_nsec * 1.0e-9;
 }
 
 

@@ -226,7 +226,7 @@ namespace // anonymous
                 //cerr << "merger: merged " << (l - lhs.begin()) << " of " << lhs.size() << " lhs items." << endl;
                 mLhs->moveToFront(l);
                 //cerr << "previously got " << lhs.size() << " items, scheduling " << mLhs->label() << endl;
-                JobManager::Token lt = mMgr.enqueue(boost::bind(&Elem::fill, mLhs.get()), mLhs->deps());
+                JobManager::Token lt = mMgr.enqueue(std::bind(&Elem::fill, mLhs.get()), mLhs->deps());
                 mDeps.insert(lt);
             }
             if (rhs.size() > 0)
@@ -234,7 +234,7 @@ namespace // anonymous
                 //cerr << "merger: merged " << (r - rhs.begin()) << " of " << rhs.size() << " rhs items." << endl;
                 mRhs->moveToFront(r);
                 //cerr << "previously got " << rhs.size() << " items, scheduling " << mRhs->label() << endl;
-                JobManager::Token rt = mMgr.enqueue(boost::bind(&Elem::fill, mRhs.get()), mRhs->deps());
+                JobManager::Token rt = mMgr.enqueue(std::bind(&Elem::fill, mRhs.get()), mRhs->deps());
                 mDeps.insert(rt);
             }
         }
@@ -242,9 +242,9 @@ namespace // anonymous
         Merger(JobManager& pMgr, const ElemPtr& pLhs, const ElemPtr& pRhs)
             : mMgr(pMgr), mLhs(pLhs), mRhs(pRhs)
         {
-            JobManager::Token lt = mMgr.enqueue(boost::bind(&Elem::fill, mLhs.get()), mLhs->deps());
+            JobManager::Token lt = mMgr.enqueue(std::bind(&Elem::fill, mLhs.get()), mLhs->deps());
             mDeps.insert(lt);
-            JobManager::Token rt = mMgr.enqueue(boost::bind(&Elem::fill, mRhs.get()), mRhs->deps());
+            JobManager::Token rt = mMgr.enqueue(std::bind(&Elem::fill, mRhs.get()), mRhs->deps());
             mDeps.insert(rt);
         }
 
@@ -283,7 +283,7 @@ namespace // anonymous
         typename T::Builder bld(pK, pBaseName, pFactory, pN);
         while (true)
         {
-            JobManager::Token t = pMgr.enqueue(boost::bind(&Elem::fill, pRoot.get()), pRoot->deps());
+            JobManager::Token t = pMgr.enqueue(std::bind(&Elem::fill, pRoot.get()), pRoot->deps());
             pMgr.wait(t);
             if (pRoot->items().empty())
             {

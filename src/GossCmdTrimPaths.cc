@@ -6,6 +6,7 @@
 #include "Graph.hh"
 #include "Timer.hh"
 #include "ProgressMonitor.hh"
+#include "ThreadGroup.hh"
 
 #include <string>
 #include <boost/lexical_cast.hpp>
@@ -129,7 +130,7 @@ namespace // anonymous
                     zapRanks.push_back(y_rnk);
                 }
 
-                boost::unique_lock<boost::mutex> lk(mMutex);
+                std::unique_lock<std::mutex> lk(mMutex);
                 for (uint64_t j = 0; j < zapRanks.size(); ++j)
                 {
                     mZapped[zapRanks[j]] = true;
@@ -139,7 +140,7 @@ namespace // anonymous
             }
         }
 
-        Block(const Graph& pGraph, dynamic_bitset<>& pZapped, boost::mutex& pMutex,
+        Block(const Graph& pGraph, dynamic_bitset<>& pZapped, std::mutex& pMutex,
               uint64_t& pTipCount, uint64_t& pZapCount, uint32_t pC,
               uint64_t pBegin, uint64_t pEnd)
             : mGraph(pGraph), mZapped(pZapped), mMutex(pMutex),
@@ -151,14 +152,14 @@ namespace // anonymous
     private:
         const Graph& mGraph;
         dynamic_bitset<>& mZapped;
-        boost::mutex& mMutex;
+        std::mutex& mMutex;
         uint64_t& mPathCount;
         uint64_t& mZapCount;
         const uint32_t mC;
         const uint64_t mBegin;
         const uint64_t mEnd;
     };
-    typedef boost::shared_ptr<Block> BlockPtr;
+    typedef std::shared_ptr<Block> BlockPtr;
 
 } // namespace anonymous
 
@@ -180,7 +181,7 @@ GossCmdTrimPaths::operator()(const GossCmdContext& pCxt)
 
     dynamic_bitset<> zapped(g.count());
 
-    boost::mutex mtx;
+    std::mutex mtx;
 
     uint64_t zapCount = 0;
     uint64_t pathCount = 0;
@@ -201,12 +202,12 @@ GossCmdTrimPaths::operator()(const GossCmdContext& pCxt)
             blks.push_back(BlockPtr(new Block(g, zapped, mtx, pathCount, zapCount, mC, b, e)));
         }
     }
-    thread_group grp;
+    ThreadGroup grp;
     for (uint64_t i = 0; i < J; ++i)
     {
-        grp.create_thread(*blks[i]);
+        grp.create(*blks[i]);
     }
-    grp.join_all();
+    grp.join();
 
     log(info, "writing out graph.");
     ProgressMonitor writeMon(log, g.count(), 200);

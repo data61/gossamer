@@ -16,9 +16,9 @@
 #define BOOST_CALL_TRAITS_HPP
 #endif
 
-#ifndef BOOST_UNORDERED_SET_HPP
-#include <boost/unordered_set.hpp>
-#define BOOST_UNORDERED_SET_HPP
+#ifndef STD_UNORDERED_SET
+#include <unordered_set>
+#define STD_UNORDERED_SET
 #endif
 
 template <typename Tag, typename ValueType = uint64_t>
@@ -38,7 +38,7 @@ public:
     {
         size_t operator() (TaggedNum<Tag,ValueType> pTaggedNum) const
         {
-            return boost::hash<typename TaggedNum<Tag,ValueType>::value_type>()(
+            return std::hash<typename TaggedNum<Tag,ValueType>::value_type>()(
                 pTaggedNum.value());
         }
     };

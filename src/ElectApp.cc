@@ -44,7 +44,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#include <boost/thread.hpp>
+#include <thread>
 
 #include "GossCmdBuildKmerSet.hh"
 #include "GossCmdFilterReads.hh"

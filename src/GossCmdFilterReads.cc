@@ -17,7 +17,6 @@
 #include "SimpleHashSet.hh"
 #include "Timer.hh"
 
-#include <boost/foreach.hpp>
 #include <iostream>
 #include <map>
 
@@ -48,7 +47,7 @@ namespace // anonymous
                 {
                     if (mMatchOut)
                     {
-                        boost::unique_lock<boost::mutex> lock(mMutex);
+                        std::unique_lock<std::mutex> lock(mMutex);
                         pRead->print(*mMatchOut);
                     }
                     return;
@@ -58,7 +57,7 @@ namespace // anonymous
                 {
                     if (mMatchOut)
                     {
-                        boost::unique_lock<boost::mutex> lock(mMutex);
+                        std::unique_lock<std::mutex> lock(mMutex);
                         pRead->print(*mMatchOut);
                     }
                     return;
@@ -66,7 +65,7 @@ namespace // anonymous
             }
             if (mNonMatchOut)
             {
-                boost::unique_lock<boost::mutex> lock(mMutex);
+                std::unique_lock<std::mutex> lock(mMutex);
                 pRead->print(*mNonMatchOut);
             }
         }
@@ -82,7 +81,7 @@ namespace // anonymous
         ostream* mMatchOut;
         ostream* mNonMatchOut;
     };
-    typedef boost::shared_ptr<ReadAligner> ReadAlignerPtr;
+    typedef std::shared_ptr<ReadAligner> ReadAlignerPtr;
 
     class PairAligner
     {
@@ -91,7 +90,7 @@ namespace // anonymous
         {
             if (match(*(pPair.first)) || match(*(pPair.second)))
             {
-                boost::unique_lock<boost::mutex> lock(mMutex);
+                std::unique_lock<std::mutex> lock(mMutex);
                 if (mMatchOut1)
                 {
                     pPair.first->print(*mMatchOut1);
@@ -103,7 +102,7 @@ namespace // anonymous
             }
             else 
             {
-                boost::unique_lock<boost::mutex> lock(mMutex);
+                std::unique_lock<std::mutex> lock(mMutex);
                 if (mNonMatchOut1)
                 {
                     pPair.first->print(*mNonMatchOut1);
@@ -152,7 +151,7 @@ namespace // anonymous
         ostream* mNonMatchOut1;
         ostream* mNonMatchOut2;
     };
-    typedef boost::shared_ptr<PairAligner> PairAlignerPtr;
+    typedef std::shared_ptr<PairAligner> PairAlignerPtr;
 
 void
 pairFiles(const string& pBaseName, string& pName1, string& pName2)
@@ -180,24 +179,24 @@ GossCmdFilterReads::operator()(const GossCmdContext& pCxt)
 
     {
         GossReadSequenceFactoryPtr seqFac
-            = make_shared<GossReadSequenceBasesFactory>();
+            = std::make_shared<GossReadSequenceBasesFactory>();
 
         GossReadParserFactory lineParserFac(LineParser::create);
-        BOOST_FOREACH(const std::string& f, mLines)
+        for (auto& f: mLines)
         {
             items.push_back(GossReadSequence::Item(f,
                             lineParserFac, seqFac));
         }
 
         GossReadParserFactory fastaParserFac(FastaParser::create);
-        BOOST_FOREACH(const std::string& f, mFastas)
+        for (auto& f: mFastas)
         {
             items.push_back(GossReadSequence::Item(f,
                             fastaParserFac, seqFac));
         }
 
         GossReadParserFactory fastqParserFac(FastqParser::create);
-        BOOST_FOREACH(const std::string& f, mFastqs)
+        for (auto& f: mFastqs)
         {
             items.push_back(GossReadSequence::Item(f,
                             fastqParserFac, seqFac));

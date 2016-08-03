@@ -5,8 +5,8 @@
 #include "SimpleHashSet.hh"
 #include "MultithreadedBatchTask.hh"
 #include <set>
-#include <boost/unordered_map.hpp>
-#include <boost/unordered_set.hpp>
+#include <unordered_map>
+#include <unordered_set>
 #include <iostream>
 #include <boost/lexical_cast.hpp>
 #include <boost/function_output_iterator.hpp>
@@ -114,7 +114,7 @@ struct TourBus::Impl
     {
         typedef pair<uint64_t,uint64_t> value_type;
         typedef FibHeap<float,value_type> fwd_t;
-        typedef boost::unordered_map<uint64_t,fwd_t::iterator> rev_t;
+        typedef std::unordered_map<uint64_t,fwd_t::iterator> rev_t;
         fwd_t mFwd;
         rev_t mRev;
 
@@ -204,7 +204,6 @@ struct TourBus::Impl
     bool mDoRelCutoffCheck;
     double mRelCutoff;
     uint64_t mNumThreads;
-    bool mPuzzlingCaseEncountered;
     WorkQueue mWorkQueue;
     vector<Graph::Node> mNodes;
     dist_map_t mDistance;
@@ -218,7 +217,7 @@ struct TourBus::Impl
     void findStartNodes(deque<StartNodeItem>& pStartNodeQueue);
 
     struct FindStartNodeThread;
-    typedef boost::shared_ptr<FindStartNodeThread> FindStartNodeThreadPtr;
+    typedef std::shared_ptr<FindStartNodeThread> FindStartNodeThreadPtr;
 
     struct FindStartNodeThread : public MultithreadedBatchTask::WorkThread
     {
@@ -340,8 +339,7 @@ TourBus::Impl::FindStartNodeThread::FindStartNodeThread(
 TourBus::Impl::Impl(const Graph& pGraph, Logger& pLog)
     : mGraph(pGraph),
       mLog(pLog),
-      mTrimmer(mGraph),
-      mPuzzlingCaseEncountered(false)
+      mTrimmer(mGraph)
 {
     uint64_t rho = mGraph.K() + 1;
     mMaxSequenceLength = 2 * rho + 2;
@@ -363,6 +361,8 @@ TourBus::Impl::Impl(const Graph& pGraph, Logger& pLog)
 void
 TourBus::Impl::findStartNodes(deque<StartNodeItem>& pStartNodeQueue)
 {
+    using namespace std::placeholders;
+
     uint64_t N = mGraph.count();
     uint64_t J = mNumThreads;
     uint64_t S = N / J;
@@ -432,7 +432,7 @@ TourBus::Impl::findStartNodes(deque<StartNodeItem>& pStartNodeQueue)
         deque<Graph::Node> c;
         merge(a.begin(), a.end(), b.begin(), b.end(),
               make_function_output_iterator(
-                  boost::bind(dequePushBaskConstRef, boost::ref(c), _1)));
+                  std::bind(dequePushBaskConstRef, std::ref(c), _1)));
 
         nodeRuns.push_back(deque<Graph::Node>());
         nodeRuns.back().swap(c);
@@ -477,7 +477,7 @@ TourBus::Impl::findStartNodes(deque<StartNodeItem>& pStartNodeQueue)
             mNodes.reserve(a.size() + b.size());
             merge(a.begin(), a.end(), b.begin(), b.end(),
                   make_function_output_iterator(
-                      boost::bind(vectorPushBaskConstRef, boost::ref(mNodes), _1)));
+                      std::bind(vectorPushBaskConstRef, std::ref(mNodes), _1)));
             break;
         }
 
@@ -511,7 +511,7 @@ TourBus::Impl::findStartNodes(deque<StartNodeItem>& pStartNodeQueue)
         deque<StartNodeItem> c;
         merge(a.begin(), a.end(), b.begin(), b.end(),
               make_function_output_iterator(
-                  boost::bind(dequePushBaskConstRef, boost::ref(c), _1)));
+                  std::bind(dequePushBaskConstRef, std::ref(c), _1)));
 
         startNodeRuns.push_back(deque<StartNodeItem>());
         startNodeRuns.back().swap(c);
@@ -893,13 +893,10 @@ TourBus::Impl::analyseEdge(const Graph::Edge& pEnd, const Graph::Edge& pBegin)
 #endif // VERBOSE_DEBUG
 
     // Now let's scan back up the majority path looking for a common element.
-    bool found = false;
     n = g.from(majEdge);
     nRank = rank(n);
-    //set<Graph::Node> ns;
     do
     {
-        //ns.insert(n);
 #ifdef VERBOSE_DEBUG
         sbv.clear();
         g.seq(n, sbv);
@@ -907,40 +904,14 @@ TourBus::Impl::analyseEdge(const Graph::Edge& pEnd, const Graph::Edge& pBegin)
 #endif // VERBOSE_DEBUG
         if (minority.count(nRank))
         {
-            found = true;
             break;
         }
         x = mPredecessors.find(nRank);
         BOOST_ASSERT(x != mPredecessors.end());
         n = g.from(x->second);
         nRank = rank(n);
-        //BOOST_ASSERT(ns.count(n) == 0);
     } while (x != mPredecessors.end());
 
-    if (!found)
-    {
-#ifdef VERBOSE_DEBUG
-        cerr << "Not found!  This is the puzzling case.\n";
-#endif // VERBOSE_DEBUG
-        mPuzzlingCaseEncountered = true;
-        return;
-        // XXX What's going on?
-        cerr << "puzzling!" << endl;
-        for (path_predecessor_t::const_iterator i = mPredecessors.begin(); i != mPredecessors.end(); ++i)
-        {
-            SmallBaseVector v;
-            g.seq(mNodes[i->first], v);
-            cerr << v << '\t';
-            v.clear();
-            g.seq(i->second, v);
-            cerr << v << '\t';
-            Graph::Edge y = g.linearPath(i->second);
-            v.clear();
-            g.tracePath(i->second, y, v);
-            cerr << v << endl;
-        }
-        return;
-    }
 #ifdef VERBOSE_DEBUG
     sbv.clear();
     g.seq(n, sbv);
@@ -1197,13 +1168,6 @@ TourBus::setCoverageRelativeCutoff(double pRelCutoff)
 {
     mPImpl->mDoRelCutoffCheck = true;
     mPImpl->mRelCutoff = pRelCutoff;
-}
-
-
-bool
-TourBus::puzzlingCaseEncountered() const
-{
-    return mPImpl->mPuzzlingCaseEncountered;
 }
 
 

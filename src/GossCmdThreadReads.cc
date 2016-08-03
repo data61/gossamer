@@ -25,10 +25,9 @@
 #include <algorithm>
 #include <iostream>
 #include <string>
-#include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/thread.hpp>
-#include <boost/unordered_set.hpp>
+#include <thread>
+#include <unordered_set>
 #include <math.h>
 
 using namespace boost;
@@ -37,8 +36,8 @@ using namespace std;
 
 typedef pair<SuperPathId,SuperPathId> Link;
 
-// boost::hash
-namespace boost {
+// std::hash
+namespace std {
     template<>
     struct hash<Link>
     {
@@ -64,7 +63,7 @@ Debug readLinks("read-links", "read links from a file, rather than recalculating
 typedef vector<string> strings;
 
 typedef uint32_t LinkCount;
-typedef unordered_map<Link, LinkCount> LinkMap;
+typedef std::unordered_map<Link, LinkCount> LinkMap;
 
 string label(const GossRead& pRead)
 {
@@ -75,9 +74,9 @@ string label(const GossRead& pRead)
 
 struct BiLinkMap
 {
-    typedef unordered_map<SuperPathId, vector<SuperPathId> > UniLinkMap;
-    typedef unordered_map<Link, uint32_t> LinkCountMap;
-    typedef unordered_map<Link, uint32_t> LinkGapMap;
+    typedef std::unordered_map<SuperPathId, vector<SuperPathId> > UniLinkMap;
+    typedef std::unordered_map<Link, uint32_t> LinkCountMap;
+    typedef std::unordered_map<Link, uint32_t> LinkGapMap;
 
     void add(SuperPathId a, SuperPathId b, uint32_t g = 0, LinkCount c = 1)
     {
@@ -182,7 +181,7 @@ struct BiLinkMap
 
 struct SimpleBiLinkMap
 {
-    typedef unordered_map<SuperPathId, SuperPathId> UniLinkMap;
+    typedef std::unordered_map<SuperPathId, SuperPathId> UniLinkMap;
 
     void add(SuperPathId a, SuperPathId b)
     {
@@ -215,7 +214,7 @@ struct SimpleBiLinkMap
             mLhs.insert(make_pair(n, b));
             mRhs.insert(make_pair(b, n));
 
-            unordered_map<Link, uint32_t>::iterator k(mGaps.find(Link(a, b)));
+            std::unordered_map<Link, uint32_t>::iterator k(mGaps.find(Link(a, b)));
             BOOST_ASSERT(k != mGaps.end());
             uint32_t g = k->second;
             mGaps.erase(k);
@@ -242,7 +241,7 @@ struct SimpleBiLinkMap
             mLhs.insert(make_pair(a, n));
             mRhs.insert(make_pair(n, a));
 
-            unordered_map<Link, uint32_t>::iterator k(mGaps.find(Link(a, b)));
+            std::unordered_map<Link, uint32_t>::iterator k(mGaps.find(Link(a, b)));
             BOOST_ASSERT(k != mGaps.end());
             uint32_t g = k->second;
             mGaps.erase(k);
@@ -263,7 +262,7 @@ struct SimpleBiLinkMap
             mLhs.erase(i);
             mRhs.erase(j);
 
-            unordered_map<Link, uint32_t>::iterator k(mGaps.find(Link(a, b)));
+            std::unordered_map<Link, uint32_t>::iterator k(mGaps.find(Link(a, b)));
             BOOST_ASSERT(k != mGaps.end());
             mGaps.erase(k);
         }
@@ -303,7 +302,7 @@ struct SimpleBiLinkMap
     UniLinkMap mLhs;
     UniLinkMap mRhs;
 
-    unordered_map<Link, uint32_t> mGaps;
+    std::unordered_map<Link, uint32_t> mGaps;
 };
 
 typedef vector<SuperPathId> Path;
@@ -394,7 +393,7 @@ private:
     BiLinkMap mLinks;
 };
 
-typedef boost::shared_ptr<ReadLinker> ReadLinkerPtr;
+typedef std::shared_ptr<ReadLinker> ReadLinkerPtr;
 
 #if 0
 // Find a path from pBegin to pEnd, that does not visit any other
@@ -551,7 +550,7 @@ dumpLinks(ostream& pOut, const SimpleBiLinkMap& pLinks)
         BOOST_ASSERT(j->second == a);
 
         uint32_t g = 0;
-        unordered_map<Link, uint32_t>::const_iterator k(pLinks.mGaps.find(*i));
+        std::unordered_map<Link, uint32_t>::const_iterator k(pLinks.mGaps.find(*i));
         if (k != pLinks.mGaps.end())
         {
             g = k->second;
@@ -710,24 +709,24 @@ GossCmdThreadReads::operator()(const GossCmdContext& pCxt)
 
         {
             GossReadSequenceFactoryPtr seqFac
-                = make_shared<GossReadSequenceBasesFactory>();
+                = std::make_shared<GossReadSequenceBasesFactory>();
 
             GossReadParserFactory lineParserFac(LineParser::create);
-            BOOST_FOREACH(const std::string& f, mLines)
+            for(auto& f: mLines)
             {
                 items.push_back(GossReadSequence::Item(f,
                                 lineParserFac, seqFac));
             }
 
             GossReadParserFactory fastaParserFac(FastaParser::create);
-            BOOST_FOREACH(const std::string& f, mFastas)
+            for(auto& f: mFastas)
             {
                 items.push_back(GossReadSequence::Item(f,
                                 fastaParserFac, seqFac));
             }
 
             GossReadParserFactory fastqParserFac(FastqParser::create);
-            BOOST_FOREACH(const std::string& f, mFastqs)
+            for(auto& f: mFastqs)
             {
                 items.push_back(GossReadSequence::Item(f,
                                 fastqParserFac, seqFac));
@@ -887,7 +886,7 @@ GossCmdThreadReads::operator()(const GossCmdContext& pCxt)
                 BOOST_ASSERT(i->second.size() == 1);
                 SuperPathId a = i->first;
                 SuperPathId b = i->second.front();
-                unordered_map<Link, uint32_t>::const_iterator j(links.mGaps.find(Link(a, b)));
+                std::unordered_map<Link, uint32_t>::const_iterator j(links.mGaps.find(Link(a, b)));
                 uint32_t g = j == links.mGaps.end() ? 0 : j->second;
                 // cerr << "add\t" << a.value() << '\t' << b.value() << '\t' << g << '\n';
                 lnks.add(a, b, g);

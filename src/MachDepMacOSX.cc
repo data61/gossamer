@@ -41,7 +41,7 @@ namespace MacOSX {
     {
         struct sigaction sigact = {};
         sigact.sa_sigaction = &printBacktraceAndExit;
-        sigact.sa_flags = SA_RESTART || SA_SIGINFO;
+        sigact.sa_flags = SA_RESTART | SA_SIGINFO;
 
         int sigs[] = {SIGILL, SIGFPE, SIGSEGV, SIGBUS};
         for (unsigned i = 0; i < sizeof(sigs) / sizeof(int); ++i)
@@ -69,8 +69,6 @@ namespace MacOSX {
     };
 
     std::bitset<kCpuCapLast> sCpuCaps;
-
-    double sTicksPerSec;
 
     uint32_t sLogicalProcessorCount;
 
@@ -106,13 +104,6 @@ namespace MacOSX {
     {
         return MacOSX::sLogicalProcessorCount;
     }
-
-    double
-    monotonicRealTimeClock()
-    {
-        uint64_t ticks = mach_absolute_time();
-        return ticks / MacOSX::sTicksPerSec;
-    }
 }
 
 void
@@ -120,8 +111,4 @@ MachineAutoSetup::setupMachineSpecific()
 {
     Gossamer::MacOSX::probeCpu();
     Gossamer::MacOSX::installSignalHandlers();
-
-    mach_timebase_info_data_t timebase_info;
-    mach_timebase_info(&timebase_info);
-    Gossamer::MacOSX::sTicksPerSec = 1.0e9 * timebase_info.numer / timebase_info.denom;
 }

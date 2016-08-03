@@ -11,9 +11,9 @@
 #define BOOST_PROGRAM_OPTIONS_HPP
 #endif
 
-#ifndef BOOST_SHARED_PTR_HPP
-#include <boost/shared_ptr.hpp>
-#define BOOST_SHARED_PTR_HPP
+#ifndef STD_MEMORY
+#include <memory>
+#define STD_MEMORY
 #endif
 
 class GossOption
@@ -56,7 +56,7 @@ private:
     const std::string mShort;
     mutable std::string mSpec;
 };
-typedef boost::shared_ptr<GossOption> GossOptionPtr;
+typedef std::shared_ptr<GossOption> GossOptionPtr;
 
 class GossOptions
 {

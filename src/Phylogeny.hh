@@ -12,7 +12,7 @@
 #include <set>
 #include <iostream>
 #include <vector>
-#include <boost/unordered_map.hpp>
+#include <unordered_map>
 
 class Phylogeny
 {
@@ -36,7 +36,7 @@ public:
 
     const std::vector<uint32_t>& kids(uint32_t pNode) const
     {
-        boost::unordered_map<uint32_t,std::vector<uint32_t> >::const_iterator i = mChildIndex.find(pNode);
+        std::unordered_map<uint32_t,std::vector<uint32_t> >::const_iterator i = mChildIndex.find(pNode);
         if (i != mChildIndex.end())
         {
             return i->second;
@@ -114,10 +114,10 @@ private:
     AnnotTree::NodePtr mRoot;
     uint32_t mRootNode;
     std::vector<uint32_t> mEmptyKids;
-    boost::unordered_map<uint32_t,uint32_t> mParentIndex;
-    boost::unordered_map<uint32_t,std::vector<uint32_t> > mChildIndex;
-    boost::unordered_map<uint32_t,std::string> mNameIndex;
-    boost::unordered_map<uint32_t,AnnotTree::NodePtr> mNodeIndex;
+    std::unordered_map<uint32_t,uint32_t> mParentIndex;
+    std::unordered_map<uint32_t,std::vector<uint32_t> > mChildIndex;
+    std::unordered_map<uint32_t,std::string> mNameIndex;
+    std::unordered_map<uint32_t,AnnotTree::NodePtr> mNodeIndex;
 };
 
 #endif // PHYLOGENY_HH

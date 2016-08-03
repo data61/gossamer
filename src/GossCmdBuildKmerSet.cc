@@ -25,7 +25,6 @@
 
 #include <iostream>
 #include <stdexcept>
-#include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 
 using namespace boost;
@@ -112,22 +111,22 @@ GossCmdBuildKmerSet::operator()(const GossCmdContext& pCxt)
 
     {
         GossReadSequenceFactoryPtr seqFac
-            = make_shared<GossReadSequenceBasesFactory>();
+            = std::make_shared<GossReadSequenceBasesFactory>();
 
         GossReadParserFactory lineParserFac(LineParser::create);
-        BOOST_FOREACH(const std::string& f, mLineNames)
+        for (auto& f: mLineNames)
         {
             items.push_back(GossReadSequence::Item(f, lineParserFac, seqFac));
         }
 
         GossReadParserFactory fastaParserFac(FastaParser::create);
-        BOOST_FOREACH(const std::string& f, mFastaNames)
+        for (auto& f: mFastaNames)
         {
             items.push_back(GossReadSequence::Item(f, fastaParserFac, seqFac));
         }
 
         GossReadParserFactory fastqParserFac(FastqParser::create);
-        BOOST_FOREACH(const std::string& f, mFastqNames)
+        for (auto& f: mFastqNames)
         {
             items.push_back(GossReadSequence::Item(f, fastqParserFac, seqFac));
         }

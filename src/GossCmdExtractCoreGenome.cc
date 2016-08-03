@@ -20,7 +20,7 @@ namespace // anonymous
 
 struct Cursor
 {
-    shared_ptr<Graph::LazyIterator> itm;
+    std::shared_ptr<Graph::LazyIterator> itm;
 
     bool operator<(const Cursor& pRhs) const
     {
@@ -36,7 +36,7 @@ struct Cursor
 };
 
 
-double sqr(const double& pX)
+double sqr(const double pX)
 {
     return pX * pX;
 }

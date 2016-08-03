@@ -124,6 +124,6 @@ private:
     std::string mNow;
 };
 
-typedef boost::shared_ptr<Logger> LoggerPtr;
+typedef std::shared_ptr<Logger> LoggerPtr;
 
 #endif // LOGGER_HH

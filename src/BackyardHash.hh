@@ -6,14 +6,19 @@
 #define STD_VECTOR
 #endif
 
-#ifndef BOOST_UNORDERED_MAP_HPP
-#include <boost/unordered_map.hpp>
-#define BOOST_UNORDERED_MAP_HPP
+#ifndef STD_UNORDERED_MAP
+#include <unordered_map>
+#define STD_UNORDERED_MAP
 #endif
 
 #ifndef STDINT_H
 #include <stdint.h>
 #define STDINT_H
+#endif
+
+#ifndef BOOST_ATOMIC_HPP
+#include <boost/atomic.hpp>
+#define BOOST_ATOMIC_HPP
 #endif
 
 #ifndef GOSSAMER_HH
@@ -22,10 +27,6 @@
 
 #ifndef PROPERTIES_HH
 #include "Properties.hh"
-#endif
-
-#ifndef ATOMIC_HH
-#include "Atomic.hh"
 #endif
 
 #ifndef SPINLOCK_HH
@@ -187,7 +188,7 @@ public:
      */
     uint64_t size() const
     {
-        return mSize.get();
+        return mSize;
     }
 
     /**
@@ -279,7 +280,7 @@ public:
                 s += (1ULL << mSlotBits);
             }
         }
-        boost::unordered_map<value_type,uint64_t>::const_iterator i = mOther.find(pItem);
+        std::unordered_map<value_type,uint64_t>::const_iterator i = mOther.find(pItem);
         if (i != mOther.end())
         {
             c += i->second;
@@ -362,30 +363,28 @@ public:
         }
         mOther.clear();
         mOtherIndex.clear();
-        mSize.clear();
-        mSpills.clear();
-        mPanics.clear();
+        mSize = 0;
+        mSpills = 0;
+        mPanics = 0;
     }
 
     void index() const
     {
         mOtherIndex.clear();
-        for (boost::unordered_map<value_type,uint64_t>::const_iterator j = mOther.begin();
-                j != mOther.end(); ++j)
-        {
-            mOtherIndex.push_back(*j);
+        for (auto& j : mOther) {
+            mOtherIndex.push_back(j);
         }
     }
 
     PropertyTree stat() const
     {
-        double d = static_cast<double>(mSize.get()) / mItems.size();
+        double d = static_cast<double>(mSize) / mItems.size();
         PropertyTree t;
-        t.putProp("cuckoo-size", mSize.get());
+        t.putProp("cuckoo-size", mSize);
         t.putProp("cuckoo-load", d);
         t.putProp("spill-items", mOther.size());
-        t.putProp("count-spills", mSpills.get());
-        t.putProp("panic-spills", mPanics.get());
+        t.putProp("count-spills", mSpills);
+        t.putProp("panic-spills", mPanics);
         return t;
     }
 
@@ -605,12 +604,12 @@ private:
     std::vector<value_type> mItems;
     std::vector<Spinlock> mMutexes;
     Spinlock mOtherMutex;
-    boost::unordered_map<value_type,uint64_t> mOther;
+    std::unordered_map<value_type,uint64_t> mOther;
     mutable std::vector<std::pair<value_type,uint64_t> > mOtherIndex;
-    Atomic mRandom;
-    Atomic mSize;
-    Atomic mSpills;
-    Atomic mPanics;
+    boost::atomic<uint64_t> mRandom;
+    boost::atomic<uint64_t> mSize;
+    boost::atomic<uint64_t> mSpills;
+    boost::atomic<uint64_t> mPanics;
 };
 
 #endif // BACKYARDHASH_HH

@@ -23,7 +23,6 @@
 #include "Timer.hh"
 
 #include <string>
-#include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 
 using namespace boost;
@@ -56,24 +55,24 @@ GossCmdExtractReads::operator()(const GossCmdContext& pCxt)
 
     {
         GossReadSequenceFactoryPtr seqFac
-            = make_shared<GossReadSequenceBasesFactory>();
+            = std::make_shared<GossReadSequenceBasesFactory>();
 
         GossReadParserFactory lineParserFac(LineParser::create);
-        BOOST_FOREACH(const std::string& f, mLines)
+        for (auto& f: mLines)
         {
             items.push_back(GossReadSequence::Item(f,
                             lineParserFac, seqFac));
         }
 
         GossReadParserFactory fastaParserFac(FastaParser::create);
-        BOOST_FOREACH(const std::string& f, mFastas)
+        for (auto& f: mFastas)
         {
             items.push_back(GossReadSequence::Item(f,
                             fastaParserFac, seqFac));
         }
 
         GossReadParserFactory fastqParserFac(FastqParser::create);
-        BOOST_FOREACH(const std::string& f, mFastqs)
+        for (auto& f: mFastqs)
         {
             items.push_back(GossReadSequence::Item(f,
                             fastqParserFac, seqFac));

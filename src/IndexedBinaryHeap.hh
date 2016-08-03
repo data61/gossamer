@@ -11,9 +11,9 @@
 #define STDINT_H
 #endif
 
-#ifndef BOOST_UNORDERED_MAP_HPP
-#include <boost/unordered_map.hpp>
-#define BOOST_UNORDERED_MAP_HPP
+#ifndef STD_UNORDERED_MAP
+#include <unordered_map>
+#define STD_UNORDERED_MAP
 #endif
 
 #ifndef STD_VECTOR
@@ -31,18 +31,23 @@
 #define STD_IOSTREAM
 #endif
 
+#ifndef STD_UTILITY
+#include <utility>
+#define STD_UTILITY
+#endif
+
 /**
  * A binary min heap of elements T, which have methods:
  *      P T::priority() const
  *      K T::key() const
- * Requires boost::hash<K>.
+ * Requires std::hash<K>.
  * Has support for removing, and up/down-heaping arbitrary elements.
  */
 template<typename T, typename K, typename P=uint32_t>
 class IndexedBinaryHeap
 {
     typedef uint32_t heap_pos;
-    typedef boost::unordered_map<K, heap_pos> PosMap;
+    typedef std::unordered_map<K, heap_pos> PosMap;
 
 public:
 
@@ -88,7 +93,7 @@ public:
     {
         mHeap.push_back(t);
         heap_pos pos = mHeap.size();
-        mPos.insert(make_pair(t.key(), pos));
+        mPos.insert(std::make_pair(t.key(), pos));
         up(pos);
         valid();
     }

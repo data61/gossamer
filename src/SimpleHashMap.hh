@@ -34,9 +34,9 @@
 #define STD_STRING
 #endif
 
-#ifndef BOOST_UNORDERED_MAP
-#include <boost/unordered_map.hpp>
-#define BOOST_UNORDERED_MAP
+#ifndef STD_UNORDERED_MAP
+#include <unordered_map>
+#define STD_UNORDERED_MAP
 #endif
 
 template <typename T, typename V>
@@ -77,7 +77,7 @@ public:
 
         std::pair<T,V> operator*() const
         {
-            return make_pair(mMap.mItems[mPos], mMap.mValues[mPos]);
+            return std::make_pair(mMap.mItems[mPos], mMap.mValues[mPos]);
         }
 
         Iterator(const SimpleHashMap<T,V>& pMap)
@@ -190,7 +190,7 @@ template <typename T, typename V>
 V*
 SimpleHashMap<T,V>::find(const T& pItem) const
 {
-    uint64_t h = boost::hash<T>()(pItem);
+    uint64_t h = std::hash<T>()(pItem);
     uint64_t p = 0;
     uint64_t i = h & mMask;
     uint64_t w = i / sWordBits;
@@ -228,7 +228,7 @@ SimpleHashMap<T,V>::insert(const T& pItem, const V& pValue)
 {
     BOOST_ASSERT(find(pItem) == NULL);
     //BOOST_ASSERT(!gone(pItem));
-    uint64_t h = boost::hash<T>()(pItem);
+    uint64_t h = std::hash<T>()(pItem);
     uint64_t p = 0;
     uint64_t i = h & mMask;
     uint64_t w = i / sWordBits;

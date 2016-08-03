@@ -5,9 +5,9 @@
 #include "FileFactory.hh"
 #endif
 
-#ifndef BOOST_SHARED_PTR_HPP
-#include <boost/shared_ptr.hpp>
-#define BOOST_SHARED_PTR_HPP
+#ifndef STD_MEMORY
+#include <memory>
+#define STD_MEMORY
 #endif
 
 #ifndef STDINT_H
@@ -19,7 +19,7 @@ class CompactDynamicBitVector
 {
 public:
     class Node;
-    typedef boost::shared_ptr<Node> NodePtr;
+    typedef std::shared_ptr<Node> NodePtr;
 
     class Visitor
     {

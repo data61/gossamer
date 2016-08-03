@@ -30,9 +30,9 @@
 #define STD_IOSTREAM
 #endif // STD_IOSTREAM
 
-#ifndef BOOST_UNORDERED_SET_HPP
-#include <boost/unordered_set.hpp>
-#define BOOST_UNORDERED_SET_HPP
+#ifndef STD_UNORDERED_SET
+#include <unordered_set>
+#define STD_UNORDERED_SET
 #endif
 
 #ifndef BOOST_STATIC_ASSERT_HPP
@@ -585,8 +585,8 @@ namespace std {
     };
 }
 
-// boost::hash
-namespace boost {
+// std::hash
+namespace std {
     template<int Words>
     struct hash< BigInteger<Words> >
     {

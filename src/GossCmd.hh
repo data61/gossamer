@@ -23,9 +23,9 @@
 #define STD_STRING
 #endif
 
-#ifndef BOOST_SHARED_PTR_HPP
-#include <boost/shared_ptr.hpp>
-#define BOOST_SHARED_PTR_HPP
+#ifndef STD_MEMORY
+#include <memory>
+#define STD_MEMORY
 #endif
 
 #ifndef BOOST_OPTIONAL_HPP
@@ -40,7 +40,7 @@ public:
 
     virtual ~GossCmd() {}
 };
-typedef boost::shared_ptr<GossCmd> GossCmdPtr;
+typedef std::shared_ptr<GossCmd> GossCmdPtr;
 
 class GossCmdCompound : public GossCmd
 {
@@ -94,6 +94,6 @@ protected:
 private:
     const std::string mDesc;
 };
-typedef boost::shared_ptr<GossCmdFactory> GossCmdFactoryPtr;
+typedef std::shared_ptr<GossCmdFactory> GossCmdFactoryPtr;
 
 #endif

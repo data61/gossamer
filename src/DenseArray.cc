@@ -6,6 +6,9 @@ using namespace boost;
 using namespace std;
 
 
+constexpr uint64_t DenseSelect::version;
+
+
 inline
 DenseSelect::Header::Header(const bool pInvertSense)
     : version(DenseSelect::version),
@@ -22,65 +25,6 @@ DenseSelect::Header::Header(const bool pInvertSense)
 }
 
 
-namespace {
-    struct OldDenseSelectHeader
-    {
-        uint64_t indexArrayOffset;
-        uint64_t rankArrayOffset;
-    };
-}
-
-
-void
-DenseSelect::reconstructHeaderFromOldVersion(bool pInvertSense)
-{
-    const OldDenseSelectHeader& hdr
-        = *reinterpret_cast<const OldDenseSelectHeader*>(mData);
-
-    mHeader.version = version;
-    mHeader.flags.reset();
-    mHeader.flags[Header::kInvertSense] = pInvertSense;
-    mHeader.indexArrayOffset = hdr.indexArrayOffset;
-    mHeader.rankArrayOffset = hdr.rankArrayOffset;
-
-    mHeader.logBlockSize = sLogDefBlockSize;
-    mHeader.blockSize = sDefBlockSize;
-    mHeader.logSampleRate = sLogDefSampleRate;
-    mHeader.sampleRate = sDefSampleRate;
-
-    // Everything from here on (apart from intermediate blocks, since
-    // they didn't exist in old-style indexes) is an estimate at best.
-
-    const uint64_t* index
-        = reinterpret_cast<const uint64_t*>(mData + hdr.indexArrayOffset);
-
-    uint64_t numBlocks = (hdr.rankArrayOffset - hdr.indexArrayOffset) / sizeof(uint64_t);
-    uint64_t unspilledBlocks = 0;
-    uint64_t spilledBlocks = 0;
-    for (uint64_t i = 0; i < numBlocks; ++i)
-    {
-        if (index[i] & 1ull)
-        {
-            ++spilledBlocks;
-        }
-        else
-        {
-            ++unspilledBlocks;
-        }
-    }
-
-    mHeader.numBlocks = numBlocks;
-    mHeader.indexSize = sizeof(uint64_t) * numBlocks * 2;
-    mHeader.smallBlocks = unspilledBlocks;
-    mHeader.smallBlocksSize = unspilledBlocks * sizeof(uint16_t)
-                               * sDefBlockSize / sDefSampleRate;
-    mHeader.intermediateBlocks = 0;
-    mHeader.intermediateBlocksSize = 0;
-    mHeader.largeBlocks = spilledBlocks;
-    mHeader.largeBlocksSize = spilledBlocks * sDefBlockSize * sizeof(uint64_t);
-}
-
-
 DenseSelect::DenseSelect(const WordyBitVector& pBitVector,
             const string& pBaseName, FileFactory& pFactory,
             bool pInvertSense)
@@ -93,7 +37,9 @@ DenseSelect::DenseSelect(const WordyBitVector& pBitVector,
 
     if (mHeader.version != version)
     {
-        reconstructHeaderFromOldVersion(pInvertSense);
+        BOOST_THROW_EXCEPTION(
+            Gossamer::error()
+            << Gossamer::version_mismatch_info(pair<uint64_t,uint64_t>(version, mHeader.version)));
     }
 
     // The header has a bunch of redundancy in it. Sanity check just
@@ -304,6 +250,7 @@ DenseSelect::select(uint64_t i, uint64_t j) const
 
     if (idxi != idxj)
     {
+        // If the indexes fall in different blocks, we can't optimise.
         return make_pair(select(i), select(j));
     }
 
@@ -570,10 +517,10 @@ DenseSelect::Builder::flush()
         {
             internal_pointer_t internalPtr = 0;
 
-            if (mSubBlockRange[i] <=
-                    (mHeader.blockSize >> mHeader.logSampleRate))
+            if (mSubBlockRange[i] <= (mHeader.blockSize >> mHeader.logSampleRate))
             {
                 // Small enough to use bit scanning.
+                internalPtr = tSmall;
             }
             else if (mSubBlockRange[i] < (1ull << 8))
             {

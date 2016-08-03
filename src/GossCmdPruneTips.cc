@@ -4,12 +4,12 @@
 #include "GossCmdReg.hh"
 #include "GossOptionChecker.hh"
 #include "Graph.hh"
-#include "Atomic.hh"
 #include "Timer.hh"
 #include "MultithreadedBatchTask.hh"
 #include "ProgressMonitor.hh"
 
 #include <string>
+#include <boost/atomic.hpp>
 #include <boost/lexical_cast.hpp>
 
 using namespace boost;
@@ -68,8 +68,8 @@ namespace // anonymous
             vector<uint64_t> zapRanks;
             int workQuantum = 10000ll;
 
-            bool cutoffCheck = mCutoff;
-            bool relCutoffCheck = mRelCutoff;
+            bool cutoffCheck = mCutoff.get() > 0;
+            bool relCutoffCheck = mRelCutoff.get() > 0;
 
             for (uint64_t i = mBegin; i < mEnd; ++i)
             {
@@ -207,7 +207,7 @@ namespace // anonymous
                     zapRanks.push_back(y_rnk);
                 }
 
-                boost::unique_lock<boost::mutex> lk(mMutex);
+                std::unique_lock<std::mutex> lk(mMutex);
                 for (uint64_t j = 0; j < zapRanks.size(); ++j)
                 {
                     mZapped[zapRanks[j]] = true;
@@ -220,8 +220,8 @@ namespace // anonymous
         }
 
         Block(MultithreadedBatchTask& pTask, const Graph& pGraph,
-              dynamic_bitset<>& pZapped, boost::mutex& pMutex,
-              Atomic& pTipCount, Atomic& pZapCount,
+              dynamic_bitset<>& pZapped, std::mutex& pMutex,
+              boost::atomic<uint64_t>& pTipCount, boost::atomic<uint64_t>& pZapCount,
               uint64_t pBegin, uint64_t pEnd,
               const optional<uint64_t> pCutoff,
               const optional<double> pRelCutoff)
@@ -235,15 +235,15 @@ namespace // anonymous
     private:
         const Graph& mGraph;
         dynamic_bitset<>& mZapped;
-        boost::mutex& mMutex;
-        Atomic& mTipCount;
-        Atomic& mZapCount;
+        std::mutex& mMutex;
+        boost::atomic<uint64_t>& mTipCount;
+        boost::atomic<uint64_t>& mZapCount;
         const uint64_t mBegin;
         const uint64_t mEnd;
         const optional<uint64_t> mCutoff;
         const optional<double> mRelCutoff;
     };
-    typedef boost::shared_ptr<Block> BlockPtr;
+    typedef std::shared_ptr<Block> BlockPtr;
 
     Debug dumpGraphBuildStats("dump-graph-build-stats", "Dump the graph builder stats.");
 
@@ -271,10 +271,10 @@ GossCmdPruneTips::operator()(const GossCmdContext& pCxt)
     for (uint64_t iteration = 0; iteration < mIterations; ++iteration)
     {
         dynamic_bitset<> zapped(g.count());
-        boost::mutex mtx;
+        std::mutex mtx;
 
-        Atomic zapCount = 0;
-        Atomic tipCount = 0;
+        boost::atomic<uint64_t> zapCount(0);
+        boost::atomic<uint64_t> tipCount(0);
 
         log(info, "locating tips (iteration " + lexical_cast<string>(iteration + 1) + ")");
 
@@ -304,10 +304,10 @@ GossCmdPruneTips::operator()(const GossCmdContext& pCxt)
         }
 
         g.remove(zapped);
-        log(info, "number of tips removed: " + lexical_cast<string>(tipCount.get()));
-        log(info, "number of edges removed: " + lexical_cast<string>(zapCount.get()));
-        tc += tipCount.get();
-        zc += zapCount.get();
+        log(info, "number of tips removed: " + lexical_cast<string>(tipCount));
+        log(info, "number of edges removed: " + lexical_cast<string>(zapCount));
+        tc += tipCount;
+        zc += zapCount;
     }
 
     log(info, "writing out graph.");

@@ -19,7 +19,7 @@
 
 class GossReadSequence;
 
-typedef boost::shared_ptr<GossReadSequence> GossReadSequencePtr;
+typedef std::shared_ptr<GossReadSequence> GossReadSequencePtr;
 
 class GossReadSequenceFactory
 {
@@ -33,7 +33,7 @@ public:
     virtual ~GossReadSequenceFactory() {}
 };
 
-typedef boost::shared_ptr<GossReadSequenceFactory> GossReadSequenceFactoryPtr;
+typedef std::shared_ptr<GossReadSequenceFactory> GossReadSequenceFactoryPtr;
 
 class GossReadSequence
 {

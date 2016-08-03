@@ -3,8 +3,7 @@
 
 #include <string>
 #include <iostream>
-#include <boost/thread.hpp>
-#include <boost/make_shared.hpp>
+#include <thread>
 #include <boost/filesystem.hpp>
 
 static const std::string KILL_SIGNAL_CMD_OPTION = "--kill-signal";
@@ -31,12 +30,12 @@ private:
     std::string mSignalFile; // if file exists, kill
     int mCheckEveryMsec; // check if file exists every msec   
     bool mStop;    
-    boost::shared_ptr<boost::thread> mThread;
+    std::shared_ptr<std::thread> mThread;
 
-    static boost::shared_ptr<GossKillSignal> mInstance;
+    static std::shared_ptr<GossKillSignal> mInstance;
 };
 
-boost::shared_ptr<GossKillSignal> GossKillSignal::mInstance;
+std::shared_ptr<GossKillSignal> GossKillSignal::mInstance;
 
 using namespace std;
 using namespace boost;
@@ -87,8 +86,8 @@ void GossKillSignal::JoinThread()
 void GossKillSignal::Register(const std::string& pSignalFileName, int pCheckEveryMsec )
 {
     cerr << "Here" << endl;
-    mInstance = boost::shared_ptr<GossKillSignal>(new GossKillSignal(pSignalFileName, pCheckEveryMsec) );
-    mInstance->mThread = boost::make_shared<thread>( boost::ref(*GossKillSignal::mInstance) ); // start the thread that checks for signals
+    mInstance = std::make_shared<GossKillSignal>(pSignalFileName, pCheckEveryMsec);
+    mInstance->mThread = std::make_shared<thread>( boost::ref(*GossKillSignal::mInstance) ); // start the thread that checks for signals
 }
 
 bool GossKillSignal::ParseAndRegister(int& argc, char* argv[], bool bRemoveFromArgs, int pCheckEveryMsec)

@@ -18,7 +18,7 @@
 
 #include <iostream>
 #include <string>
-#include <boost/unordered_map.hpp>
+#include <unordered_map>
 #include <boost/lexical_cast.hpp>
 #include <boost/tuple/tuple.hpp>
 
@@ -132,7 +132,7 @@ namespace   // anonymous
     // Find the best alignment of the end of pA with the start of pB.
     bool alignEnds(const SmallBaseVector& pA, const SmallBaseVector& pB, int64_t pEst, int64_t& pAln)
     {
-        typedef unordered_map<Gossamer::position_type, vector<int64_t> > OfsMap;
+        typedef std::unordered_map<Gossamer::position_type, vector<int64_t> > OfsMap;
         const int64_t lenA = pA.size();
         OfsMap ofs;
         const int64_t K = 7;
@@ -144,7 +144,7 @@ namespace   // anonymous
             // cerr << kmerToString(K, kmer) << '\t' << of << '\n';
         }
 
-        unordered_map<int64_t, uint64_t> alns;
+        std::unordered_map<int64_t, uint64_t> alns;
         const int64_t lenB = pB.size();
         for (int64_t i = 0; i < lenB - K + 1; ++i)
         {
@@ -167,7 +167,7 @@ namespace   // anonymous
         // For alignment -a with we require at least 
         //      (a - K + 1) / 2 
         // hits. i.e. at least half of the kmers in the match must be present.
-        for (unordered_map<int64_t, uint64_t>::iterator
+        for (std::unordered_map<int64_t, uint64_t>::iterator
              i = alns.begin(); i != alns.end(); )
         {
             int64_t a = -i->first;
@@ -188,7 +188,7 @@ namespace   // anonymous
         }
 
         // Pick the remaining alignment that's closest to the estimate.
-        unordered_map<int64_t, uint64_t>::const_iterator i = alns.begin();
+        std::unordered_map<int64_t, uint64_t>::const_iterator i = alns.begin();
         int64_t aln = i->first;
         int64_t minDiff = llabs(aln - pEst);
         ++i;
@@ -206,8 +206,8 @@ namespace   // anonymous
         return true;
     }
 
-    typedef unordered_map<SuperPathId, int64_t> DistMap;
-    typedef multimap<int64_t, SuperPathId> InvDistMap;
+    typedef std::unordered_map<SuperPathId, int64_t> DistMap;
+    typedef std::multimap<int64_t, SuperPathId> InvDistMap;
 
     typedef boost::tuple<double, SuperPathId, int64_t> QueueEntry;
 
@@ -429,12 +429,12 @@ namespace   // anonymous
     // available nodes.
     // If false is returned, no viable linear sequence could be found.
     bool linearise(const Graph& pG, const SuperGraph& pSg, const ScaffoldGraph& pScaf, 
-                   const unordered_set<SuperPathId>& pAvail, InvDistMap& pInvDistMap)
+                   const std::unordered_set<SuperPathId>& pAvail, InvDistMap& pInvDistMap)
     {
         // Find a starting terminal. 
         SuperPathId start(0);
         bool foundStart = false;
-        for (unordered_set<SuperPathId>::const_iterator i = pAvail.begin(); i != pAvail.end(); ++i)
+        for (std::unordered_set<SuperPathId>::const_iterator i = pAvail.begin(); i != pAvail.end(); ++i)
         {
             const ScaffoldGraph::Edges& tos(pScaf.getTos(*i));
             const ScaffoldGraph::Edges& froms(pScaf.getFroms(*i));
@@ -632,17 +632,17 @@ GossCmdScaffold::operator()(const GossCmdContext& pCxt)
 #ifdef EXTRACT
     if (mExtract != uint64_t(-1))
     {
-        unordered_set<SuperPathId> cmp;
+        std::unordered_set<SuperPathId> cmp;
         scaf.getConnectedNodes(SuperPathId(mExtract), cmp);
         cerr << "component containing " << mExtract << ':';
-        for (unordered_set<SuperPathId>::const_iterator i = cmp.begin(); i != cmp.end(); ++i)
+        for (std::unordered_set<SuperPathId>::const_iterator i = cmp.begin(); i != cmp.end(); ++i)
         {
             cerr << ' ' << (*i).value() << "(" << sg.reverseComplement(*i).value() << ")";
         }
         cerr << '\n';
 
         set<pair<SuperPathId, SuperPathId> > seen;
-        for (unordered_set<SuperPathId>::const_iterator i = cmp.begin(); i != cmp.end(); ++i)
+        for (std::unordered_set<SuperPathId>::const_iterator i = cmp.begin(); i != cmp.end(); ++i)
         {
             SuperPathId n(*i);
             ScaffoldGraph::Node& m(scaf.mNodes[n]);
@@ -669,7 +669,7 @@ GossCmdScaffold::operator()(const GossCmdContext& pCxt)
                 }
             }
         }
-        for (unordered_set<SuperPathId>::const_iterator i = cmp.begin(); i != cmp.end(); ++i)
+        for (std::unordered_set<SuperPathId>::const_iterator i = cmp.begin(); i != cmp.end(); ++i)
         {
             SuperPathId n(*i);
             uint64_t sz(sg.baseSize(n));
@@ -688,7 +688,7 @@ GossCmdScaffold::operator()(const GossCmdContext& pCxt)
 #ifdef DO_DOT
     scaf.dumpDot(cout, sg);
 #endif
-    unordered_set<SuperPathId> left;
+    std::unordered_set<SuperPathId> left;
     scaf.getNodes(left);
     InvDistMap ids;
     while (!left.empty())

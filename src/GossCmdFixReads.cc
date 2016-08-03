@@ -22,8 +22,8 @@
 #include <string>
 #include <boost/lexical_cast.hpp>
 #include <boost/math/distributions.hpp>
-#include <boost/thread.hpp>
-#include <boost/tuple/tuple.hpp>
+#include <thread>
+#include <utility>
 
 using namespace boost;
 using namespace boost::program_options;
@@ -92,7 +92,7 @@ namespace   // anonymous
             return (mParents.insert(make_pair(pX, ParentRank(pX, 0))).first)->second;
         }
 
-        unordered_map<T, ParentRank> mParents;
+        std::unordered_map<T, ParentRank> mParents;
     };
 
     class OfsCmp 
@@ -101,8 +101,8 @@ namespace   // anonymous
 
         bool operator()(uint64_t pX, uint64_t pY) const
         {
-            unordered_map<uint64_t, uint64_t>::const_iterator itrX(mKmerOfs.find(pX));
-            unordered_map<uint64_t, uint64_t>::const_iterator itrY(mKmerOfs.find(pY));
+            auto itrX = mKmerOfs.find(pX);
+            auto itrY = mKmerOfs.find(pY);
             if (itrX != mKmerOfs.end() && itrY != mKmerOfs.end())
             {
                 return itrX->second < itrY->second;
@@ -110,14 +110,14 @@ namespace   // anonymous
             return pX < pY;
         }
 
-        OfsCmp(const unordered_map<uint64_t, uint64_t>& pKmerOfs)
+        OfsCmp(const std::unordered_map<uint64_t, uint64_t>& pKmerOfs)
             : mKmerOfs(pKmerOfs)
         {
         }
 
     private:
 
-        const unordered_map<uint64_t, uint64_t>& mKmerOfs;
+        const std::unordered_map<uint64_t, uint64_t>& mKmerOfs;
     };
 
     class CompCmpGt
@@ -145,14 +145,14 @@ namespace   // anonymous
         const map<uint64_t, double>& mCompWeights;
     };
 
-    typedef tuple<uint64_t, uint64_t, string> Frag;
+    typedef std::tuple<uint64_t, uint64_t, string> Frag;
     class FragCmp
     {
     public:
         
         bool operator()(const Frag& pX, const Frag& pY) const
         {
-            return pX.get<0>() < pY.get<0>();
+            return std::get<0>(pX) < std::get<0>(pY);
         }
 
         FragCmp()
@@ -234,12 +234,12 @@ namespace   // anonymous
 
     class Scanner : public GossReadHandler
     {
-        static const double sIndelRate = 0.15;
-        static const uint64_t sMinEdges = 100;
-        static const uint64_t sMaxBranch = 1024;
-        static const double sMinHitPairP = 1.0e-9;
-        static const uint64_t sMaxPairLookAhead = 100000; // 100;
-        static const uint64_t sMaxMatchK = 21;
+        static constexpr double sIndelRate = 0.15;
+        static constexpr uint64_t sMinEdges = 100;
+        static constexpr uint64_t sMaxBranch = 1024;
+        static constexpr double sMinHitPairP = 1.0e-9;
+        static constexpr uint64_t sMaxPairLookAhead = 100000; // 100;
+        static constexpr uint64_t sMaxMatchK = 21;
 
     public:
 
@@ -646,7 +646,7 @@ namespace   // anonymous
             // segments
             mKmerAligner.reset();
             vector<SegOfs> segOfs(ranks.size(), SegOfs(SuperPathId(0), 0));
-            typedef unordered_map<uint64_t, vector<uint64_t> > SegPosType;
+            typedef std::unordered_map<uint64_t, vector<uint64_t> > SegPosType;
             SegPosType segPos;
             {
                 // vector<string> segStrs;
@@ -946,7 +946,6 @@ namespace   // anonymous
                         continue;
                     }
 
-                    // goto done;
                     {
                         // If the path extends beyond the end of the read, just fill it in up to that length.
                         const uint64_t readLenAfter = numLocs - lastPos;
@@ -997,9 +996,8 @@ namespace   // anonymous
                     {
                         continue;
                     }
-done:
                     frags.push_back(Frag(firstPos, lastPos, ""));
-                    sequence(edges, frags.back().get<2>());
+                    sequence(edges, std::get<2>(frags.back()));
                     numUsedComps += 1;
                     numJuncs += compJuncs;
                     usedSegs.insert(usedSegs.end(), compSegs.begin(), compSegs.end());
@@ -1015,17 +1013,15 @@ done:
                 string corRead;
                 corRead.reserve(numLocs * 1.5);
                 uint64_t gapPos = 0;
-                // cerr << "from\tto\treadLen\tfragLen\n";
                 for (uint64_t i = 0; i < frags.size(); ++i)
                 {
                     const Frag& frag(frags[i]);
-                    // cerr << frag.get<0>() << '\t' << frag.get<1>() << '\t' << (frag.get<1>() - frag.get<0>()) << '\t' << frag.get<2>().size() << '\t' << frag.get<2>() << '\n';
-                    for (uint64_t j = gapPos; j < frag.get<0>(); ++j)
+                    for (uint64_t j = gapPos; j < std::get<0>(frag); ++j)
                     {
                         corRead += tolower(pRead.read()[j]);
                     }
-                    corRead += frag.get<2>();
-                    gapPos = frag.get<1>();
+                    corRead += std::get<2>(frag);
+                    gapPos = std::get<1>(frag);
                 }
                 for (uint64_t j = gapPos; j < pRead.length(); ++j)
                 {
@@ -1089,7 +1085,7 @@ done:
         map<uint64_t,uint64_t> mHist;
     };
 
-    typedef shared_ptr<Scanner> ScannerPtr;
+    typedef std::shared_ptr<Scanner> ScannerPtr;
 
     template<typename T>
     void bfs(const EntryEdgeSet& pEntries, uint64_t pStart, uint64_t pDepth, T& pVis)
@@ -1211,10 +1207,10 @@ GossCmdFixReads::operator()(const GossCmdContext& pCxt)
     ostream& out(**outPtr);
 
     log(info, "processing reads");
-    vector<shared_ptr<GossReadHandler> > sps;
+    std::vector<std::shared_ptr<GossReadHandler> > sps;
     for (uint64_t i = 0; i < mNumThreads; ++i)
     {
-        sps.push_back(shared_ptr<GossReadHandler>(new Scanner(g, ee, eix, hood, out, mut)));
+        sps.push_back(std::shared_ptr<GossReadHandler>(new Scanner(g, ee, eix, hood, out, mut)));
     }
     GossReadDispatcher handler(sps);
     GossReadProcessor::processSingle(pCxt, mFastas, mFastqs, mLines, handler);

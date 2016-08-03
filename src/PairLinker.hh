@@ -53,7 +53,7 @@ public:
     {
         uint64_t id = pId.value();
         {
-            boost::unique_lock<boost::mutex> l(mMutex);
+            std::unique_lock<std::mutex> l(mMutex);
             if (mKnown[id])
             {
                 return mUnique[id];
@@ -61,7 +61,7 @@ public:
         }
 
         bool u = mSG.unique(mSG[pId], mExpectedCoverage);
-        boost::unique_lock<boost::mutex> l(mMutex);
+        std::unique_lock<std::mutex> l(mMutex);
         mUnique[id] = u;
         mKnown[id] = true;
         return u;
@@ -75,7 +75,7 @@ public:
 
 private:
     
-    boost::mutex mMutex;
+    std::mutex mMutex;
     const SuperGraph& mSG;
     const double mExpectedCoverage;
     boost::dynamic_bitset<> mKnown;
@@ -216,7 +216,7 @@ public:
                 TrivialVector<uint8_t,PairLink::maxBytes> v;
                 PairLink::encode(lnk, v);
                 {
-                    boost::unique_lock<boost::mutex> lk(mMutex);
+                    std::unique_lock<std::mutex> lk(mMutex);
                     //cerr << "p\t" << lhsId.value() << '\t' << rhsId.value() << '\t'
                     //              << lhsStartOff << '\t' << rhsEndOff << '\n';
                     mSorter.push_back(v);
@@ -228,7 +228,7 @@ public:
                 v.clear();
                 PairLink::encode(lnk_rc, v);
                 {
-                    boost::unique_lock<boost::mutex> lk(mMutex);
+                    std::unique_lock<std::mutex> lk(mMutex);
                     //cerr << "r\t" << rhsRcId.value() << '\t' << lhsRcId.value() << '\t'
                     //              << rhsRcStartOff << '\t' << lhsRcEndOff << '\n';
                     mSorter.push_back(v);
@@ -244,7 +244,7 @@ public:
 
     PairLinker(const SuperGraph& pSuperGraph, const PairAligner& pAligner,
                Orientation pOrient, UniquenessCache& pUCache,
-               ExternalBufferSort& pSorter, boost::mutex& pMutex)
+               ExternalBufferSort& pSorter, std::mutex& pMutex)
         : mSuperGraph(pSuperGraph), mAligner(pAligner), 
           mOrient(pOrient), mUCache(pUCache),
           mSorter(pSorter), mMutex(pMutex)
@@ -259,9 +259,9 @@ private:
     Hist mDist;
     UniquenessCache& mUCache;
     ExternalBufferSort& mSorter;
-    boost::mutex& mMutex;
+    std::mutex& mMutex;
 };
 
-typedef boost::shared_ptr<PairLinker> PairLinkerPtr;
+typedef std::shared_ptr<PairLinker> PairLinkerPtr;
 
 #endif  // PAIRLINKER_HH

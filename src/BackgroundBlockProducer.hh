@@ -11,7 +11,7 @@ class BackgroundBlockProducer
 public:
     typedef typename Producer::value_type value_type;
     typedef Deque<value_type> Block;
-    typedef boost::shared_ptr<Block> BlockPtr;
+    typedef std::shared_ptr<Block> BlockPtr;
 
     class ProdWorker
     {
@@ -84,7 +84,7 @@ public:
     {
         if (mValid)
         {
-            mThread.interrupt();
+            // XXX interrupt support?
         }
         mThread.join();
     }
@@ -92,7 +92,7 @@ public:
 private:
     BoundedQueue<BlockPtr> mQueue;
     ProdWorker mProd;
-    boost::thread mThread;
+    std::thread mThread;
     bool mValid;
     BlockPtr mItems;
 };

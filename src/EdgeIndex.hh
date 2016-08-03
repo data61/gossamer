@@ -17,7 +17,7 @@
 class EdgeIndex
 {
 public:
-    static const uint64_t version = 2011092301ULL;
+    static constexpr uint64_t version = 2011092301ULL;
     // Version history
     // 2011082901   - first readable/writable version
     // 2011092301   - changed PathIndex to a dense array

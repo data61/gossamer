@@ -2,7 +2,7 @@
 #define JOBMANAGER_HH
 
 #include <boost/function.hpp>
-#include <boost/thread.hpp>
+#include <thread>
 #include <map>
 #include <set>
 #include <vector>
@@ -32,7 +32,7 @@ public:
 
     Token enqueue(const Job& pJob, const Tokens& pDeps)
     {
-        boost::unique_lock<boost::mutex> lk(mMutex);
+        std::unique_lock<std::mutex> lk(mMutex);
         std::vector<Token> toSchedule;
         Token t = mNextTok++;
         mJobs[t] = pJob;
@@ -68,7 +68,7 @@ public:
 
     void wait()
     {
-        boost::unique_lock<boost::mutex> lk(mMutex);
+        std::unique_lock<std::mutex> lk(mMutex);
         while (!mIncomplete.empty())
         {
             mCond.wait(lk);
@@ -77,7 +77,7 @@ public:
 
     void wait(const Token& pTok)
     {
-        boost::unique_lock<boost::mutex> lk(mMutex);
+        std::unique_lock<std::mutex> lk(mMutex);
         while (mIncomplete.count(pTok))
         {
             mCond.wait(lk);
@@ -101,12 +101,12 @@ private:
     {
         Job j = mJobs[pTok];
         mJobs.erase(pTok);
-        mQueue.push_back(boost::bind(&runJob, this, pTok, j));
+        mQueue.push_back(std::bind(&runJob, this, pTok, j));
     }
 
     void finish(Token pTok)
     {
-        boost::unique_lock<boost::mutex> lk(mMutex);
+        std::unique_lock<std::mutex> lk(mMutex);
         std::vector<Token> toSchedule;
         mIncomplete.erase(pTok);
         if (mIncomplete.empty())
@@ -134,8 +134,8 @@ private:
         }
     }
 
-    boost::mutex mMutex;
-    boost::condition_variable mCond;
+    std::mutex mMutex;
+    std::condition_variable mCond;
     Token mNextTok;
     std::map<Token,Job> mJobs;
     std::map<Token,Tokens> mDepsIndex;

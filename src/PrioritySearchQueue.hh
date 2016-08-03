@@ -27,7 +27,7 @@
 #endif
 
 template<typename K, typename V,
-         typename KeyHash = boost::hash<K>,
+         typename KeyHash = std::hash<K>,
          typename KeyPred = std::equal_to<K>,
          typename ValueComp = std::less<V>,
          typename Allocator = std::allocator<char>

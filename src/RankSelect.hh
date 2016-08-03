@@ -24,9 +24,9 @@
 #define BOOST_CALL_TRAITS_HPP
 #endif
 
-#ifndef BOOST_UNORDERED_SET_HPP
-#include <boost/unordered_set.hpp>
-#define BOOST_UNORDERED_SET_HPP
+#ifndef STD_UNORDERED_SET
+#include <unordered_set>
+#define STD_UNORDERED_SET
 #endif
 
 #ifndef NUMERIC_CONVERSION_UTIL_HH
@@ -77,7 +77,7 @@ namespace Gossamer
         {
             size_t operator() (param_type pPos) const
             {
-                return boost::hash<value_type>()(pPos.value());
+                return std::hash<value_type>()(pPos.value());
             }
         };
 
@@ -319,8 +319,8 @@ namespace std {
     };
 }
 
-// boost::hash
-namespace boost {
+// std::hash
+namespace std {
     template<>
     struct hash<Gossamer::position_type>
         : public Gossamer::position_type::Hash

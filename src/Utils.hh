@@ -26,10 +26,35 @@
 #define BOOST_STATIC_ASSERT_HPP
 #endif
 
-#include <boost/math/constants/constants.hpp>
-#include <boost/operators.hpp>
+#ifndef STD_MEMORY
+#include <memory>
+#define STD_MEMORY
+#endif
+
+#ifndef STD_ITERATOR
+#include <iterator>
+#define STD_ITERATOR
+#endif
+
+#ifndef STD_IOSTREAM
 #include <iostream>
+#define STD_IOSTREAM
+#endif
+
+#ifndef BOOST_MATH_CONSTANTS_CONSTANTS_HPP
+#include <boost/math/constants/constants.hpp>
+#define BOOST_MATH_CONSTANTS_CONSTANTS_HPP
+#endif
+
+#ifndef BOOST_OPERATORS_HPP
+#include <boost/operators.hpp>
+#define BOOST_OPERATORS_HPP
+#endif
+
+#ifndef SIGNAL_H
 #include <signal.h>
+#define SIGNAL_H
+#endif
 
 // Identify the platform.  At the moment, we only have three
 // platforms:
@@ -91,13 +116,6 @@ namespace Gossamer
 
 /// Get the number of logical processors on this machine.
 uint32_t logicalProcessorCount();
-
-
-/// Get the value of a monotonic real-time clock time in seconds.
-/// Note that this is NOT a high-resolution timer.  On Windows, in
-/// particular, the best you can hope for is 10-16ms of resolution
-/// using this clock.
-double monotonicRealTimeClock();
 
 
 inline uint32_t popcnt(uint64_t pWord)
@@ -224,7 +242,7 @@ inline uint64_t find_first_set(uint64_t pWord)
 
 inline uint64_t select_by_ffs(uint64_t pWord, uint64_t pR)
 {
-    register uint64_t bit = 0;
+    uint64_t bit = 0;
     for (++pR; pR > 0; --pR)
     {
         bit = pWord & -pWord;
@@ -260,7 +278,7 @@ inline uint64_t select_by_vigna(uint64_t pWord, uint64_t pR)
     const uint64_t sOnesStep4  = 0x1111111111111111ull;
     const uint64_t sIncrStep8  = 0x8040201008040201ull;
 
-    register uint64_t byte_sums = pWord - ((pWord & 0xA*sOnesStep4) >> 1);
+    uint64_t byte_sums = pWord - ((pWord & 0xA*sOnesStep4) >> 1);
     byte_sums = (byte_sums & 3*sOnesStep4) + ((byte_sums >> 2) & 3*sOnesStep4);
     byte_sums = (byte_sums + (byte_sums >> 4)) & 0xF*sLSBs8;
     byte_sums *= sLSBs8;
@@ -511,6 +529,42 @@ lower_bound(const T* pBegin, const T* pEnd, const T& pKey)
 }
 
 
+// Custom version of lower_bound, which converts from binary
+// search to linear search once the gap is small enough.
+//
+template<typename It, typename T, typename Comp, int Min>
+It
+tuned_lower_bound(const It& pBegin, const It& pEnd, const T& pKey, Comp pComp)
+{
+    auto len = std::distance(pBegin, pEnd);
+    It s = pBegin;
+
+    while (len > Min)
+    {
+        auto half = len >> 1;
+        It m = s;
+        std::advance(m, half);
+        if (pComp(*m, pKey))
+        {
+            s = m;
+            std::advance(s, 1);
+            len -= half + 1;
+        }
+        else
+        {
+            len = half;
+        }
+    }
+
+    while (len > 0 && pComp(*s,pKey)) {
+        --len;
+        ++s;
+    }
+
+    return s;
+}
+
+
 // Custom version of upper_bound, optimised for pointers.
 //
 template<typename T>
@@ -535,6 +589,48 @@ upper_bound(const T* pBegin, const T* pEnd, const T& pKey)
     }
 
     return pBegin;
+}
+
+
+
+// Custom version of upper_bound, which converts from binary
+// search to linear search once the gap is small enough.
+//
+template<typename It, typename T, typename Comp, int Min>
+It
+tuned_upper_bound(const It& pBegin, const It& pEnd, const T& pKey, Comp pComp)
+{
+    auto len = std::distance(pBegin, pEnd);
+    It s = pBegin;
+
+    while (len > Min)
+    {
+        auto half = len >> 1;
+        It m = s;
+        std::advance(m, half);
+        if (pComp(pKey,*m))
+        {
+            len = half;
+        }
+        else
+        {
+            s = m;
+            std::advance(s, 1);
+            len -= half + 1;
+        }
+    }
+
+    std::advance(s, len);
+    while (len > 0) {
+        --s;
+        if (!pComp(pKey, *s)) {
+            ++s;
+            break;
+        }
+        --len;
+    }
+
+    return s;
 }
 
 

@@ -1,17 +1,25 @@
 # To enable KILL_SIGNAL run:  bjam define=KILL_SIGNAL_SUPPORT
 
-using gcc ;
 import testing ;
-using mpi ;
+import feature ;
+
+feature.feature cpp11 :
+    on :
+    composite optional propagated
+    ;
+
+feature.compose <cpp11>on :
+        <cxxflags>"-std=c++11"
+    ;
 
 project
-    : requirements <threading>multi <debug-symbols>on <link>static <runtime-link>static 
+    : requirements <threading>multi <debug-symbols>on <link>static <runtime-link>static <cpp11>on
     ;
 
 variant debug-popcnt : debug : <cflags>-mpopcnt <cflags>-msse4.2 ;
 variant release-popcnt : release : <cflags>-mpopcnt <cflags>-msse4.2 ;
 
-lib rt : : <name>rt ;
+# lib rt : : <name>rt ;
 lib zlib : : <name>z ;
 lib bz2 : : <name>bz2 ;
 lib matio : : <name>matio ;
@@ -136,7 +144,7 @@ lib gossamer :
     VariableByteArray.cc
     VariableWidthBitArray.cc
     WordyBitVector.cc
-    boost_system boost_filesystem boost_iostreams boost_program_options boost_thread zlib bz2 rt dl sqlite3 ;
+    boost_system boost_filesystem boost_iostreams boost_program_options boost_thread zlib bz2 dl sqlite3 ;
 
 exe goss : goss.cc gossapp ;
 
@@ -152,7 +160,6 @@ exe xenome : xenome.cc xenomeapp ;
 
 unit-test testAnnotTree : testAnnotTree.cc gossamer ; 
 unit-test testAsyncMerge : testAsyncMerge.cc gossamer  boost_thread : <threading>multi ; 
-unit-test testAtomic : testAtomic.cc gossamer ; 
 unit-test testBackgroundLineSource : testBackgroundLineSource.cc gossamer  boost_thread : <threading>multi ; 
 unit-test testBackyardHash : testBackyardHash.cc gossamer ; 
 unit-test testBigInteger : testBigInteger.cc gossamer ; 

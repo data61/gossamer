@@ -68,6 +68,7 @@ log_fac_inner(uint64_t n)
 }
 
 
+static
 double log_fac(uint64_t n)
 {
     return logE10 * log_fac_inner(n);
@@ -82,6 +83,7 @@ log_choose_inner(uint64_t n, uint64_t k)
 }
 
 
+static
 double
 log_choose(uint64_t n, uint64_t k)
 {
@@ -97,6 +99,7 @@ log_binom_eq_inner(double logP, double log1mP, uint64_t n, uint64_t k)
 }
 
 
+static
 double
 log_binom_eq(double p, uint64_t n, uint64_t k)
 {
@@ -104,6 +107,7 @@ log_binom_eq(double p, uint64_t n, uint64_t k)
 }
 
 
+static
 double
 log_binom_le(double p, uint64_t n, uint64_t k)
 {
@@ -125,6 +129,7 @@ log_binom_le(double p, uint64_t n, uint64_t k)
 }
 
 
+static
 double
 logBinGE(double logP, uint64_t n, uint64_t k)
 {
@@ -279,7 +284,7 @@ private:
     Logger& mLog;
 };
 
-typedef boost::shared_ptr<Annotater> AnnotaterPtr;
+typedef std::shared_ptr<Annotater> AnnotaterPtr;
 
 uint64_t annCounts(Phylogeny& pPhylo, const map<uint32_t, uint64_t>& pCounts, uint32_t pNode)
 {

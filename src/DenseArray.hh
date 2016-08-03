@@ -55,7 +55,7 @@ protected:
 class DenseSelect
 {
 public:
-    static const uint64_t version = 2012092701ULL;
+    static constexpr uint64_t version = 2012092701ULL;
     // 2012092701L   - two-level indexes
 
     typedef uint16_t internal_pointer_t;
@@ -186,8 +186,6 @@ protected:
         tIntermediate = 5
     };
     static const uint64_t sBlockTypeMask = 0x7;
-
-    void reconstructHeaderFromOldVersion(bool pInvertSense);
 
     uint64_t lookupSubBlock(const uint8_t* pBlockStart, uint64_t pStartRank,
                             internal_pointer_t pSubBlock, uint64_t pI) const;

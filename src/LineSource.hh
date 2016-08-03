@@ -111,6 +111,6 @@ private:
     BackgroundBlockProducer<PlainLineSource> mBackground;
 };
 
-typedef boost::function<LineSourcePtr (const FileThunkIn&)> LineSourceFactory;
+typedef std::function<LineSourcePtr (const FileThunkIn&)> LineSourceFactory;
 
 #endif // LINESOURCE_HH

@@ -58,6 +58,7 @@ class IntegerArrayBasic : public IntegerArray
 {
 public:
     typedef StoreType store_type;
+    static constexpr unsigned BinarySearchCutoff = 32;
 
     uint64_t size() const
     {
@@ -74,14 +75,29 @@ public:
         using namespace Gossamer;
         store_type value = static_cast<store_type>(pVal.asUInt64());
         const store_type* arr = mArray.begin();
-        return Gossamer::lower_bound(arr + pBegin, arr + pEnd, value) - arr;
+        auto lb
+            = tuned_lower_bound<
+                    const store_type*,
+                    store_type,
+                    std::less<store_type>,
+                    BinarySearchCutoff>
+                (arr + pBegin, arr + pEnd, value, std::less<store_type>());
+        return lb - arr;
     }
 
     uint64_t upper_bound(uint64_t pBegin, uint64_t pEnd, const value_type& pVal) const
     {
+        using namespace Gossamer;
         store_type value = static_cast<store_type>(pVal.asUInt64());
         const store_type* arr = mArray.begin();
-        return Gossamer::upper_bound(arr + pBegin, arr + pEnd, value) - arr;
+        auto ub
+            = tuned_upper_bound<
+                    const store_type*,
+                    store_type,
+                    std::less<store_type>,
+                    BinarySearchCutoff>
+                (arr + pBegin, arr + pEnd, value, std::less<store_type>());
+        return ub - arr;
     }
 
     PropertyTree stat() const

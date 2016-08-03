@@ -18,6 +18,7 @@ struct WrappedNumericLimits
 
     static const int digits = wrapped_limits::digits;
     static const int digits10 = wrapped_limits::digits10;
+    static const int max_digits10 = wrapped_limits::max_digits10;
 
     static const bool is_signed = wrapped_limits::is_signed;
     static const bool is_integer = wrapped_limits::is_integer;
@@ -90,6 +91,7 @@ struct UnsignedIntegralNumericLimits
 
     static const int digits = Bits;
     static const int digits10 = (int)(Bits * 0.30102999566398114);
+    static const int max_digits10 = digits10 + 1;
 
     static T epsilon() throw() { return T(0); }
     static T round_error() throw() { return T(0); }

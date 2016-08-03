@@ -6,7 +6,8 @@
 #include "BackyardHash.hh"
 #include <vector>
 #include <boost/random.hpp>
-#include <boost/thread.hpp>
+#include "ThreadGroup.hh"
+#include <thread>
 
 using namespace boost;
 using namespace std;
@@ -256,7 +257,7 @@ private:
     map<uint64_t,uint64_t>& mMap;
     mutex& mMutex;
 };
-typedef boost::shared_ptr<Inserter> InserterPtr;
+typedef std::shared_ptr<Inserter> InserterPtr;
 
 BOOST_AUTO_TEST_CASE(test7)
 {
@@ -265,14 +266,14 @@ BOOST_AUTO_TEST_CASE(test7)
 
     const uint64_t T = 1;
     vector<InserterPtr> is;
-    thread_group g;
+    ThreadGroup g;
     mutex mtx;
     for (uint64_t i = 0; i < T; ++i)
     {
         is.push_back(InserterPtr(new Inserter(i + 17, h, m, mtx)));
-        g.create_thread(*is.back());
+        g.create(*is.back());
     }
-    g.join_all();
+    g.join();
 
     uint64_t j = 0;
     for (map<uint64_t,uint64_t>::const_iterator i = m.begin(); i != m.end(); ++i, ++j)

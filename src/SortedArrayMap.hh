@@ -211,7 +211,6 @@ private:
     Gossamer::BaseOpt<key_compare, rep_type> mImpl;
 
     class value_key_compare
-        : public std::binary_function<value_type, key_type, bool>
     {
         friend class SortedArrayMap<K, V, Compare, Alloc>;
     protected:
@@ -227,6 +226,12 @@ private:
         {
             return mComp(pV.first, pK);
         }
+
+        bool operator()(const key_type& pK, const value_type& pV) const
+        {
+            return mComp(pK, pV.first);
+        }
+
     };
 
     iterator

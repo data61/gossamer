@@ -6,9 +6,9 @@
 #define STDINT_H
 #endif
 
-#ifndef BOOST_UNORDERED_SET
-#include <boost/unordered_set.hpp>
-#define BOOST_UNORDERED_SET
+#ifndef STD_UNORDERED_SET
+#include <unordered_set>
+#define STD_UNORDERED_SET
 #endif
 
 #ifndef STD_ALGORITHM
@@ -215,7 +215,7 @@ template<typename T>
 void
 SimpleHashSet<T>::ensure(const T& pItem)
 {
-    uint64_t h = boost::hash<T>()(pItem);
+    uint64_t h = std::hash<T>()(pItem);
     uint64_t p = 0;
     uint64_t i = h & mMask;
     uint64_t w = i / wordBits;
@@ -253,7 +253,7 @@ void
 SimpleHashSet<T>::insert(const T& pItem)
 {
     BOOST_ASSERT(count(pItem) == false);
-    uint64_t h = boost::hash<T>()(pItem);
+    uint64_t h = std::hash<T>()(pItem);
     uint64_t p = 0;
     uint64_t i = h & mMask;
     uint64_t w = i / wordBits;
@@ -343,7 +343,7 @@ template<typename T>
 bool
 SimpleHashSet<T>::count(const T& pItem) const
 {
-    uint64_t h = boost::hash<T>()(pItem);
+    uint64_t h = std::hash<T>()(pItem);
     uint64_t p = 0;
     uint64_t i = h & mMask;
     uint64_t w = i / wordBits;

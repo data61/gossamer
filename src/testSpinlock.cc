@@ -1,10 +1,11 @@
 #include "Utils.hh"
 #include "Spinlock.hh"
+#include "ThreadGroup.hh"
 
 #include "Utils.hh"
 
 #include <stdint.h>
-#include <boost/thread.hpp>
+#include <thread>
 #include <boost/random.hpp>
 
 using namespace boost;
@@ -100,13 +101,13 @@ struct DecThread : public ThreadBase
 BOOST_AUTO_TEST_CASE(test_inc_dec_race)
 {
     Counter counter;
-    boost::shared_ptr<IncThread> inc(new IncThread(counter));
-    boost::shared_ptr<DecThread> dec(new DecThread(counter));
+    std::shared_ptr<IncThread> inc(new IncThread(counter));
+    std::shared_ptr<DecThread> dec(new DecThread(counter));
 
-    thread_group grp;
-    grp.create_thread(boost::bind(&ThreadBase::run, inc.get()));
-    grp.create_thread(boost::bind(&ThreadBase::run, dec.get()));
-    grp.join_all();
+    ThreadGroup grp;
+    grp.create(boost::bind(&ThreadBase::run, inc.get()));
+    grp.create(boost::bind(&ThreadBase::run, dec.get()));
+    grp.join();
 
     BOOST_CHECK_EQUAL(counter.mValue, inc->mAdj + dec->mAdj);
 }

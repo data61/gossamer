@@ -20,9 +20,9 @@
 #define STD_UTILITY
 #endif
 
-#ifndef BOOST_SHARE_PTR_HPP
-#include <boost/shared_ptr.hpp>
-#define BOOST_SHARE_PTR_HPP
+#ifndef STD_MEMORY
+#include <memory>
+#define STD_MEMORY
 #endif
 
 #ifndef SMALLBASEVECTOR_HH
@@ -160,10 +160,10 @@ public:
     /**
      * Create a copy of the read.
      */
-    virtual boost::shared_ptr<GossRead> clone() const = 0;
+    virtual std::shared_ptr<GossRead> clone() const = 0;
 
     virtual ~GossRead() {}
 };
-typedef boost::shared_ptr<GossRead> GossReadPtr;
+typedef std::shared_ptr<GossRead> GossReadPtr;
 
 #endif // GOSSREAD_HH

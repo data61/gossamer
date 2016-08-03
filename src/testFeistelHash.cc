@@ -6,7 +6,7 @@
 #include "FeistelHash.hh"
 #include <vector>
 #include <boost/random.hpp>
-#include <boost/thread.hpp>
+#include <thread>
 
 
 #define GOSS_TEST_MODULE TestFeistelHash

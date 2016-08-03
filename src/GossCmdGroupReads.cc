@@ -22,16 +22,15 @@
 #include <iostream>
 #include <map>
 
-#include <boost/foreach.hpp>
-#include <boost/tuple/tuple.hpp>
+#include <utility>
 
 using namespace boost;
 using namespace std;
 
 typedef vector<string> strings;
 
-typedef boost::tuple<mutex*, ostream*> Out;
-typedef boost::tuple<mutex*, ostream*, ostream*> Outs;
+typedef std::tuple<mutex*, ostream*> Out;
+typedef std::tuple<mutex*, ostream*, ostream*> Outs;
 
 typedef GossReadSequence::Item  ReadItem;
 typedef deque<ReadItem> ReadItems;
@@ -111,7 +110,7 @@ namespace // anonymous
             // Merge
             mLog(info, "merging");
             typedef MappedArray<uint64_t>::LazyIterator Itr;
-            typedef boost::shared_ptr<Itr> ItrPtr;
+            typedef std::shared_ptr<Itr> ItrPtr;
             vector<ItrPtr> curs;
             for (uint64_t i = 0; i < mNumBuffers; ++i)
             {
@@ -275,8 +274,9 @@ namespace // anonymous
         {
             if (pOutputs.size())
             {
-                unique_lock<mutex> l(*pOutputs[pClass].get<0>());
-                pRead.print(*pOutputs[pClass].get<1>());
+                auto& output = pOutputs[pClass];
+                std::unique_lock<std::mutex> l(*std::get<0>(output));
+                pRead.print(*std::get<1>(output));
             }
         }
 
@@ -335,9 +335,10 @@ namespace // anonymous
         {
             if (pOutputs.size())
             {
-                unique_lock<mutex> l(*pOutputs[pClass].get<0>());
-                pRead1.print(*pOutputs[pClass].get<1>());
-                pRead2.print(*pOutputs[pClass].get<2>());
+                auto& output = pOutputs[pClass];
+                unique_lock<mutex> l(*std::get<0>(output));
+                pRead1.print(*std::get<1>(output));
+                pRead2.print(*std::get<2>(output));
             }
         }
 
@@ -365,9 +366,9 @@ namespace // anonymous
         ReadClassWriter& mClassWriter;
     };
 
-    typedef boost::shared_ptr<KmerSrc> KmerSrcPtr;
-    typedef boost::shared_ptr<Read> ReadPtr;
-    typedef boost::shared_ptr<Pair> PairPtr;
+    typedef std::shared_ptr<KmerSrc> KmerSrcPtr;
+    typedef std::shared_ptr<Read> ReadPtr;
+    typedef std::shared_ptr<Pair> PairPtr;
 
     class KmerClassifier
     {
@@ -475,7 +476,7 @@ namespace // anonymous
         vector<uint64_t> mCounts;
     };
 
-    typedef boost::shared_ptr<Classifier> ClassifierPtr;
+    typedef std::shared_ptr<Classifier> ClassifierPtr;
 
     string classStr(const string& pLhsName, const string& pRhsName, uint64_t i)
     {
@@ -838,7 +839,7 @@ GossCmdGroupReads::operator()(const GossCmdContext& pCxt)
 
     LineSourceFactory lineSrcFac(BackgroundLineSource::create);
     GossReadSequenceFactoryPtr seqFac
-        = make_shared<GossReadSequenceBasesFactory>();
+        = std::make_shared<GossReadSequenceBasesFactory>();
 
     vector<uint64_t> counts(16, 0);
     if (mPairs)
@@ -848,7 +849,7 @@ GossCmdGroupReads::operator()(const GossCmdContext& pCxt)
             std::deque<GossReadSequence::Item> items;
 
             GossReadParserFactory lineParserFac(LineParser::create);
-            BOOST_FOREACH(const std::string& f, mLines)
+            for (auto& f: mLines)
             {
                 items.push_back(GossReadSequence::Item(f,
                                 lineParserFac, seqFac));
@@ -866,7 +867,7 @@ GossCmdGroupReads::operator()(const GossCmdContext& pCxt)
             std::deque<GossReadSequence::Item> items;
 
             GossReadParserFactory fastaParserFac(FastaParser::create);
-            BOOST_FOREACH(const std::string& f, mFastas)
+            for (auto& f: mFastas)
             {
                 items.push_back(GossReadSequence::Item(f,
                                 fastaParserFac, seqFac));
@@ -884,7 +885,7 @@ GossCmdGroupReads::operator()(const GossCmdContext& pCxt)
             std::deque<GossReadSequence::Item> items;
 
             GossReadParserFactory fastqParserFac(FastqParser::create);
-            BOOST_FOREACH(const std::string& f, mFastqs)
+            for (auto& f: mFastqs)
             {
                 items.push_back(GossReadSequence::Item(f,
                                 fastqParserFac, seqFac));
@@ -904,7 +905,7 @@ GossCmdGroupReads::operator()(const GossCmdContext& pCxt)
             std::deque<GossReadSequence::Item> items;
 
             GossReadParserFactory lineParserFac(LineParser::create);
-            BOOST_FOREACH(const std::string& f, mLines)
+            for (auto& f: mLines)
             {
                 items.push_back(GossReadSequence::Item(f,
                                 lineParserFac, seqFac));
@@ -922,7 +923,7 @@ GossCmdGroupReads::operator()(const GossCmdContext& pCxt)
             std::deque<GossReadSequence::Item> items;
 
             GossReadParserFactory fastaParserFac(FastaParser::create);
-            BOOST_FOREACH(const std::string& f, mFastas)
+            for (auto& f: mFastas)
             {
                 items.push_back(GossReadSequence::Item(f,
                                 fastaParserFac, seqFac));
@@ -940,7 +941,7 @@ GossCmdGroupReads::operator()(const GossCmdContext& pCxt)
             std::deque<GossReadSequence::Item> items;
 
             GossReadParserFactory fastqParserFac(FastqParser::create);
-            BOOST_FOREACH(const std::string& f, mFastqs)
+            for (auto& f: mFastqs)
             {
                 items.push_back(GossReadSequence::Item(f,
                                 fastqParserFac, seqFac));

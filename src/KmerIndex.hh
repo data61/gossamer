@@ -20,7 +20,7 @@
 class KmerIndex
 {
 public:
-    static const uint64_t version = 2012030101ULL;
+    static constexpr uint64_t version = 2012030101ULL;
 
     struct Header
     {

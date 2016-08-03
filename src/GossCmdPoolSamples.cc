@@ -19,7 +19,8 @@
 #include <iostream>
 #include <string>
 #include <boost/lexical_cast.hpp>
-#include <boost/tuple/tuple.hpp>
+#include <utility>
+#include <memory>
 
 using namespace boost;
 using namespace boost::program_options;
@@ -34,13 +35,13 @@ namespace {
     {
     public:
  
-        typedef tuple<uint64_t, uint64_t, double*> Arg;
+        typedef std::tuple<uint64_t, uint64_t, double*> Arg;
 
         void push_back(Arg pArg)
         {
-            const uint64_t i = pArg.get<0>();
-            const uint64_t j = pArg.get<1>();
-            double& result = *pArg.get<2>();
+            const uint64_t i = std::get<0>(pArg);
+            const uint64_t j = std::get<1>(pArg);
+            double& result = *std::get<2>(pArg);
 
             uint64_t unionSz = 0;
             uint64_t interSz = 0;
@@ -78,7 +79,7 @@ namespace {
             unionSz += end_j - rnk_j;
 
             result = double(interSz) / double(unionSz);
-            boost::unique_lock<boost::mutex> l(mMutex);
+            std::unique_lock<std::mutex> l(mMutex);
             mMon.tick(++mTicks);
         }
         
@@ -94,10 +95,10 @@ namespace {
         const vector<uint64_t>& mSampleRanks;
         ProgressMonitorNew& mMon;
         uint64_t mTicks;
-        boost::mutex mMutex;
+        std::mutex mMutex;
     };
 
-    typedef shared_ptr<SimilarityCalc>  SimilarityCalcPtr;
+    typedef std::shared_ptr<SimilarityCalc>  SimilarityCalcPtr;
 
 
 }   // namespace anonymous

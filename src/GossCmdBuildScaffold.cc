@@ -27,11 +27,10 @@
 #include <algorithm>
 #include <iostream>
 #include <string>
-#include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/thread.hpp>
+#include <thread>
 #include <boost/tuple/tuple.hpp>
-#include <boost/unordered_set.hpp>
+#include <unordered_set>
 #include <math.h>
 
 using namespace boost;
@@ -43,8 +42,8 @@ typedef vector<string> strings;
 typedef pair<SuperPathId,SuperPathId> Link;
 typedef pair<int64_t, int64_t> Offsets;
 
-// boost::hash
-namespace boost {
+// std::hash
+namespace std {
     template<>
     struct hash<Link>
     {
@@ -346,22 +345,22 @@ GossCmdBuildScaffold::operator()(const GossCmdContext& pCxt)
 
     {
         GossReadSequenceFactoryPtr seqFac
-            = make_shared<GossReadSequenceBasesFactory>();
+            = std::make_shared<GossReadSequenceBasesFactory>();
 
         GossReadParserFactory lineParserFac(LineParser::create);
-        BOOST_FOREACH(const std::string& f, mLines)
+        for (auto& f: mLines)
         {
             items.push_back(GossReadSequence::Item(f, lineParserFac, seqFac));
         }
 
         GossReadParserFactory fastaParserFac(FastaParser::create);
-        BOOST_FOREACH(const std::string& f, mFastas)
+        for (auto& f: mFastas)
         {
             items.push_back(GossReadSequence::Item(f, fastaParserFac, seqFac));
         }
 
         GossReadParserFactory fastqParserFac(FastqParser::create);
-        BOOST_FOREACH(const std::string& f, mFastqs)
+        for (auto& f: mFastqs)
         {
             items.push_back(GossReadSequence::Item(f, fastqParserFac, seqFac));
         }

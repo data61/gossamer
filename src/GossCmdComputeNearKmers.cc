@@ -1,7 +1,6 @@
 #include "GossCmdComputeNearKmers.hh"
 
 #include "Utils.hh"
-#include "Atomic.hh"
 #include "FastaParser.hh"
 #include "GossCmdReg.hh"
 #include "GossOptionChecker.hh"
@@ -12,10 +11,12 @@
 #include "RunLengthCodedSet.hh"
 #include "Spinlock.hh"
 #include "Timer.hh"
+#include "ThreadGroup.hh"
 
 #include <string>
+#include <boost/atomic.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/thread.hpp>
+#include <thread>
 
 using namespace boost;
 using namespace boost::program_options;
@@ -113,7 +114,7 @@ namespace // anonymous
         BlockWorker(const KmerSet& pKmerSet, const WordyBitVector& pLhs, const WordyBitVector& pRhs,
                     const uint64_t& pBegin, const uint64_t& pEnd,
                     mutex& pMutex, condition_variable& pCond, dynamic_bitset<>& pNewLhs, dynamic_bitset<>& pNewRhs,
-                    Atomic& pGlobalCount, Atomic& pGrayCount, uint64_t& pTickMask)
+                    boost::atomic<uint64_t>& pGlobalCount, boost::atomic<uint64_t>& pGrayCount, uint64_t& pTickMask)
             : mKmerSet(pKmerSet), mLhs(pLhs), mRhs(pRhs), mBegin(pBegin), mEnd(pEnd),
               mMutex(pMutex), mCond(pCond), mNewLhs(pNewLhs), mNewRhs(pNewRhs),
               mGlobalCount(pGlobalCount), mGrayCount(pGrayCount), mTickMask(pTickMask)
@@ -130,11 +131,11 @@ namespace // anonymous
         condition_variable& mCond;
         dynamic_bitset<>& mNewLhs;
         dynamic_bitset<>& mNewRhs;
-        Atomic& mGlobalCount;
-        Atomic& mGrayCount;
+        boost::atomic<uint64_t>& mGlobalCount;
+        boost::atomic<uint64_t>& mGrayCount;
         const uint64_t mTickMask;
     };
-    typedef boost::shared_ptr<BlockWorker> BlockWorkerPtr;
+    typedef std::shared_ptr<BlockWorker> BlockWorkerPtr;
 }
 // namespace anonymous
 
@@ -151,8 +152,8 @@ GossCmdComputeNearKmers::operator()(const GossCmdContext& pCxt)
     dynamic_bitset<> lb(s.count());
     dynamic_bitset<> rb(s.count());
 
-    Atomic global = 0;
-    Atomic gray = 0;
+    boost::atomic<uint64_t> global(0);
+    boost::atomic<uint64_t> gray(0);
     {
         WordyBitVector lhs(mIn + ".lhs-bits", fac);
         WordyBitVector rhs(mIn + ".rhs-bits", fac);
@@ -184,28 +185,26 @@ GossCmdComputeNearKmers::operator()(const GossCmdContext& pCxt)
             workers.push_back(BlockWorkerPtr(new BlockWorker(s, lhs, rhs, b, e, mut, cond, lb, rb, global, gray, m)));
         }
 
-        thread_group grp;
+        ThreadGroup grp;
         for (uint64_t i = 0; i < workers.size(); ++i)
         {
-            grp.create_thread(*workers[i]);
+            grp.create(*workers[i]);
         }
         {
             unique_lock<mutex> lk(mut);
-            while (global.get() < s.count())
+            while (global < s.count())
             {
                 cond.wait(lk);
                 mut.unlock();
-                double q = global.get() * 100;
+                double q = global * 100;
                 q /= s.count();
-                //cerr << gray.get() << '\t' << global.get() << '\t' << s.count() << '\t' << q << endl;
                 mut.lock();
             }
         }
-        grp.join_all();
-
+        grp.join();
     }
 
-    log(info, "found " + lexical_cast<string>(gray.get()) + " gray bits (out of " + lexical_cast<string>(s.count()) + ").");
+    log(info, "found " + lexical_cast<string>(gray) + " gray bits (out of " + lexical_cast<string>(s.count()) + ").");
     WordyBitVector::Builder lhsBld(mIn + ".lhs-bits", fac);
     WordyBitVector::Builder rhsBld(mIn + ".rhs-bits", fac);
     for (uint64_t i = 0; i < s.count(); ++i)
