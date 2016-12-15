@@ -1,3 +1,11 @@
+// Copyright (c) 2008-1016, NICTA (National ICT Australia).
+// Copyright (c) 2016, Commonwealth Scientific and Industrial Research
+// Organisation (CSIRO) ABN 41 687 119 230.
+//
+// Licensed under the CSIRO Open Source Software License Agreement;
+// you may not use this file except in compliance with the License.
+// Please see the file LICENSE, included with this distribution.
+//
 #include "TransCmdTrimRelative.hh"
 
 #include "GossCmdReg.hh"
@@ -9,7 +17,6 @@
 
 #include <string>
 #include <boost/lexical_cast.hpp>
-#include <boost/foreach.hpp>
 
 using namespace boost;
 using namespace boost::program_options;
@@ -77,7 +84,7 @@ TransCmdTrimRelative::TrimThread::processNode(
     mEdgesToCull.clear();
 
     uint64_t totalCount = 0; 
-    BOOST_FOREACH(uint32_t c, pCounts)
+    for (auto c: pCounts)
     {
         totalCount += c;
     }
@@ -104,8 +111,8 @@ TransCmdTrimRelative::TrimThread::processNode(
         mEdgesToCull.push_back(mGraph.rank(mGraph.reverseComplement(e)));
     }
 
-    unique_lock<mutex> lock(mMutex);
-    BOOST_FOREACH(uint64_t e, mEdgesToCull)
+    std::unique_lock<std::mutex> lock(mMutex);
+    for (auto e: mEdgesToCull)
     {
         mEdgesToRemove[e] = true;
     }
@@ -203,11 +210,11 @@ TransCmdTrimRelative::operator()(const GossCmdContext& pCxt)
     Timer t;
     ProgressMonitorNew mon(log, g.count());
 
-    typedef shared_ptr<TrimThread> TrimThreadPtr;
+    typedef std::shared_ptr<TrimThread> TrimThreadPtr;
     vector<TrimThreadPtr> threads;
 
     dynamic_bitset<uint64_t> zapped(g.count());
-    mutex mtx;
+    std::mutex mtx;
 
     {
         uint64_t N = g.count();

@@ -1,3 +1,11 @@
+// Copyright (c) 2008-1016, NICTA (National ICT Australia).
+// Copyright (c) 2016, Commonwealth Scientific and Industrial Research
+// Organisation (CSIRO) ABN 41 687 119 230.
+//
+// Licensed under the CSIRO Open Source Software License Agreement;
+// you may not use this file except in compliance with the License.
+// Please see the file LICENSE, included with this distribution.
+//
 #ifndef FIBHEAP_HH
 #define FIBHEAP_HH
 
@@ -35,6 +43,9 @@
 #include <deque>
 #define STD_DEQUE
 #endif
+
+// Enable TEST_FIB_HEAP to include code which should only be used
+// while testing or debugging.
 
 namespace detail {
     template<typename K, typename V>
@@ -144,6 +155,7 @@ namespace detail {
             return count;
         }
 
+#ifdef TEST_FIB_HEAP
         bool checkHeapInvariant() const
         {
             if (!mChild)
@@ -192,7 +204,6 @@ namespace detail {
             return ok;
         }
 
-#if 1
         void dump(std::ostream& pOut) const
         {
             pOut << mKey << ':' << mValue << ':' << mDegree << ':' << mMark;
@@ -472,6 +483,7 @@ public:
         removeCurrentRoot();
     }
 
+#ifdef TEST_FIB_HEAP
     bool checkHeapInvariant() const
     {
         if (!mRoot)
@@ -508,6 +520,7 @@ public:
         }
         return ok;
     }
+#endif
 
     struct Iterator
     {
@@ -515,29 +528,23 @@ public:
 
         bool empty() const
         {
-            // std::cerr << "FibHeap::Iterator::empty() = " << mDeque.empty() << "\n";
             return mDeque.empty();
         }
 
         const const_iterator operator*() const
         {
-            // std::cerr << "FibHeap::Iterator::front() = " << mDeque.front() << "\n";
             return mDeque.front();
         }
 
         Iterator& operator++()
         {
-            // std::cerr << "FibHeap::Iterator::operator++()\n";
             const_iterator children = mDeque.front()->mChild;
             mDeque.pop_front();
-            // std::cerr << "front().mChild = " << children << "\n";
             if (children)
             {
-                // std::cerr << "Adding " << children << "\n";
                 mDeque.push_front(children);
                 for (const_iterator i = children->mNext; i != children; i = i->mNext)
                 {
-                    // std::cerr << "Adding " << i << "\n";
                     mDeque.push_front(i);
                 }
             }
@@ -546,17 +553,13 @@ public:
 
         Iterator(const_iterator pRoot)
         {
-            // std::cerr << "FibHeap::Iterator::Iterator\n";
             if (!pRoot)
             {
-                // std::cerr << "No elements; exiting.\n";
                 return;
             }
             mDeque.push_back(pRoot);
-            // std::cerr << "Adding " << pRoot << "\n";
             for (const_iterator i = pRoot->mNext; i != pRoot; i = i->mNext)
             {
-                // std::cerr << "Adding " << i << "\n";
                 mDeque.push_back(i);
             }
         }
@@ -567,7 +570,7 @@ public:
         return Iterator(mRoot);
     }
 
-#if 1
+#ifdef TEST_FIB_HEAP
     void dump(std::ostream& pOut) const
     {
         pOut << mMaxDegree << ' ' << mCount << "\n";

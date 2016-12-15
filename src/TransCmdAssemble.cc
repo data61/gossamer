@@ -1,3 +1,11 @@
+// Copyright (c) 2008-1016, NICTA (National ICT Australia).
+// Copyright (c) 2016, Commonwealth Scientific and Industrial Research
+// Organisation (CSIRO) ABN 41 687 119 230.
+//
+// Licensed under the CSIRO Open Source Software License Agreement;
+// you may not use this file except in compliance with the License.
+// Please see the file LICENSE, included with this distribution.
+//
 #include "TransCmdAssemble.hh"
 
 #include "GossCmdReg.hh"
@@ -12,8 +20,7 @@
 #include <algorithm>
 #include <deque>
 #include <map>
-#include <boost/bind.hpp>
-#include <boost/foreach.hpp>
+#include <memory>
 #include <boost/lexical_cast.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <boost/pending/disjoint_sets.hpp>
@@ -360,7 +367,7 @@ namespace // anonymous
     }
 
     struct FindSeedEdgeThread;
-    typedef shared_ptr<FindSeedEdgeThread> FindSeedEdgeThreadPtr;
+    typedef std::shared_ptr<FindSeedEdgeThread> FindSeedEdgeThreadPtr;
 
     struct FindSeedEdgeThread : public MultithreadedBatchTask::WorkThread
     {
@@ -500,7 +507,7 @@ public:
         uint32_t curComponent = mWhichComponent.front();
         uint32_t curCount = 0;
 
-        BOOST_FOREACH(uint32_t comp, mWhichComponent)
+        for (auto comp: mWhichComponent)
         {
             if (curComponent == comp)
             {
@@ -562,7 +569,7 @@ private:
     mutex& mMutex;
 };
 
-typedef shared_ptr<TransPairAligner> TransPairAlignerPtr;
+typedef std::shared_ptr<TransPairAligner> TransPairAlignerPtr;
 
 
 class SortThread
@@ -576,7 +583,7 @@ public:
 
     ~SortThread()
     {
-        mThread.interrupt();
+        // mThread.interrupt();
         mThread.join();
     }
 
@@ -668,22 +675,22 @@ void
 TransCmdAssemble::initialiseReads(std::deque<GossReadSequence::Item>& pItems)
 {
     GossReadSequenceFactoryPtr seqFac
-        = make_shared<GossReadSequenceBasesFactory>();
+        = std::make_shared<GossReadSequenceBasesFactory>();
 
     GossReadParserFactory lineParserFac(LineParser::create);
-    BOOST_FOREACH(const std::string& f, mLines)
+    for (auto& f: mLines)
     {
         pItems.push_back(GossReadSequence::Item(f, lineParserFac, seqFac));
     }
 
     GossReadParserFactory fastaParserFac(FastaParser::create);
-    BOOST_FOREACH(const std::string& f, mFastas)
+    for (auto& f: mFastas)
     {
         pItems.push_back(GossReadSequence::Item(f, fastaParserFac, seqFac));
     }
 
     GossReadParserFactory fastqParserFac(FastqParser::create);
-    BOOST_FOREACH(const std::string& f, mFastqs)
+    for (auto& f: mFastqs)
     {
         pItems.push_back(GossReadSequence::Item(f, fastqParserFac, seqFac));
     }
@@ -951,6 +958,7 @@ struct ContigWeldGraph
         }
     };
 
+    // TODO: This wasn't a great idea, as it turns out.
     struct AdjList
     {
         static const uint32_t sMinOrder = 4;
@@ -1001,7 +1009,7 @@ struct ContigWeldGraph
             }
 
             // Now search in the overflow.
-            BOOST_FOREACH(AdjListEntry& entry, mOverflow)
+            for (auto& entry: mOverflow)
             {
                 if (entry.mVertTo == pVertTo)
                 {
@@ -1065,12 +1073,12 @@ struct ContigWeldGraph
             AdjList& adjlist = mGraph[v1];
             adjlist.copyOverflowToMain(true);
 
-            const uint32_t sMinEdgeCoverage = 0;
+            const uint32_t sMinEdgeCoverage = 1;
             const double sCoverageFactor = 0.04;
 
             deque<AdjListEntry> keepEdges;
 
-            BOOST_FOREACH(AdjListEntry& edge, adjlist.mMain)
+            for (auto& edge: adjlist.mMain)
             {
                 uint32_t v2 = edge.mVertTo;
                 uint32_t coverage = edge.mCount;
@@ -1383,7 +1391,7 @@ private:
     Alignment mReadR;
 };
 
-typedef shared_ptr<ContigLinker> ContigLinkerPtr;
+typedef std::shared_ptr<ContigLinker> ContigLinkerPtr;
 
 
 void
@@ -1468,7 +1476,7 @@ TransCmdAssemble::operator()(const GossCmdContext& pCxt)
             SmallBaseVector seq;
             g.seq(g.from(edges.front().mEdge), seq);
             uint64_t averageCoverage = 0;
-            BOOST_FOREACH(const EdgeInfo& edge, edges)
+            for (auto& edge: edges)
             {
                 seq.push_back(edge.mEdge.value().value() & 3);
                 averageCoverage += edge.mCount;
@@ -1507,7 +1515,7 @@ TransCmdAssemble::operator()(const GossCmdContext& pCxt)
             }
 
             // Mark the RC edges too.
-            BOOST_FOREACH(const EdgeInfo& edge, edges)
+            for (auto& edge: edges)
             {
                 Graph::Edge e_rc = g.reverseComplement(edge.mEdge);
                 mSeen[g.rank(e_rc)] = true;
@@ -1558,7 +1566,7 @@ TransCmdAssemble::operator()(const GossCmdContext& pCxt)
         }
         grp.wait();
 
-        BOOST_FOREACH(const ContigLinkerPtr& plink, linkers)
+        for (auto& plink: linkers)
         {
             basesInReads += plink->basesInReads();
         }
@@ -1580,9 +1588,9 @@ TransCmdAssemble::operator()(const GossCmdContext& pCxt)
 
         {
             uint32_t i = 0;
-            BOOST_FOREACH(const vector<uint32_t>& component, linkGraph.mComponents)
+            for (auto& component: linkGraph.mComponents)
             {
-                BOOST_FOREACH(uint32_t ctg, component)
+                for (auto ctg: component)
                 {
                     contigToComponentMap[ctg] = i;
                 }
@@ -1592,7 +1600,7 @@ TransCmdAssemble::operator()(const GossCmdContext& pCxt)
 
         {
             uint64_t i = 0;
-            BOOST_FOREACH(uint32_t& ctg, kmerToContigMap)
+            for (auto& ctg: kmerToContigMap)
             {
                 if (ctg)
                 {
@@ -1627,9 +1635,9 @@ TransCmdAssemble::operator()(const GossCmdContext& pCxt)
         mutex mut;
         for (uint64_t i = 0; i < mNumThreads; ++i)
         {
-            linkers.push_back(TransPairAlignerPtr(new TransPairAligner(
+            linkers.push_back(std::make_shared<TransPairAligner>(
                 g, kmerToContigMap, componentReadCount, kmerPresent, sorter,
-                mut)));
+                mut));
             grp.add(*linkers.back());
         }
 
@@ -1683,7 +1691,7 @@ TransCmdAssemble::operator()(const GossCmdContext& pCxt)
 
         uint32_t nonEmptyCompId = 0;
         uint32_t compId = 0;
-        BOOST_FOREACH(const vector<uint32_t>& component, linkGraph.mComponents)
+        for (auto& component: linkGraph.mComponents)
         {
             ResolveTranscripts resolver(lexical_cast<string>(nonEmptyCompId),
                         g, log, out, mMinLength, totalMappableReads);
@@ -1726,7 +1734,7 @@ TransCmdAssemble::operator()(const GossCmdContext& pCxt)
                 out << "# Contigs:\n";
 #endif
 
-                BOOST_FOREACH(uint32_t ctg, component)
+                for (auto ctg: component)
                 {
                     const ContigInfo& info = linkGraph.mContigInfo[ctg];
                     SmallBaseVector seq;
@@ -1741,7 +1749,7 @@ TransCmdAssemble::operator()(const GossCmdContext& pCxt)
                 unsigned readId = 0;
                 out << "# Reads:\n";
 #endif
-                BOOST_FOREACH(const read_pair_info& readPair, readPairs)
+                for (auto& readPair: readPairs)
                 {
 #ifdef DUMP_COMPONENT_INTERMEDIATES
                     out << ">component" << compId << "--" << "read" << readId << "/1\n";

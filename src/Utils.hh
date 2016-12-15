@@ -1,3 +1,11 @@
+// Copyright (c) 2008-1016, NICTA (National ICT Australia).
+// Copyright (c) 2016, Commonwealth Scientific and Industrial Research
+// Organisation (CSIRO) ABN 41 687 119 230.
+//
+// Licensed under the CSIRO Open Source Software License Agreement;
+// you may not use this file except in compliance with the License.
+// Please see the file LICENSE, included with this distribution.
+//
 #ifndef UTILS_HH
 #define UTILS_HH
 
@@ -331,6 +339,7 @@ inline uint64_t roundUpToNextPowerOf2(uint64_t pX)
 }
 
 
+// Base-4 hamming distance
 inline uint32_t ham(uint64_t x, uint64_t y)
 {
     static const uint64_t m = 0x5555555555555555ULL;
@@ -339,6 +348,7 @@ inline uint32_t ham(uint64_t x, uint64_t y)
 }
 
 
+// Base-4 reverse
 inline uint64_t rev(uint64_t x)
 {
     static const uint64_t m2  = 0x3333333333333333ULL;
@@ -361,6 +371,7 @@ inline uint64_t rev(uint64_t x)
 }
 
 
+// Reverse complement
 inline uint64_t reverseComplement(const uint64_t k, uint64_t x)
 {
     x = rev(~x);
@@ -394,6 +405,7 @@ template <> struct Log2<18> { static const uint64_t value = 5; };
 template <> struct Log2<19> { static const uint64_t value = 5; };
 
 
+// Ramanujan's approximation to the logarithm of factorial.
 inline double logFac(uint64_t n)
 {
     if (n < 2)
@@ -404,6 +416,7 @@ inline double logFac(uint64_t n)
 }
 
 
+// Approximation to the logarithm of { n \choose k }
 inline double logChoose(uint64_t n, uint64_t k)
 {
     return logFac(n) - logFac(k) - logFac(n - k);

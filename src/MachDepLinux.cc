@@ -1,3 +1,11 @@
+// Copyright (c) 2008-1016, NICTA (National ICT Australia).
+// Copyright (c) 2016, Commonwealth Scientific and Industrial Research
+// Organisation (CSIRO) ABN 41 687 119 230.
+//
+// Licensed under the CSIRO Open Source Software License Agreement;
+// you may not use this file except in compliance with the License.
+// Please see the file LICENSE, included with this distribution.
+//
 #include "Utils.hh"
 #include <unistd.h>
 #include <execinfo.h>
@@ -150,8 +158,6 @@ namespace Gossamer { namespace Linux {
 
     std::bitset<kCpuCapLast> sCpuCaps;
 
-    clockid_t sMonotonicClockId;
-
     uint32_t sLogicalProcessorCount;
 
     inline void
@@ -159,7 +165,10 @@ namespace Gossamer { namespace Linux {
     {
         pInfo[0] = pInfoType;
         __asm__ __volatile__(
-            "mov %%ebx,%%edi;" // ebx is used for PIC; don't clobber it
+            // ebx is used for PIC on 32-bit. We officially
+            // don't support 32-bit, but it's just as easy to
+            // avoid clobbering it.
+            "mov %%ebx,%%edi;"
             "cpuid;"
             "mov %%ebx, %%esi;"
             "mov %%edi, %%edx;"

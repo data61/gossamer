@@ -1,3 +1,11 @@
+// Copyright (c) 2008-1016, NICTA (National ICT Australia).
+// Copyright (c) 2016, Commonwealth Scientific and Industrial Research
+// Organisation (CSIRO) ABN 41 687 119 230.
+//
+// Licensed under the CSIRO Open Source Software License Agreement;
+// you may not use this file except in compliance with the License.
+// Please see the file LICENSE, included with this distribution.
+//
 #include "PhysicalFileFactory.hh"
 
 #include "GossamerException.hh"
@@ -10,7 +18,7 @@
 #include <stdexcept>
 #include <boost/algorithm/string.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
-#include "BzipFilter.hh"
+#include <boost/iostreams/filter/bzip2.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
 #include <boost/filesystem.hpp>
 
@@ -104,12 +112,6 @@ public:
     BzippedInHolder(const string& pFileName)
         : mFileName(pFileName), mFile(mFileName.c_str(), ios::binary )
     {
-#if 0
-        BOOST_THROW_EXCEPTION(
-                Gossamer::error()
-                    << errinfo_file_name(mFileName)
-                    << Gossamer::general_error_info("BZip2 decompression is disabled due to bugs in third-party libraries. Please uncompress input files."));
-#endif
         if (!mFile.good())
         {
             BOOST_THROW_EXCEPTION(
@@ -118,7 +120,7 @@ public:
                     << errinfo_file_name(mFileName));
         }
         mFile.exceptions(ifstream::badbit);
-        mFilter.push(Gossamer::bzip2_decompressor(false, 63493103));
+        mFilter.push(bzip2_decompressor(false, 63493103));
         mFilter.push(mFile);
     }
 

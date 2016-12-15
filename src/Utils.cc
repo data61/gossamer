@@ -1,3 +1,11 @@
+// Copyright (c) 2008-1016, NICTA (National ICT Australia).
+// Copyright (c) 2016, Commonwealth Scientific and Industrial Research
+// Organisation (CSIRO) ABN 41 687 119 230.
+//
+// Licensed under the CSIRO Open Source Software License Agreement;
+// you may not use this file except in compliance with the License.
+// Please see the file LICENSE, included with this distribution.
+//
 #include "Utils.hh"
 #include "GossamerException.hh"
 
@@ -9,6 +17,8 @@
 #include <sys/syscall.h>
 #include <unistd.h>
 #endif
+
+#include <atomic>
 
 
 namespace Gossamer {
@@ -184,21 +194,40 @@ namespace {
 
     bool sInitialised = false;
 
-    // What test are we currently running?
-    // 
-    // A subtle point: This needs to be volatile to ensure that the
-    // store to this memory location is committed before we attempt
-    // to run an instruction which would be inlined.
-    volatile enum hardware_test_type_t {
+    // Suppose that you want to see whether or not a particular
+    // CPU instruction works. There are two things you need to
+    // ensure:
+    //
+    //     1. The instruction isn't compiled away.
+    //
+    //     2. The instruction isn't reordered with respect to
+    //        whatever steps you take to detect a faulting
+    //        instruction.
+    //
+    // This is especially important when the instruction isn't
+    // necessarily a memory operation, because C++ semantics only
+    // guarantees memory consistency.
+    //
+    // The solution is to make any instruction under test data-
+    // dependent on sequentially-ordered memory operations, and
+    // also to make a sequentially-ordered memory operation
+    // which is data-dependent on the instruction. This is the
+    // reason for all the shenanigans with std::atomic.
+    //
+    // Welcome to the future, where it's harder to prevent a
+    // compiler optimisation than it is to ensure one.
+
+    enum testing_what_t {
         TESTING_NOTHING = 0,
         TESTING_POPCNT
-    } sWhichTest = TESTING_NOTHING;
+    };
 
+    std::atomic<testing_what_t> sWhichTest;
 
     void
     sigill_handler(int pSigNum)
     {
-        switch (sWhichTest)
+        switch (sWhichTest.load(std::memory_order_seq_cst))
         {
             case TESTING_POPCNT:
             {
@@ -241,27 +270,30 @@ namespace {
     };
 
 
-    volatile uint64_t sPopcntTest = 0xDEADBEEFCAFEBABEull;
-    volatile uint64_t sPopcntTestResult = 0;
+    std::atomic<uint64_t> sPopcntTest(0xDEADBEEFCAFEBABEull);
+    std::atomic<uint64_t> sPopcntTestResult(0);
 
     void testInstructions()
     {
         // Check to make sure that popcnt works.
         try
         {
-            sWhichTest = TESTING_NOTHING;
+            sWhichTest.store(TESTING_NOTHING, std::memory_order_seq_cst);
 
             TemporarySignalHandler sigHandler(SIGILL, &sigill_handler);
 
-            sWhichTest = TESTING_POPCNT;
+            sWhichTest.store(TESTING_POPCNT, std::memory_order_seq_cst);
 
-            sPopcntTestResult = Gossamer::popcnt(sPopcntTest);
+            {
+                uint64_t v = sPopcntTest.load(std::memory_order_seq_cst);
+                sPopcntTestResult.store(Gossamer::popcnt(v), std::memory_order_seq_cst);
+            }
 
-            sWhichTest = TESTING_NOTHING;
+            sWhichTest.store(TESTING_NOTHING, std::memory_order_seq_cst);
         }
         catch (Gossamer::error& err)
         {
-            sWhichTest = TESTING_NOTHING;
+            sWhichTest.store(TESTING_NOTHING, std::memory_order_seq_cst);
             throw;
         }
     }

@@ -1,6 +1,13 @@
+// Copyright (c) 2008-1016, NICTA (National ICT Australia).
+// Copyright (c) 2016, Commonwealth Scientific and Industrial Research
+// Organisation (CSIRO) ABN 41 687 119 230.
+//
+// Licensed under the CSIRO Open Source Software License Agreement;
+// you may not use this file except in compliance with the License.
+// Please see the file LICENSE, included with this distribution.
+//
 #include "TourBus.hh"
 #include "GraphTrimmer.hh"
-#include "FibHeap.hh"
 #include "ProgressMonitor.hh"
 #include "SimpleHashSet.hh"
 #include "MultithreadedBatchTask.hh"
@@ -13,7 +20,8 @@
 #include <boost/tuple/tuple_io.hpp>
 
 #undef VERBOSE_DEBUG
-//#define VERBOSE_DEBUG
+#undef TEST_FIB_HEAP
+#include "FibHeap.hh"
 
 using namespace std;
 using namespace boost;
@@ -108,8 +116,6 @@ struct TourBus::Impl
     typedef map<uint64_t,float> dist_map_t;
     typedef boost::tuple<uint64_t,float,uint32_t> WorkItem;
 
-    static void breakpoint() {}
-
     struct WorkQueue
     {
         typedef pair<uint64_t,uint64_t> value_type;
@@ -124,7 +130,6 @@ struct TourBus::Impl
             if (!mFwd.checkHeapInvariant())
             {
                 std::cerr << "ERROR: Heap invariant broken\n";
-                breakpoint();
                 throw 0;
             }
             fwd_t::Iterator it(mFwd.iterate());
@@ -136,7 +141,6 @@ struct TourBus::Impl
                 {
                     std::cerr << "ERROR: Can't find " << i->mValue.first <<
                         " in the WorkQueue reverse map.\n";
-                    breakpoint();
                     throw 0;
                 }
                 ++it;
@@ -1050,8 +1054,6 @@ TourBus::Impl::analyseEdge(const Graph::Edge& pEnd, const Graph::Edge& pBegin)
             }
         }
     }
-
-    // cerr << minSeq << " -> " << maxSeq << " (" << editDistance << ")\n";
 
     ++mBubblesRemoved;
     GraphTrimmer::EdgeTrimVisitor trimVisitor(mTrimmer);

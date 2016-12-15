@@ -1,3 +1,11 @@
+// Copyright (c) 2008-1016, NICTA (National ICT Australia).
+// Copyright (c) 2016, Commonwealth Scientific and Industrial Research
+// Organisation (CSIRO) ABN 41 687 119 230.
+//
+// Licensed under the CSIRO Open Source Software License Agreement;
+// you may not use this file except in compliance with the License.
+// Please see the file LICENSE, included with this distribution.
+//
 // TODO: 
 //  - Fix for different Ks!
 //  - Selectable filter predicate, e.g. keep reads that match <= N references, rather than >= N.
@@ -142,7 +150,7 @@ namespace // anonymous
     class ElectCmdGroup : public GossCmd
     {
         typedef std::vector<std::string> strings;
-        typedef shared_ptr<KmerSet> KmerSetPtr;
+        typedef std::shared_ptr<KmerSet> KmerSetPtr;
         // typedef SimpleHashMap<Gossamer::edge_type, uint64_t> KmerMap;
 
         // Maps kmers to bitsets representing the references they appear in.
@@ -176,7 +184,7 @@ namespace // anonymous
                 GossRead::Iterator src(pRead, mK);
                 cmd(pCxt, src);
                 
-                KmerSetPtr kmerSetPtr(new KmerSet(name, pCxt.fac));
+                KmerSetPtr kmerSetPtr = std::make_shared<KmerSet>(name, pCxt.fac);
                 if (mKmerSets.size() < (uint64_t(pId) + 1))
                 {
                     mKmerSets.resize(pId + 1);
@@ -195,8 +203,7 @@ namespace // anonymous
 
                 std::deque<GossReadSequence::Item> items;
 
-                GossReadSequenceFactoryPtr seqFac
-                    = make_shared<GossReadSequenceBasesFactory>();
+                auto seqFac = std::make_shared<GossReadSequenceBasesFactory>();
                 GossReadParserFactory fastaParserFac(FastaParser::create);
 
                 items.push_back(GossReadSequence::Item(pFastaFile, fastaParserFac, seqFac));
@@ -210,6 +217,7 @@ namespace // anonymous
                 KmerSetPtr kmerSetPtr(new KmerSet(name, pCxt.fac));
                 if (mKmerSets.size() < (uint64_t(pId) + 1))
                 {
+                    Gossamer::ensureCapacity(mKmerSets);
                     mKmerSets.resize(pId + 1);
                 }
                 mKmerSets[pId] = kmerSetPtr;
@@ -221,6 +229,7 @@ namespace // anonymous
                 KmerSetPtr kmerSetPtr(new KmerSet(pBaseName, pFac));
                 if (mKmerSets.size() < (uint64_t(pId) + 1))
                 {
+                    Gossamer::ensureCapacity(mKmerSets);
                     mKmerSets.resize(pId + 1);
                 }
                 mKmerSets[pId] = kmerSetPtr;
@@ -459,7 +468,7 @@ namespace // anonymous
             ClassifiedReadWriter mWriter;
         };
 
-        typedef shared_ptr<KmerFilter> KmerFilterPtr;
+        typedef std::shared_ptr<KmerFilter> KmerFilterPtr;
 
         struct ReadFilter : public GossReadHandler
         {
@@ -483,9 +492,11 @@ namespace // anonymous
             {
                 for (uint64_t i = 0; i < mNumThreads; ++i)
                 {
-                    mKmerFilts.push_back(KmerFilterPtr(new KmerFilter(mK, mRefThreshold, mKmerMap, 
-                                                                      mMatchOut1, mMatchOut2, mNonmatchOut1, mNonmatchOut2,
-                                                                      mMatchMut, mNonmatchMut)));
+                    mKmerFilts.push_back(
+                            std::make_shared<KmerFilter>(
+                                mK, mRefThreshold, mKmerMap,
+                                mMatchOut1, mMatchOut2, mNonmatchOut1, mNonmatchOut2,
+                                mMatchMut, mNonmatchMut));
                     mReadGrp.add(*mKmerFilts.back());
                 }
             }
@@ -500,15 +511,16 @@ namespace // anonymous
             {
                 for (uint64_t i = 0; i < mNumThreads; ++i)
                 {
-                    mKmerFilts.push_back(KmerFilterPtr(new KmerFilter(mK, mRefThreshold, mKmerMap, 
-                                                                      mMatchOut1, mMatchOut2, mNonmatchOut1, mNonmatchOut2,
-                                                                      mMatchMut, mNonmatchMut)));
+                    mKmerFilts.push_back(
+                            std::make_shared<KmerFilter>(
+                                mK, mRefThreshold, mKmerMap,
+                                mMatchOut1, mMatchOut2, mNonmatchOut1, mNonmatchOut2,
+                                mMatchMut, mNonmatchMut));
                     mPairGrp.add(*mKmerFilts.back());
                 }
             }
 
         private:
-
             const uint64_t mK;
             const uint64_t mRefThreshold;
             const KmerMap& mKmerMap;
@@ -592,7 +604,7 @@ namespace // anonymous
             FileFactory& fac(pCxt.fac);
             string kmerSetName(fac.tmpName());
 
-            shared_ptr<StringFileFactory> strFacPtr(new StringFileFactory());
+            auto strFacPtr = std::make_shared<StringFileFactory>();
             GossCmdContext refCxt(*strFacPtr, pCxt.log, pCxt.cmdName, pCxt.opts);
 
             vector<string> refNames;

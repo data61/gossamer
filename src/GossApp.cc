@@ -1,3 +1,11 @@
+// Copyright (c) 2008-1016, NICTA (National ICT Australia).
+// Copyright (c) 2016, Commonwealth Scientific and Industrial Research
+// Organisation (CSIRO) ABN 41 687 119 230.
+//
+// Licensed under the CSIRO Open Source Software License Agreement;
+// you may not use this file except in compliance with the License.
+// Please see the file LICENSE, included with this distribution.
+//
 #include "GossApp.hh"
 
 #include "Debug.hh"
@@ -54,7 +62,6 @@
 #include "GossCmdScaffold.hh"
 #include "GossCmdTrimGraph.hh"
 #include "GossCmdTrimPaths.hh"
-#include "GossCmdUpgradeGraph.hh"
 
 using namespace boost;
 using namespace boost::program_options;
@@ -85,7 +92,8 @@ GossApp::version() const
     return Gossamer::version;
 }
 
-// #define ONLY_RELEASED_COMMANDS
+
+#undef ONLY_RELEASED_COMMANDS
 
 GossApp::GossApp()
     : App(globalOpts, commonOpts)
@@ -132,7 +140,6 @@ GossApp::GossApp()
     cmds.push_back(GossCmdReg("pool-samples", GossCmdFactoryPtr(new GossCmdFactoryPoolSamples)));
     cmds.push_back(GossCmdReg("subtract-kmer-set", GossCmdFactoryPtr(new GossCmdFactorySubtractKmerSet)));
     cmds.push_back(GossCmdReg("trim-paths", GossCmdFactoryPtr(new GossCmdFactoryTrimPaths)));
-    cmds.push_back(GossCmdReg("upgrade-graph", GossCmdFactoryPtr(new GossCmdFactoryUpgradeGraph)));
 #endif
 
     globalOpts.addOpt<strings>("debug", "D",

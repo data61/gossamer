@@ -1,9 +1,15 @@
+// Copyright (c) 2008-1016, NICTA (National ICT Australia).
+// Copyright (c) 2016, Commonwealth Scientific and Industrial Research
+// Organisation (CSIRO) ABN 41 687 119 230.
+//
+// Licensed under the CSIRO Open Source Software License Agreement;
+// you may not use this file except in compliance with the License.
+// Please see the file LICENSE, included with this distribution.
+//
 #include "ResolveTranscripts.hh"
 
 #include <boost/assert.hpp>
-#include <boost/foreach.hpp>
 #include <boost/optional.hpp>
-#include <boost/make_shared.hpp>
 #include <boost/random.hpp>
 #include <boost/call_traits.hpp>
 #include <boost/ptr_container/ptr_unordered_set.hpp>
@@ -241,7 +247,7 @@ namespace
 }
 
 
-namespace boost {
+namespace std {
     template<>
     struct hash<edge_t>
     {
@@ -368,7 +374,7 @@ struct ResolveTranscripts::Impl
         subset_t mKmers;
         dynamic_bitset<uint64_t> mToRemove;
         vector<uint32_t> mCoverage;
-        shared_ptr<Nodes> mNodes;
+        std::shared_ptr<Nodes> mNodes;
 
         struct Nodes
         {
@@ -742,10 +748,10 @@ struct ResolveTranscripts::Impl
 
         static const uint64_t sCacheSize = 1000ull;
 
-        typedef unordered_map<node_t,distance_type> distance_map_t;
+        typedef std::unordered_map<node_t,distance_type> distance_map_t;
 
         boost::mt19937 mRng;
-        typedef unordered_map<node_t,distance_map_t> cache_map_t;
+        typedef std::unordered_map<node_t,distance_map_t> cache_map_t;
         cache_map_t mCache;
 
         void shortestPathsFrom(node_t pFrom);
@@ -772,11 +778,15 @@ struct ResolveTranscripts::Impl
 
         optional<distance_type> distance(node_t pFrom, node_t pTo);
 
-        void shortestPath(node_t pFrom, node_t pTo, set<edge_t>& pPath);
+        void shortestPath(node_t pFrom, node_t pTo, std::set<edge_t>& pPath);
     };
 
-    // Non-recursive implementation of Tarjan's SCC algorithm.
+    // Tarjan's SCC algorithm uses depth-first search. However, these
+    // graphs can be far too big to use the C++ stack for this purpose,
+    // so we have to use an explicit stack.
+    //
     // You are not expected to understand this.
+    //
     struct SCC
     {
         const Impl& mImpl;
@@ -889,8 +899,7 @@ struct ResolveTranscripts::Impl
 #endif
                                 } while (w != f.v);
 
-                                mSCCs.push_back(vector<node_t>());
-                                mSCCs.back().swap(scc);
+                                mSCCs.push_back(std::move(scc));
                             }
 
 #ifdef DEBUG_SCC
@@ -1216,7 +1225,7 @@ ResolveTranscripts::Impl::Component::buildNodes()
 
     Gossamer::sortAndUnique(extraordinaryNodes);
 
-    mNodes = shared_ptr<Nodes>(new Nodes(*this, extraordinaryNodes));
+    mNodes = std::make_shared<Nodes>(*this, extraordinaryNodes);
 }
 
 
@@ -1357,7 +1366,7 @@ ResolveTranscripts::Impl::commitEdgeRemove()
 
     mComponent = std::shared_ptr<Component>();
     denseArrayFromBitmap(sComponentKmersName, mStringFac, newEdges);
-    mComponent = std::shared_ptr<Component>(new Component(mGraph, mStringFac, newCounts.begin(), newCounts.end()));
+    mComponent = std::make_shared<Component>(mGraph, mStringFac, newCounts.begin(), newCounts.end());
 }
 
 
@@ -3296,7 +3305,7 @@ ResolveTranscripts::Impl::breakCyclesComponent(BreakCyclesContext& pCtx)
 #endif
     // Gather statistics.
     uint64_t linearPaths = 0;
-    unordered_set<edge_t> edges;
+    std::unordered_set<edge_t> edges;
 
     vector<edge_t> inEdges, outEdges;
     inEdges.reserve(sMaxEdgesPerNode);
@@ -3466,7 +3475,7 @@ ResolveTranscripts::Impl::breakCyclesSubcomponent(BreakCyclesContext& pCtx)
 
     ShortestPaths shortestPaths(*this, pCtx.mComponent);
 
-    typedef ptr_unordered_set< set<edge_t> > loops_t;
+    typedef std::set< std::set<edge_t> > loops_t;
     loops_t loops;
 #ifdef MORE_INTERNAL_PROGRESS
     mLog(info, "  breakCyclesSubcomponent");
@@ -3499,8 +3508,8 @@ ResolveTranscripts::Impl::breakCyclesSubcomponent(BreakCyclesContext& pCtx)
             }
             // cerr << "Path found between " << v2 << " and " << v << '\n';
 
-            auto_ptr< set<edge_t> > loopPath(new set<edge_t>());
-            shortestPaths.shortestPath(v2, v, *loopPath);
+            std::set<edge_t> loopPath;
+            shortestPaths.shortestPath(v2, v, loopPath);
             loops.insert(loopPath);
         }
     }

@@ -1,3 +1,11 @@
+// Copyright (c) 2008-1016, NICTA (National ICT Australia).
+// Copyright (c) 2016, Commonwealth Scientific and Industrial Research
+// Organisation (CSIRO) ABN 41 687 119 230.
+//
+// Licensed under the CSIRO Open Source Software License Agreement;
+// you may not use this file except in compliance with the License.
+// Please see the file LICENSE, included with this distribution.
+//
 #ifndef GRAPH_HH
 #define GRAPH_HH
 
@@ -72,18 +80,6 @@ public:
             fLastFlag = 64
         };
         std::bitset<fLastFlag> flags;
-    };
-
-    // Support for loading graphs without the flags field.
-
-    // This is the oldest version which does not have the flags
-    // field but we can still silently use.
-    static const uint64_t versionWithoutFlags = 2011091601ULL; 
-
-    struct HeaderWithoutFlags
-    {
-        uint64_t version;
-        uint64_t K;
     };
 
     class Iterator;
