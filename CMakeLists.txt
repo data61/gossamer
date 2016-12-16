@@ -7,6 +7,7 @@ set(PACKAGE_VERSION "0.0.0a")
 set(PACKAGE_STRING "${PACKAGE_NAME} ${PACKAGE_VERSION}")
 set(PACKAGE_TARNAME "${PACKAGE_NAME}")
 
+option(BUILD_docs "build the documents" ON)
 option(BUILD_tests "build the tests" ON)
 option(BUILD_translucent "build translucent" OFF)
 
@@ -19,8 +20,12 @@ endif(BUILD_tests)
 
 include(GossDetectPlatform)
 include(GossDetectDependencies)
-include(GossPandoc)
+if(BUILD_docs)
+    include(GossPandoc)
+endif(BUILD_docs)
 
 add_subdirectory(src)
-add_subdirectory(docs)
+if(BUILD_docs)
+    add_subdirectory(docs)
+endif(BUILD_docs)
 
