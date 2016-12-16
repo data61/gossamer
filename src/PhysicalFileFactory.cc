@@ -63,12 +63,12 @@ public:
                     << errinfo_errno(errno)
                     << errinfo_file_name(mFileName));
         }
-        mFile.exceptions(ifstream::badbit);
+        mFile.exceptions(std::ifstream::badbit);
     }
 
 private:
     string mFileName;
-    ifstream mFile;
+    std::ifstream mFile;
 };
 
 class GzippedInHolder : public FileFactory::InHolder
@@ -89,14 +89,14 @@ public:
                     << errinfo_errno(errno)
                     << errinfo_file_name(mFileName));
         }
-        mFile.exceptions(ifstream::badbit);
+        mFile.exceptions(std::ifstream::badbit);
         mFilter.push(gzip_decompressor());
         mFilter.push(mFile);
     }
 
 private:
     string mFileName;
-    ifstream mFile;
+    std::ifstream mFile;
     filtering_stream<input> mFilter;
 };
 
@@ -119,14 +119,14 @@ public:
                     << errinfo_errno(errno)
                     << errinfo_file_name(mFileName));
         }
-        mFile.exceptions(ifstream::badbit);
+        mFile.exceptions(std::ifstream::badbit);
         mFilter.push(bzip2_decompressor(false, 63493103));
         mFilter.push(mFile);
     }
 
 private:
     string mFileName;
-    ifstream mFile;
+    std::ifstream mFile;
     filtering_stream<input> mFilter;
 };
 
@@ -162,12 +162,12 @@ public:
                     << errinfo_errno(errno)
                     << errinfo_file_name(mFileName));
         }
-        mFile.exceptions(ofstream::badbit);
+        mFile.exceptions(std::ofstream::badbit);
     }
 
 private:
     string mFileName;
-    ofstream mFile;
+    std::ofstream mFile;
 };
 
 class PlainMappedHolder : public FileFactory::MappedHolder
@@ -211,14 +211,14 @@ public:
                     << errinfo_errno(errno)
                     << errinfo_file_name(mFileName));
         }
-        mFile.exceptions(ofstream::badbit);
+        mFile.exceptions(std::ofstream::badbit);
         mFilter.push(gzip_compressor());
         mFilter.push(mFile);
     }
 
 private:
     string mFileName;
-    ofstream mFile;
+    std::ofstream mFile;
     filtering_stream<output> mFilter;
 };
 
@@ -241,14 +241,14 @@ public:
                     << errinfo_errno(errno)
                     << errinfo_file_name(mFileName));
         }
-        mFile.exceptions(ofstream::badbit);
+        mFile.exceptions(std::ofstream::badbit);
         mFilter.push(bzip2_compressor());
         mFilter.push(mFile);
     }
 
 private:
     string mFileName;
-    ofstream mFile;
+    std::ofstream mFile;
     filtering_stream<output> mFilter;
 };
 

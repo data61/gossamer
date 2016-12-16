@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(testMoreOutputDetail)
 
         int const* li = get_error_info<throw_line>(exc);
         BOOST_CHECK(li != NULL);
-        BOOST_CHECK_EQUAL(*li, 169);
+        BOOST_CHECK_EQUAL(*li, 163);
 
         const char* const* fi = get_error_info<throw_file>(exc);
         BOOST_CHECK(fi != NULL);
