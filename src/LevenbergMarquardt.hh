@@ -34,6 +34,11 @@
 #define BOOST_NUMERIC_UBLAS_MATRIX_HPP
 #endif
 
+#ifndef BOOST_NONCOPYABLE_HPP
+#include <boost/noncopyable.hpp>
+#define BOOST_NONCOPYABLE_HPP
+#endif
+
 #ifndef LOGGER_HH
 #include "Logger.hh"
 #endif

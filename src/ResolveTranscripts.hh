@@ -22,6 +22,11 @@
 #define BOOST_UTILITY_HPP
 #endif
 
+#ifndef BOOST_NONCOPYABLE_HPP
+#include <boost/noncopyable.hpp>
+#define BOOST_NONCOPYABLE_HPP
+#endif
+
 #ifndef STD_MEMORY
 #include <memory>
 #define STD_MEMORY

@@ -34,6 +34,11 @@
 #define BOOST_UTILITY_HPP
 #endif
 
+#ifndef BOOST_NONCOPYABLE_HPP
+#include <boost/noncopyable.hpp>
+#define BOOST_NONCOPYABLE_HPP
+#endif
+
 #ifndef STD_IOSTREAM
 #include <iostream>
 #define STD_IOSTREAM

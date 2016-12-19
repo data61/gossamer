@@ -34,6 +34,7 @@
 #include "TrivialVector.hh"
 
 #include <algorithm>
+#include <boost/noncopyable.hpp>
 #include <boost/lexical_cast.hpp>
 #include <thread>
 #include <boost/tuple/tuple.hpp>

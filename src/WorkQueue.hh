@@ -9,6 +9,7 @@
 #ifndef WORKQUEUE_HH
 #define WORKQUEUE_HH
 
+#include <boost/noncopyable.hpp>
 #include <boost/function.hpp>
 #include <thread>
 #include <deque>
