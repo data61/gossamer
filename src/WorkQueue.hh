@@ -11,6 +11,8 @@
 
 #include <boost/noncopyable.hpp>
 #include <boost/function.hpp>
+#include <condition_variable>
+#include <mutex>
 #include <thread>
 #include <deque>
 #include "ThreadGroup.hh"

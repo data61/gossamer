@@ -73,7 +73,7 @@ GossCmdDotSupergraph::operator()(const GossCmdContext& pCxt)
     FileFactory::OutHolderPtr outPtr(fac.out(mOut));
     ostream& out(**outPtr);
 
-    auto_ptr<SuperGraph> sgPtr(SuperGraph::read(mIn, fac));
+    auto sgPtr = SuperGraph::read(mIn, fac);
     SuperGraph& sg(*sgPtr);
 
     vector<SuperGraph::Node> nodes;

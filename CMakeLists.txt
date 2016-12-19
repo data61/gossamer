@@ -10,6 +10,7 @@ set(PACKAGE_TARNAME "${PACKAGE_NAME}")
 option(BUILD_docs "build the documents" ON)
 option(BUILD_tests "build the tests" ON)
 option(BUILD_translucent "build translucent" OFF)
+option(MY_GLIBCXX_HAS_THE_WRONG_ABI "the local GNU libstdc++ is using the wrong ABI" OFF)
 
 set(CMAKE_MODULE_PATH ${gossamer_SOURCE_DIR}/cmake)
 set(GOSSAMER_SOURCE_DIR ${gossamer_SOURCE_DIR}/src)

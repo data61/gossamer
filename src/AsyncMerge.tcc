@@ -315,12 +315,10 @@ void
 AsyncMerge::merge(const vector<string>& pParts, const vector<uint64_t>& pSizes, const string& pGraphName,
                   uint64_t pK, uint64_t pN, uint64_t pNumThreads, uint64_t pBufferSize, FileFactory& pFactory)
 {
-    uint64_t n;
     {
         JobManager mgr(pNumThreads);
         ElemPtr r = build(pParts, pSizes, pFactory, pBufferSize, mgr);
         do_merge<T>(mgr, r, pGraphName, pK, pN, pFactory);
         mgr.wait();
-        n = r->edgesRead();
     }
 }

@@ -331,7 +331,6 @@ BOOST_AUTO_TEST_CASE(testAppend1)
 {
     uint64_t w0 = 0;
     uint64_t w1 = 0;
-    uint64_t p = 0;
     w1 = RunLengthCodedBitVectorWord<DeltaCodec>::append(w0, 1, true);
     BOOST_CHECK_EQUAL(w0, 3);
     BOOST_CHECK_EQUAL(w1, 0);
@@ -344,9 +343,7 @@ BOOST_AUTO_TEST_CASE(testAppend1)
     BOOST_CHECK_EQUAL(w0, 21);
     BOOST_CHECK_EQUAL(w1, 0);
 
-    p = w0;
     w0 = 0;
-
     w1 = RunLengthCodedBitVectorWord<DeltaCodec>::append(w0, 3, true);
     BOOST_CHECK_EQUAL(w0, 21);
     BOOST_CHECK_EQUAL(w1, 0);

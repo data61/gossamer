@@ -11,6 +11,8 @@
 
 #include <boost/function.hpp>
 #include <thread>
+#include <mutex>
+#include <condition_variable>
 #include <map>
 #include <set>
 #include <vector>

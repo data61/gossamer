@@ -209,7 +209,7 @@ GossCmdPrintContigs::operator()(const GossCmdContext& pCxt)
     {
         try 
         {
-            auto_ptr<SuperGraph> sgPtr(SuperGraph::read(mIn, fac));
+            auto sgPtr = SuperGraph::read(mIn, fac);
             FileFactory::OutHolderPtr outPtr(fac.out(mOut));
             ostream& out(**outPtr);
             sgPtr->printContigs(mIn, fac, log, out, mL, mOmitSequence, mVerboseHeaders, mNoLineBreaks, mPrintEntailed, mPrintRcs, mNumThreads);

@@ -439,12 +439,12 @@ public:
     /**
      * Reads a saved SuperGraph.
      */
-    static std::auto_ptr<SuperGraph> read(const std::string& pBaseName, FileFactory& pFactory);
+    static std::unique_ptr<SuperGraph> read(const std::string& pBaseName, FileFactory& pFactory);
     
     /**
      * Returns a new SuperGraph.
      */
-    static std::auto_ptr<SuperGraph> create(const std::string& pBaseName, FileFactory& pFactory);
+    static std::unique_ptr<SuperGraph> create(const std::string& pBaseName, FileFactory& pFactory);
 
 private:
 

@@ -111,10 +111,10 @@ public:
      */
     void write(const std::string& pBaseName, FileFactory& pFactory) const;
 
-    static std::auto_ptr<EdgeIndex> read(const std::string& pBaseName, FileFactory& pFactory,
+    static std::unique_ptr<EdgeIndex> read(const std::string& pBaseName, FileFactory& pFactory,
                                          const Graph& pGraph);
 
-    static std::auto_ptr<EdgeIndex> create(const Graph& pGraph, const EntryEdgeSet& pEntryEdges,
+    static std::unique_ptr<EdgeIndex> create(const Graph& pGraph, const EntryEdgeSet& pEntryEdges,
                                            const SuperGraph& pSuper, uint64_t pDiv, 
                                            uint64_t pNumThreads, Logger& pLog);
 

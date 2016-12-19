@@ -133,10 +133,10 @@ BOOST_AUTO_TEST_CASE(testAlignKmers)
     {
         GraphPtr gPtr = Graph::open("graph", fac);
         Graph& g(*gPtr);
-        auto_ptr<SuperGraph> sgPtr = SuperGraph::read("graph", fac);
+        auto sgPtr = SuperGraph::read("graph", fac);
         const SuperGraph& sg(*sgPtr);
         const EntryEdgeSet& ee(sg.entries());
-        auto_ptr<EdgeIndex> ixPtr = EdgeIndex::create(g, ee, sg, 4, 1, log);
+        auto ixPtr = EdgeIndex::create(g, ee, sg, 4, 1, log);
         const EdgeIndex& ix(*ixPtr);
 
         KmerAligner aln(g, ee, ix);
@@ -824,10 +824,10 @@ BOOST_AUTO_TEST_CASE(testLinkPairs)
 
         GraphPtr gPtr = Graph::open("graph", fac);
         Graph& g(*gPtr);
-        auto_ptr<SuperGraph> sgPtr = SuperGraph::read("graph", fac);
+        auto sgPtr = SuperGraph::read("graph", fac);
         const SuperGraph& sg(*sgPtr);
         const EntryEdgeSet& ee(sg.entries());
-        auto_ptr<EdgeIndex> ixPtr = EdgeIndex::create(g, ee, sg, 4, 1, log);
+        auto ixPtr = EdgeIndex::create(g, ee, sg, 4, 1, log);
         const EdgeIndex& ix(*ixPtr);
 
         mutex mut;

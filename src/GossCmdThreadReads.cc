@@ -676,7 +676,7 @@ GossCmdThreadReads::operator()(const GossCmdContext& pCxt)
         log(info, "Estimated coverage = " + lexical_cast<string>(coverage));
     }
 
-    auto_ptr<SuperGraph> sgp(SuperGraph::read(mIn, fac));
+    auto sgp = SuperGraph::read(mIn, fac);
     SuperGraph& sg(*sgp);
     const EntryEdgeSet& entries(sg.entries());
 
@@ -710,7 +710,7 @@ GossCmdThreadReads::operator()(const GossCmdContext& pCxt)
                 << Gossamer::general_error_info("Asymmetric graphs not yet handled")
                 << Gossamer::open_graph_name_info(mIn));
         }
-        auto_ptr<EdgeIndex> idxPtr(EdgeIndex::create(g, entries, sg, mCacheRate, mNumThreads, log));
+        auto idxPtr = EdgeIndex::create(g, entries, sg, mCacheRate, mNumThreads, log);
         EdgeIndex& idx(*idxPtr);
 
         std::deque<GossReadSequence::Item> items;
