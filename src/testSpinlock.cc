@@ -14,6 +14,7 @@
 
 #include <stdint.h>
 #include <thread>
+#include <boost/noncopyable.hpp>
 #include <boost/random.hpp>
 
 using namespace boost;

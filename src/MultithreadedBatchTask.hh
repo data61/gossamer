@@ -33,6 +33,11 @@
 #define BOOST_EXCEPTION_PTR_HPP
 #endif // BOOST_EXCEPTION_PTR_HPP
 
+#ifndef BOOST_NONCOPYABLE_HPP
+#include <boost/noncopyable.hpp>
+#define BOOST_NONCOPYABLE_HPP
+#endif
+
 class MultithreadedBatchTask : private boost::noncopyable
 {
 public:

@@ -19,6 +19,11 @@
 #define STD_LIST
 #endif
 
+#ifndef BOOST_NONCOPYABLE_HPP
+#include <boost/noncopyable.hpp>
+#define BOOST_NONCOPYABLE_HPP
+#endif
+
 class ThreadGroup : private boost::noncopyable
 {
 public:
