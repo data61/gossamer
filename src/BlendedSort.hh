@@ -29,11 +29,17 @@
 #define STD_VECTOR
 #endif
 
-#include "WorkQueue.hh"
+#ifndef STD_FUNCTIONAL
+#include <functional>
+#define STD_FUNCTIONAL
+#endif
 
-#include <boost/lambda/bind.hpp>
-
+#ifndef STD_IOSTREAM
 #include <iostream>
+#define STD_IOSTREAM
+#endif
+
+#include "WorkQueue.hh"
 
 template <typename T>
 class BlendedSort

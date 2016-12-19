@@ -993,7 +993,7 @@ TourBus::Impl::analyseEdge(const Graph::Edge& pEnd, const Graph::Edge& pBegin)
         return;
     }
 
-    if (static_cast<size_t>(::abs((int64_t)maxSeq.size() - (int64_t)minSeq.size())) > mMaxEditDistance)
+    if (static_cast<size_t>(std::abs((int64_t)maxSeq.size() - (int64_t)minSeq.size())) > mMaxEditDistance)
     {
 #ifdef VERBOSE_DEBUG
         cerr << "Length difference too high.\n";

@@ -114,8 +114,8 @@ BOOST_AUTO_TEST_CASE(test_inc_dec_race)
     std::shared_ptr<DecThread> dec(new DecThread(counter));
 
     ThreadGroup grp;
-    grp.create(boost::bind(&ThreadBase::run, inc.get()));
-    grp.create(boost::bind(&ThreadBase::run, dec.get()));
+    grp.create(std::bind(&ThreadBase::run, inc.get()));
+    grp.create(std::bind(&ThreadBase::run, dec.get()));
     grp.join();
 
     BOOST_CHECK_EQUAL(counter.mValue, inc->mAdj + dec->mAdj);
