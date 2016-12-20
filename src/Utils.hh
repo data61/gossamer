@@ -67,9 +67,9 @@
 // Identify the platform.  At the moment, we only have three
 // platforms:
 //
-//     - Linux x86-64 (here called GOSS_LINUX_X64)
-//     - Mac OSX x86-64 (here called GOSS_MACOSX_X64)
-//     - Windows x86-64 (here called GOSS_WINDOWS_X64)
+//     - Linux x86-64 (here called GOSS_LINUX_X64), GCC or Clang
+//     - Mac OSX x86-64 (here called GOSS_MACOSX_X64), Clang
+//     - Windows x86-64 (here called GOSS_WINDOWS_X64), MSVC (untested)
 
 #undef GOSS_WINDOWS_X64
 #undef GOSS_MACOSX_X64
@@ -99,7 +99,7 @@
 
 #elif defined(GOSS_PLATFORM_UNIX)
 
-#if defined(linux) || define (__linux__)
+#if defined(linux) || defined(__linux__)
 #define GOSS_PLATFORM_LINUX
 #if !defined(GOSS_COMPILER_GNU) && !defined(GOSS_COMPILER_CLANG)
 #error "This appears to be a build on Linux with an unknown compiler."

@@ -45,9 +45,8 @@ const char* genome =
 BOOST_AUTO_TEST_CASE(test1)
 {
 
-    mt19937 rng(17);
+    boost::random::mt19937 rng(17);
     uniform_real<> dist;
-    variate_generator<mt19937&,uniform_real<> > gen(rng, dist);
 
     static const uint64_t N = 100;
     static const uint64_t L = 30;
@@ -56,7 +55,7 @@ BOOST_AUTO_TEST_CASE(test1)
     string R;
     for (uint64_t i = 0; i < N; ++i)
     {
-        uint64_t x = gen() * (G.size() - L + 1);
+        uint64_t x = dist(rng) * (G.size() - L + 1);
         string r = G.substr(x, L);
         R += ">" + lexical_cast<string>(x) + "\n";
         R += r;
