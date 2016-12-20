@@ -14,7 +14,7 @@
 #include <iostream>
 #include <string>
 #include <boost/dynamic_bitset.hpp>
-#include <boost/random.hpp>
+#include <random>
 
 
 using namespace boost;

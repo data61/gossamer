@@ -14,7 +14,7 @@
 #include "SimpleHashSet.hh"
 #include <vector>
 #include <set>
-#include <boost/random.hpp>
+#include <random>
 
 using namespace boost;
 using namespace std;
@@ -68,15 +68,14 @@ BOOST_AUTO_TEST_CASE(testEasyWithEnsure)
 BOOST_AUTO_TEST_CASE(testBigger)
 {
     mt19937 rng(19);
-    uniform_real<> dist;
-    variate_generator<mt19937&,uniform_real<> > gen(rng,dist);
+    uniform_real_distribution<> dist;
 
     set<uint64_t> xs;
     SimpleHashSet<uint64_t> x;
     uint64_t z = 0;
     for (uint64_t i = 0; i < 1000; ++i)
     {
-        uint64_t y = 1024ULL * 1024ULL * 1024ULL * gen();
+        uint64_t y = 1024ULL * 1024ULL * 1024ULL * dist(rng);
         z += y + 1;
         while (xs.count(z - 1) || xs.count(z + 1))
         {

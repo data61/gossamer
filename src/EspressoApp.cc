@@ -29,7 +29,7 @@
 #include <stdlib.h>
 
 #include <thread>
-#include <boost/random.hpp>
+#include <random>
 
 #include "GossCmdBuildKmerSet.hh"
 #include "GossCmdFilterReads.hh"
@@ -530,7 +530,7 @@ namespace // anonymous
               mRho(pKmers.K()), mNumGenes(mIdx.size().asUInt64()/mKmers.count()),
               mClassifiedFile(pClassifiedFile),
               mUnclassifiedFile(pUnclassifiedFile),
-              mRng(17), mGen(mRng, mDist)
+              mRng(17)
         {
             counts.resize(mNumGenes, -log(mNumGenes));
         }
@@ -647,7 +647,7 @@ namespace // anonymous
                 scores[i]. second += counts[scores[i].first] - logReadCount;
                 logSum = logAdd(logSum, scores[i].second);
             }
-            double x = mGen();
+            double x = mDist(mRng);
             double cumu = 0;
             double written = false;
             for (uint64_t i = 0; i < scores.size(); ++i)
@@ -673,9 +673,8 @@ namespace // anonymous
         ostream* mClassifiedFile;
         ostream* mUnclassifiedFile;
 
-        mt19937 mRng;
-        uniform_real<> mDist;
-        variate_generator<mt19937&,uniform_real<> > mGen;
+        std::mt19937 mRng;
+        std::uniform_real_distribution<> mDist;
 
     };
 

@@ -9,7 +9,7 @@
 #include "CompactDynamicBitVector.hh"
 
 #include <boost/dynamic_bitset.hpp>
-#include <boost/random.hpp>
+#include <random>
 
 
 using namespace boost;
@@ -54,15 +54,14 @@ BOOST_AUTO_TEST_CASE(test1)
     static const uint64_t N = 65536;
 
     mt19937 rng(17);
-    uniform_real<> dist;
-    variate_generator<mt19937&,uniform_real<> > gen(rng, dist);
+    uniform_real_distribution<> dist;
 
     CompactDynamicBitVector t;
     uint64_t c = 0;
     for (uint64_t i = 0; i < N; ++i)
     {
-        uint64_t pos = gen() * i;
-        bool b = gen() > 0.5;
+        uint64_t pos = dist(rng) * i;
+        bool b = dist(rng) > 0.5;
         t.insert(pos, b);
         if (b)
         {
@@ -101,8 +100,7 @@ BOOST_AUTO_TEST_CASE(test2)
     static const uint64_t N = 65536;
 
     mt19937 rng(17);
-    uniform_real<> dist;
-    variate_generator<mt19937&,uniform_real<> > gen(rng, dist);
+    uniform_real_distribution<> dist;
 
     CompactDynamicBitVector t;
     uint64_t c = 0;
@@ -126,11 +124,11 @@ BOOST_AUTO_TEST_CASE(test2)
 #endif
         BOOST_CHECK_EQUAL(t.size(), z);
         BOOST_CHECK_EQUAL(t.count(), c);
-        uint64_t pos = gen() * z;
-        bool op = gen() > 0.4;
+        uint64_t pos = dist(rng) * z;
+        bool op = dist(rng) > 0.4;
         if (t.size() == 0 || op)
         {
-            bool b = gen() > 0.5;
+            bool b = dist(rng) > 0.5;
             t.insert(pos, b);
 #if 0
             if (i >= 1870)

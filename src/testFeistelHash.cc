@@ -13,7 +13,7 @@
 
 #include "FeistelHash.hh"
 #include <vector>
-#include <boost/random.hpp>
+#include <random>
 #include <thread>
 
 
@@ -35,15 +35,14 @@ BOOST_AUTO_TEST_CASE(testMutant)
 
 BOOST_AUTO_TEST_CASE(test4)
 {
-    mt19937 rng(19);
-    uniform_int<> dist(0, 1 << 24);
-    variate_generator<mt19937&,uniform_int<> > gen(rng,dist);
+    std::mt19937 rng(19);
+    std::uniform_int_distribution<> dist(0, 1 << 24);
 
     static const uint64_t N = 1024 * 1024;
     for (uint64_t i = 0; i < N; ++i)
     {
         typedef FeistelHash::Item Item;
-        Item x(gen(), gen());
+        Item x(dist(rng), dist(rng));
         Item y = FeistelHash::hash(x);
         Item z = FeistelHash::unhash(y);
         BOOST_CHECK_EQUAL(x.first, z.first);

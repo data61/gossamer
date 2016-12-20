@@ -10,7 +10,7 @@
 
 #include <boost/assert.hpp>
 #include <boost/optional.hpp>
-#include <boost/random.hpp>
+#include <random>
 #include <boost/call_traits.hpp>
 #include <boost/ptr_container/ptr_unordered_set.hpp>
 #include <boost/ptr_container/ptr_deque.hpp>

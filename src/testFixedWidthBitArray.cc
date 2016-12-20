@@ -14,7 +14,7 @@
 #include <iostream>
 #include <string>
 #include <boost/dynamic_bitset.hpp>
-#include <boost/random.hpp>
+#include <random>
 
 
 using namespace boost;
@@ -33,13 +33,12 @@ BOOST_AUTO_TEST_CASE(test1)
     {
         FixedWidthBitArray<4>::Builder b("x", fac);
 
-        mt19937 rng(17);
-        uniform_int<> dist(0, 15);
-        variate_generator<mt19937&,uniform_int<> > gen(rng, dist);
+        std::mt19937 rng(17);
+        std::uniform_int_distribution<> dist(0, 15);
 
         for (uint64_t i = 0; i < N; ++i)
         {
-            uint64_t x = gen();
+            uint64_t x = dist(rng);
             b.push_back(x);
             nums.push_back(x);
         }
@@ -66,13 +65,12 @@ BOOST_AUTO_TEST_CASE(test2)
     {
         FixedWidthBitArray<7>::Builder b("x", fac);
 
-        mt19937 rng(17);
-        uniform_int<> dist(0, 127);
-        variate_generator<mt19937&,uniform_int<> > gen(rng, dist);
+        std::mt19937 rng(17);
+        std::uniform_int_distribution<> dist(0, 127);
 
         for (uint64_t i = 0; i < N; ++i)
         {
-            uint64_t x = gen();
+            uint64_t x = dist(rng);
             b.push_back(x);
             nums.push_back(x);
         }

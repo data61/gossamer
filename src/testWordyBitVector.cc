@@ -14,7 +14,7 @@
 #include <iostream>
 #include <string>
 #include <boost/dynamic_bitset.hpp>
-#include <boost/random.hpp>
+#include <random>
 
 
 using namespace boost;
@@ -130,12 +130,11 @@ BOOST_AUTO_TEST_CASE(test4)
         WordyBitVector::Builder vb("v", fac);
 
         mt19937 rng(17);
-        uniform_real<> dist;
-        variate_generator<mt19937&,uniform_real<> > gen(rng, dist);
+        uniform_real_distribution<> dist;
 
         for (uint64_t i = 0; i < N; ++i)
         {
-            bool bit = gen() < 1.0/70000.0;
+            bool bit = dist(rng) < 1.0/70000.0;
             vb.push_backX(bit);
             bits[i] = bit;
         }
@@ -173,12 +172,11 @@ BOOST_AUTO_TEST_CASE(test5)
         WordyBitVector::Builder vb("v", fac);
 
         mt19937 rng(17);
-        uniform_real<> dist;
-        variate_generator<mt19937&,uniform_real<> > gen(rng, dist);
+        uniform_real_distribution<> dist;
 
         for (uint64_t i = 0; i < N; ++i)
         {
-            bool bit = gen() < 1.0/70000.0;
+            bool bit = dist(rng) < 1.0/70000.0;
             vb.push_backX(bit);
             if (bit)
             {

@@ -12,7 +12,7 @@
 #include <iostream>
 #include <string>
 #include <boost/dynamic_bitset.hpp>
-#include <boost/random.hpp>
+#include <random>
 
 #include "StringFileFactory.hh"
 
@@ -57,18 +57,17 @@ BOOST_AUTO_TEST_CASE(test0)
     StringFileFactory fac;
     ExternalBufferSort sorter(1024, fac);
 
-    mt19937 rng(19);
-    uniform_real<> dist;
-    variate_generator<mt19937&,uniform_real<> > gen(rng,dist);
+    std::mt19937 rng(19);
+    std::uniform_real_distribution<> dist;
 
     vector<Item> xs;
     for (uint64_t i = 0; i < 10; ++i)
     {
-        uint64_t x = gen() * 24;
+        uint64_t x = dist(rng) * 24;
         Item itm;
         for (uint64_t j = 0; j < x; ++j)
         {
-            itm.push_back(gen() * 256);
+            itm.push_back(dist(rng) * 256);
         }
         sorter.push_back(itm);
         xs.push_back(itm);
@@ -86,18 +85,17 @@ BOOST_AUTO_TEST_CASE(test1)
     StringFileFactory fac;
     ExternalBufferSort sorter(1024, fac);
 
-    mt19937 rng(19);
-    uniform_real<> dist;
-    variate_generator<mt19937&,uniform_real<> > gen(rng,dist);
+    std::mt19937 rng(19);
+    std::uniform_real_distribution<> dist;
 
     vector<Item> xs;
     for (uint64_t i = 0; i < 8 * 1024; ++i)
     {
-        uint64_t x = gen() * 24;
+        uint64_t x = dist(rng) * 24;
         Item itm;
         for (uint64_t j = 0; j < x; ++j)
         {
-            itm.push_back(gen() * 256);
+            itm.push_back(dist(rng) * 256);
         }
         sorter.push_back(itm);
         xs.push_back(itm);

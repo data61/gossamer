@@ -13,7 +13,7 @@
 #include <sstream>
 #include <string>
 #include <iostream>
-#include <boost/random.hpp>
+#include <random>
 
 using namespace boost;
 using namespace std;
@@ -197,12 +197,11 @@ BOOST_AUTO_TEST_CASE(test1)
 
         mt19937 rng(17);
         exponential_distribution<> dist(1.0 / 1024.0);
-        variate_generator<mt19937&,exponential_distribution<> > gen(rng, dist);
 
         position_type p(0);
         for (uint64_t i = 0; i < N; ++i)
         {
-            p += position_type(gen() + 1);
+            p += position_type(dist(rng) + 1);
             //cout << lexical_cast<string>(p) << endl;
             b.push_back(p);
         }
@@ -238,14 +237,13 @@ BOOST_AUTO_TEST_CASE(test1)
         dynamic_bitset<> bs(v.count());
 
         mt19937 rng(17);
-        uniform_real<> dist;
-        variate_generator<mt19937&,uniform_real<> > gen(rng, dist);
+        uniform_real_distribution<> dist;
 
         {
             SparseArray::Builder bld("y", fac, a.select(a.count() - 1), a.count());
             for (uint64_t i = 0; i < v.count(); ++i)
             {
-                if (gen() < 0.01)
+                if (dist(rng) < 0.01)
                 {
                     bs[i] = true;
                 }
@@ -275,14 +273,13 @@ BOOST_AUTO_TEST_CASE(test1)
         dynamic_bitset<> bs(v.count());
 
         mt19937 rng(17);
-        uniform_real<> dist;
-        variate_generator<mt19937&,uniform_real<> > gen(rng, dist);
+        uniform_real_distribution<> dist;
 
         {
             SparseArray::Builder bld("y", fac, a.select(a.count() - 1), a.count());
             for (uint64_t i = 0; i < v.count(); ++i)
             {
-                if (gen() < 0.01)
+                if (dist(rng) < 0.01)
                 {
                     bs[i] = true;
                 }

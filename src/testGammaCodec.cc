@@ -10,7 +10,7 @@
 #include "GammaCodec.hh"
 
 #include <boost/dynamic_bitset.hpp>
-#include <boost/random.hpp>
+#include <random>
 
 
 using namespace boost;

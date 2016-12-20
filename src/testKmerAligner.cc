@@ -27,7 +27,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
-#include <boost/random.hpp>
+#include <random>
 
 using namespace boost;
 using namespace std;

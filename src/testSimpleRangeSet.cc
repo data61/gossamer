@@ -13,7 +13,7 @@
 
 #include "SimpleRangeSet.hh"
 #include <vector>
-#include <boost/random.hpp>
+#include <random>
 
 
 using namespace boost;

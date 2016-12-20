@@ -15,7 +15,7 @@
 #include <string>
 #include <iostream>
 #include <boost/dynamic_bitset.hpp>
-#include <boost/random.hpp>
+#include <random>
 
 
 using namespace boost;
@@ -79,13 +79,12 @@ BOOST_AUTO_TEST_CASE(test2)
     {
         VariableByteArray::Builder b("x", fac, N, 0.01);
 
-        mt19937 rng(209);
-        uniform_int<> dist(0,70000);
-        variate_generator<mt19937&,uniform_int<> > gen(rng, dist);
+        std::mt19937 rng(209);
+        std::uniform_int_distribution<> dist(0,70000);
 
         for (uint64_t i = 0; i < N; ++i)
         {
-            VariableByteArray::value_type v = gen();
+            VariableByteArray::value_type v = dist(rng);
             values.push_back(v);
             b.push_back(v);
         }
@@ -110,13 +109,12 @@ BOOST_AUTO_TEST_CASE(test3)
     {
         VariableByteArray::Builder b("x", fac, N, 0.01);
 
-        mt19937 rng(209);
-        uniform_int<> dist(0,70000);
-        variate_generator<mt19937&,uniform_int<> > gen(rng, dist);
+        std::mt19937 rng(209);
+        std::uniform_int_distribution<> dist(0,70000);
 
         for (uint64_t i = 0; i < N; ++i)
         {
-            VariableByteArray::value_type v = gen();
+            VariableByteArray::value_type v = dist(rng);
             values.push_back(v);
             b.push_back(v);
         }
@@ -144,13 +142,12 @@ BOOST_AUTO_TEST_CASE(test4)
     {
         VariableByteArray::Builder b("x", fac, N, 0.01);
 
-        mt19937 rng(209);
-        uniform_real<> dist;
-        variate_generator<mt19937&,uniform_real<> > gen(rng, dist);
+        std::mt19937 rng(209);
+        std::uniform_real_distribution<> dist;
 
         for (uint64_t i = 0; i < N; ++i)
         {
-            double x = gen();
+            double x = dist(rng);
             uint64_t y = x * x * x * 1024 * 1024 * 16;
             VariableByteArray::value_type v = y;
             values.push_back(v);
