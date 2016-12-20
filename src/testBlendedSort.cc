@@ -13,7 +13,7 @@
 
 #include "BlendedSort.hh"
 #include <vector>
-#include <boost/random.hpp>
+#include <random>
 #include <math.h>
 
 using namespace boost;
@@ -65,9 +65,8 @@ BOOST_AUTO_TEST_CASE(testEmpty)
 
 BOOST_AUTO_TEST_CASE(testOne)
 {
-    mt19937 rng(19);
-    uniform_real<> dist;
-    variate_generator<mt19937&,uniform_real<> > gen(rng,dist);
+    std::mt19937 rng(19);
+    std::uniform_real_distribution<> dist;
 
     static const uint64_t N = 1024 * 1024;
 
@@ -75,7 +74,7 @@ BOOST_AUTO_TEST_CASE(testOne)
     std::vector<uint64_t> perm;
     for (uint64_t i = 0; i < N; ++i)
     {
-        items.push_back(gen() * N);
+        items.push_back(dist(rng) * N);
         perm.push_back(i);
     }
 
@@ -93,9 +92,8 @@ BOOST_AUTO_TEST_CASE(testOne)
 
 BOOST_AUTO_TEST_CASE(testTwo)
 {
-    mt19937 rng(19);
-    uniform_real<> dist;
-    variate_generator<mt19937&,uniform_real<> > gen(rng,dist);
+    std::mt19937 rng(19);
+    std::uniform_real_distribution<> dist;
 
     static const uint64_t N = 1024 * 1024;
 
@@ -103,7 +101,7 @@ BOOST_AUTO_TEST_CASE(testTwo)
     std::vector<uint64_t> perm;
     for (uint64_t i = 0; i < N; ++i)
     {
-        items.push_back(gen() * N);
+        items.push_back(dist(rng) * N);
         perm.push_back(i);
     }
 

@@ -15,7 +15,7 @@
 #include <iostream>
 #include <string>
 #include <boost/dynamic_bitset.hpp>
-#include <boost/random.hpp>
+#include <random>
 
 
 #define GOSS_TEST_MODULE TestAsyncMerge
@@ -27,15 +27,14 @@ using namespace std;
 void genPairs(uint64_t pSeed, uint64_t pN, vector<Gossamer::EdgeAndCount>& pItems)
 {
     static const double p = 1.0 / 1024.0;
-    mt19937 rng(pSeed);
-    exponential_distribution<> dist(p);
-    variate_generator<mt19937&,exponential_distribution<> > gen(rng,dist);
+    std::mt19937 rng(pSeed);
+    std::exponential_distribution<> dist(p);
 
     Gossamer::EdgeAndCount itm(Gossamer::position_type(0), 0);
     for (uint64_t i = 0; i < pN; ++i)
     {
-        itm.first += gen() + 1;
-        itm.second = gen() + 1;
+        itm.first += dist(rng) + 1;
+        itm.second = dist(rng) + 1;
         pItems.push_back(itm);
     }
 }

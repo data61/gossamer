@@ -12,7 +12,7 @@
 #include <iostream>
 #include <string>
 #include <boost/dynamic_bitset.hpp>
-#include <boost/random.hpp>
+#include <random>
 
 using namespace boost;
 using namespace std;
@@ -79,9 +79,8 @@ BOOST_AUTO_TEST_CASE(test2)
 #if 1
 BOOST_AUTO_TEST_CASE(test3)
 {
-    mt19937 rng(19);
-    uniform_real<> dist;
-    variate_generator<mt19937&,uniform_real<> > gen(rng,dist);
+    std::mt19937 rng(19);
+    std::uniform_real_distribution<> dist;
 
     BitVecSet bvs;
     vector<dynamic_bitset<> > ref;
@@ -106,15 +105,15 @@ BOOST_AUTO_TEST_CASE(test3)
             }
         }
 
-        if (gen() < 0.5)
+        if (dist(rng) < 0.5)
         {
-            uint64_t x = gen() * (ref.size() + 1);
+            uint64_t x = dist(rng) * (ref.size() + 1);
 
             if (x < ref.size())
             {
                 uint64_t z = bvs.size(BitVecSet::VecNum(x));
-                uint64_t y = gen() * (z + 1);
-                bool b = gen() < 0.5;
+                uint64_t y = dist(rng) * (z + 1);
+                bool b = dist(rng) < 0.5;
 
                 //cerr << "ins " << x << '\t' << y << '\t' << b << endl;
                 bvs.insert(BitVecSet::VecNum(x), BitVecSet::VecPos(y), b);
@@ -140,11 +139,11 @@ BOOST_AUTO_TEST_CASE(test3)
         }
         else
         {
-            uint64_t x = gen() * ref.size();
+            uint64_t x = dist(rng) * ref.size();
             uint64_t z = bvs.size(BitVecSet::VecNum(x));
             if (z > 0)
             {
-                uint64_t y = gen() * z;
+                uint64_t y = dist(rng) * z;
                 //cerr << "del " << x << '\t' << y << endl;
 
                 bvs.erase(BitVecSet::VecNum(x), BitVecSet::VecPos(y));

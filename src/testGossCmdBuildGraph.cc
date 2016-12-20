@@ -15,7 +15,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
-#include <boost/random.hpp>
+#include <random>
 
 using namespace boost;
 using namespace std;
@@ -45,8 +45,8 @@ const char* genome =
 BOOST_AUTO_TEST_CASE(test1)
 {
 
-    boost::random::mt19937 rng(17);
-    uniform_real<> dist;
+    std::mt19937 rng(17);
+    std::uniform_real_distribution<> dist;
 
     static const uint64_t N = 100;
     static const uint64_t L = 30;
