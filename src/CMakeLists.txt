@@ -1,6 +1,6 @@
 
 ADD_LIBRARY(gosslib
-	App.cc
+	GossCmdReg.cc App.cc
 	AnnotTree.cc
 	#AsyncMerge.cc
 	BackyardHash.cc
@@ -49,11 +49,12 @@ TARGET_LINK_LIBRARIES(gosslib
 	${ZLIB_LIBRARIES}
 	${BZIP2_LIBRARIES}
 	${SQLITE_LIBRARIES}
+	Threads::Threads
 )
 
 
 ADD_LIBRARY(gossapp
-	GossApp.cc GossOption.cc GossCmdReg.cc GossCmdHelp.cc 
+	GossApp.cc GossOption.cc GossCmdHelp.cc 
 	GossCmdAnnotateKmers.cc
 	GossCmdBuildDb.cc
 	GossCmdBuildEdgeIndex.cc

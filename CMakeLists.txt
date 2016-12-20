@@ -1,6 +1,6 @@
 project(gossamer)
 
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.1)
 set(PACKAGE_BUGREPORT "need-an-email-address")
 set(PACKAGE_NAME "gossamer")
 set(PACKAGE_VERSION "0.0.0a")

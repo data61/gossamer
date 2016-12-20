@@ -9,6 +9,11 @@ if (Boost_FOUND)
 endif (Boost_FOUND)
 
 
+# Multithreading
+
+find_package(Threads REQUIRED)
+
+
 # ZLIB
 
 find_package(ZLIB REQUIRED)

@@ -13,7 +13,7 @@ if (CMAKE_HOST_APPLE)
 elseif (CMAKE_HOST_UNIX)
     message(STATUS "This is a Unix-like platform")
     set(PLATFORM_FLAGS "-DGOSS_PLATFORM_UNIX")
-    set(PLATFORM_LDFLAGS "-L/lib64 -lpthread")
+    set(PLATFORM_LDFLAGS "-L/lib64 -L/usr/lib/x86_64-linux-gnu/ -lpthread")
     set(GOSS_SEARCH_PATHS
         /usr
         /usr/local
