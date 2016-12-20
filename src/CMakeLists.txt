@@ -126,6 +126,8 @@ TARGET_LINK_LIBRARIES(xenome xenomeapp)
 
 # translucent
 
+if(BUILD_translucent)
+
 ADD_LIBRARY(translucentapp
 	TranslucentApp.cc GossOption.cc GossCmdReg.cc GossCmdHelp.cc 
 	GossCmdBuildGraph.cc
@@ -138,8 +140,6 @@ ADD_LIBRARY(translucentapp
 	TransCmdTrimRelative.cc
 	ResolveTranscripts.cc
 )
-
-if(BUILD_translucent)
 
 TARGET_LINK_LIBRARIES(translucentapp gosslib ${Boost_PROGRAM_OPTIONS_LIBRARY})
 
