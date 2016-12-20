@@ -24,7 +24,7 @@ using namespace std;
 #include "testBegin.hh"
 
 
-#if 1
+#if 0
 const char* genome =
     "ACCCCCGTCCCGGGTTCAGAGTCACGTACGGAGTGACTAATAGCCGTTGGATTATCTTACACGTGGACGA"
     "TCAGGATCTGTGATTCGTGAAGCGAATCTGACGGAAGATCGTTCACACTCACGTGGTGGGTCCCGACAAT"
@@ -44,7 +44,6 @@ const char* genome =
 
 BOOST_AUTO_TEST_CASE(test1)
 {
-
     std::mt19937 rng(17);
     std::uniform_real_distribution<> dist;
 

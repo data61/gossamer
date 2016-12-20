@@ -86,7 +86,7 @@ kmerModel(const LevenbergMarquardt::params_t& pParams,
 }
 
 
-#if 1
+#if 0
 BOOST_AUTO_TEST_CASE(testGaussianFit)
 {
     static uint64_t xmin = 1;
