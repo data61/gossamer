@@ -14,7 +14,7 @@
 #include <sstream>
 #include <string>
 #include <iostream>
-#include <boost/random.hpp>
+#include <random>
 
 
 using namespace boost;
@@ -47,12 +47,11 @@ BOOST_AUTO_TEST_CASE(test1)
         SparseArray::Builder b("x", fac, position_type(N), N * 0.1);
 
         mt19937 rng(17);
-        uniform_real<> dist;
-        variate_generator<mt19937&,uniform_real<> > gen(rng, dist);
+        uniform_real_distribution<> dist;
 
         for (uint64_t i = 0; i < N; ++i)
         {
-            bool bit = gen() < 0.1;
+            bool bit = dist(rng) < 0.1;
             if (bit)
             {
                 bits[i] = true;
@@ -126,12 +125,11 @@ BOOST_AUTO_TEST_CASE(test2)
         SparseArray::Builder b("x", fac, position_type(N), N * 0.01);
 
         mt19937 rng(17);
-        uniform_real<> dist;
-        variate_generator<mt19937&,uniform_real<> > gen(rng, dist);
+        uniform_real_distribution<> dist;
 
         for (uint64_t i = 0; i < N; ++i)
         {
-            bool bit = gen() < 0.01;
+            bool bit = dist(rng) < 0.01;
             if (bit)
             {
                 b.push_back(position_type(i));

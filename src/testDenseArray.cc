@@ -13,7 +13,7 @@
 #include <sstream>
 #include <string>
 #include <iostream>
-#include <boost/random.hpp>
+#include <random>
 
 
 using namespace boost;
@@ -83,13 +83,12 @@ BOOST_AUTO_TEST_CASE(test1)
     {
         DenseArray::Builder b("v", fac);
 
-        mt19937 rng(17);
-        uniform_real<> dist;
-        variate_generator<mt19937&,uniform_real<> > gen(rng, dist);
+        std::mt19937 rng(17);
+        std::uniform_real_distribution<> dist;
 
         for (uint64_t i = 0; i < N; ++i)
         {
-            if (gen() > 0.5)
+            if (dist(rng) > 0.5)
             {
                 b.push_back(i);
             }
@@ -146,13 +145,12 @@ BOOST_AUTO_TEST_CASE(test2)
         WordyBitVector::Builder vb("v", fac);
         DenseSelect::Builder b("x", fac, false);
 
-        mt19937 rng(17);
-        uniform_real<> dist;
-        variate_generator<mt19937&,uniform_real<> > gen(rng, dist);
+        std::mt19937 rng(17);
+        std::uniform_real_distribution<> dist;
 
         for (uint64_t i = 0; i < N; ++i)
         {
-            bool bit = gen() < 1.0/70000.0;
+            bool bit = dist(rng) < 1.0/70000.0;
             bits[i] = bit;
             vb.push_backX(bit);
             if (bit)
@@ -201,13 +199,12 @@ BOOST_AUTO_TEST_CASE(test3)
         WordyBitVector::Builder vb("v", fac);
         DenseSelect::Builder b("x", fac, false);
 
-        mt19937 rng(17);
-        uniform_real<> dist;
-        variate_generator<mt19937&,uniform_real<> > gen(rng, dist);
+        std::mt19937 rng(17);
+        std::uniform_real_distribution<> dist;
 
         for (uint64_t i = 0; i < N; ++i)
         {
-            bool bit = gen() < 0.999;
+            bool bit = dist(rng) < 0.999;
             vb.push_backX(bit);
             if (bit)
             {
@@ -248,13 +245,12 @@ BOOST_AUTO_TEST_CASE(test4)
         WordyBitVector::Builder vb("v", fac);
         DenseSelect::Builder b("x", fac, true);
 
-        mt19937 rng(17);
-        uniform_real<> dist;
-        variate_generator<mt19937&,uniform_real<> > gen(rng, dist);
+        std::mt19937 rng(17);
+        std::uniform_real_distribution<> dist;
 
         for (uint64_t i = 0; i < N; ++i)
         {
-            bool bit = gen() > 0.5;
+            bool bit = dist(rng) > 0.5;
             vb.push_backX(bit);
             if (!bit)
             {
@@ -295,13 +291,12 @@ BOOST_AUTO_TEST_CASE(test5)
         WordyBitVector::Builder vb("v", fac);
         DenseSelect::Builder b("x", fac, true);
 
-        mt19937 rng(17);
-        uniform_real<> dist;
-        variate_generator<mt19937&,uniform_real<> > gen(rng, dist);
+        std::mt19937 rng(17);
+        std::uniform_real_distribution<> dist;
 
         for (uint64_t i = 0; i < N; ++i)
         {
-            bool bit = gen() > 0.5;
+            bool bit = dist(rng) > 0.5;
             vb.push_backX(bit);
             if (!bit)
             {
@@ -400,13 +395,12 @@ BOOST_AUTO_TEST_CASE(test_one_in_10)
         WordyBitVector::Builder vb("v", fac);
         DenseSelect::Builder b("x", fac, false);
 
-        mt19937 rng(17);
-        uniform_real<> dist;
-        variate_generator<mt19937&,uniform_real<> > gen(rng, dist);
+        std::mt19937 rng(17);
+        std::uniform_real_distribution<> dist;
 
         for (uint64_t i = 0; i < N; ++i)
         {
-            bool bit = gen() < 0.1;
+            bool bit = dist(rng) < 0.1;
             vb.push_backX(bit);
             if (bit)
             {
@@ -458,13 +452,12 @@ BOOST_AUTO_TEST_CASE(test_one_in_100)
         WordyBitVector::Builder vb("v", fac);
         DenseSelect::Builder b("x", fac, false);
 
-        mt19937 rng(17);
-        uniform_real<> dist;
-        variate_generator<mt19937&,uniform_real<> > gen(rng, dist);
+        std::mt19937 rng(17);
+        std::uniform_real_distribution<> dist;
 
         for (uint64_t i = 0; i < N; ++i)
         {
-            bool bit = gen() < 0.01;
+            bool bit = dist(rng) < 0.01;
             vb.push_backX(bit);
             if (bit)
             {
@@ -516,13 +509,12 @@ BOOST_AUTO_TEST_CASE(test_one_in_1000)
         WordyBitVector::Builder vb("v", fac);
         DenseSelect::Builder b("x", fac, false);
 
-        mt19937 rng(17);
-        uniform_real<> dist;
-        variate_generator<mt19937&,uniform_real<> > gen(rng, dist);
+        std::mt19937 rng(17);
+        std::uniform_real_distribution<> dist;
 
         for (uint64_t i = 0; i < N; ++i)
         {
-            bool bit = gen() < 0.001;
+            bool bit = dist(rng) < 0.001;
             vb.push_backX(bit);
             if (bit)
             {
@@ -574,13 +566,12 @@ BOOST_AUTO_TEST_CASE(test_one_in_10000)
         WordyBitVector::Builder vb("v", fac);
         DenseSelect::Builder b("x", fac, false);
 
-        mt19937 rng(17);
-        uniform_real<> dist;
-        variate_generator<mt19937&,uniform_real<> > gen(rng, dist);
+        std::mt19937 rng(17);
+        std::uniform_real_distribution<> dist;
 
         for (uint64_t i = 0; i < N; ++i)
         {
-            bool bit = gen() < 0.0001;
+            bool bit = dist(rng) < 0.0001;
             vb.push_backX(bit);
             if (bit)
             {

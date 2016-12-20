@@ -41,8 +41,8 @@ GossCmdBuildEdgeIndex::operator()(const GossCmdContext& pCxt)
     Timer t;
 
     LOG(log, info) << "constructing index";
-    GraphPtr gPtr(Graph::open(mIn, fac));
-    auto_ptr<SuperGraph> sgp(SuperGraph::read(mIn, fac));
+    auto gPtr = Graph::open(mIn, fac);
+    auto sgp = SuperGraph::read(mIn, fac);
     const Graph& g(*gPtr);
     if (g.asymmetric())
     {
@@ -53,7 +53,7 @@ GossCmdBuildEdgeIndex::operator()(const GossCmdContext& pCxt)
 
     const SuperGraph& sg(*sgp);
     const EntryEdgeSet& entries(sg.entries());
-    auto_ptr<EdgeIndex> ixPtr = EdgeIndex::create(g, entries, sg, mCacheRate, mNumThreads, log);
+    auto ixPtr = EdgeIndex::create(g, entries, sg, mCacheRate, mNumThreads, log);
     LOG(log, info) << "writing index";
     ixPtr->write(mIn, fac);
     log(info, "total elapsed time: " + lexical_cast<string>(t.check()));

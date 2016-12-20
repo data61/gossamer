@@ -219,7 +219,7 @@ public:
                 }
                 b.end(mArray.count());
             }
-            mMask = std::auto_ptr<Mask>(new Mask("mask", mFac));
+            mMask = std::unique_ptr<Mask>(new Mask("mask", mFac));
             return;
         }
         {
@@ -253,7 +253,7 @@ public:
             }
             b.end(mArray.count());
         }
-        mMask = std::auto_ptr<Mask>(new Mask("mask", mFac));
+        mMask = std::unique_ptr<Mask>(new Mask("mask", mFac));
     }
 
     SparseArrayView(const SparseArray& pArray)
@@ -265,7 +265,7 @@ private:
 
     const SparseArray& mArray;
     StringFileFactory mFac;
-    std::auto_ptr<Mask> mMask;
+    std::unique_ptr<Mask> mMask;
 };
 
 

@@ -13,7 +13,7 @@
 
 #include "SortedArrayMap.hh"
 #include <vector>
-#include <boost/random.hpp>
+#include <random>
 
 
 using namespace boost;
@@ -64,8 +64,7 @@ BOOST_AUTO_TEST_CASE(testEasy)
 BOOST_AUTO_TEST_CASE(testBigger)
 {
     mt19937 rng(19);
-    uniform_real<> dist;
-    variate_generator<mt19937&,uniform_real<> > gen(rng,dist);
+    uniform_real_distribution<> dist;
 
     map<uint64_t,uint64_t> xs;
     SortedArrayMap<uint64_t,uint64_t> x;
@@ -74,8 +73,8 @@ BOOST_AUTO_TEST_CASE(testBigger)
     uint64_t z = 0;
     for (uint64_t i = 0; i < 1000; ++i)
     {
-        uint64_t y = 1024ULL * 1024ULL * 1024ULL * gen();
-        uint64_t v = 1024ULL * 1024ULL * 1024ULL * gen();
+        uint64_t y = 1024ULL * 1024ULL * 1024ULL * dist(rng);
+        uint64_t v = 1024ULL * 1024ULL * 1024ULL * dist(rng);
         z += y + 1;
         xs[z] = v;
         x.insert(value_type(z,v));

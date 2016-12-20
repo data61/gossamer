@@ -477,11 +477,11 @@ ScaffoldGraph::existScafFiles(const GossCmdContext& pCxt, const std::string& pSg
     return pCxt.fac.exists(header0);
 }
 
-auto_ptr<ScaffoldGraph> ScaffoldGraph::read(const string& pName, FileFactory& pFactory,
+unique_ptr<ScaffoldGraph> ScaffoldGraph::read(const string& pName, FileFactory& pFactory,
                                             uint64_t pMinLinkCount)
 {
     typedef vector<LinkReaderPtr> Readers;
-    auto_ptr<ScaffoldGraph> scaf(new ScaffoldGraph);
+    unique_ptr<ScaffoldGraph> scaf(new ScaffoldGraph);
     Readers ins;
 
     // Open all scaffold files.

@@ -16,7 +16,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
-#include <boost/random.hpp>
+#include <random>
 
 using namespace boost;
 using namespace std;
@@ -54,10 +54,8 @@ string edge(uint64_t pK, uint64_t pX)
 
 BOOST_AUTO_TEST_CASE(testBuildEntrySets)
 {
-
-    mt19937 rng(17);
-    uniform_real<> dist;
-    variate_generator<mt19937&,uniform_real<> > gen(rng, dist);
+    std::mt19937 rng(17);
+    std::uniform_real_distribution<> dist;
 
     static const uint64_t N = 1000;
     static const uint64_t L = 30;
@@ -66,7 +64,7 @@ BOOST_AUTO_TEST_CASE(testBuildEntrySets)
     string R;
     for (uint64_t i = 0; i < N; ++i)
     {
-        uint64_t x = gen() * (G.size() - L + 1);
+        uint64_t x = dist(rng) * (G.size() - L + 1);
         string r = G.substr(x, L);
         R += ">" + lexical_cast<string>(x) + "\n";
         R += r;

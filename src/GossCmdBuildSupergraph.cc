@@ -53,7 +53,7 @@ GossCmdBuildSupergraph::operator()(const GossCmdContext& pCxt)
     }
 
     LOG(log, info) << "constructing supergraph";
-    auto_ptr<SuperGraph> sgPtr(SuperGraph::create(mIn, fac));
+    auto sgPtr = SuperGraph::create(mIn, fac);
     LOG(log, info) << "writing supergraph";
     sgPtr->write(mIn, fac);
     log(info, "total elapsed time: " + lexical_cast<string>(t.check()));

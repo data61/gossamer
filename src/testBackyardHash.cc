@@ -13,7 +13,7 @@
 
 #include "BackyardHash.hh"
 #include <vector>
-#include <boost/random.hpp>
+#include <random>
 #include "ThreadGroup.hh"
 #include <thread>
 
@@ -70,16 +70,15 @@ BOOST_AUTO_TEST_CASE(test3)
 
 BOOST_AUTO_TEST_CASE(test4)
 {
-    mt19937 rng(19);
-    uniform_int<> dist;
-    variate_generator<mt19937&,uniform_int<> > gen(rng,dist);
+    std::mt19937 rng(19);
+    std::uniform_int_distribution<> dist;
 
     BackyardHash x(16, 32, 1ULL << 16);
     static const uint64_t N = 1024 * 1024;
     map<Gossamer::edge_type,uint64_t> m;
     for (uint64_t i = 1; i < N; ++i)
     {
-        Gossamer::edge_type v(gen());
+        Gossamer::edge_type v(dist(rng));
         x.insert(v);
         m[v]++;
     }
@@ -96,16 +95,15 @@ BOOST_AUTO_TEST_CASE(test4)
 
 BOOST_AUTO_TEST_CASE(test5)
 {
-    mt19937 rng(19);
-    uniform_int<> dist;
-    variate_generator<mt19937&,uniform_int<> > gen(rng,dist);
+    std::mt19937 rng(19);
+    std::uniform_int_distribution<> dist;
 
     BackyardHash x(16, 32, 1ULL << 16);
     static const uint64_t N = 1024 * 1024;
     map<Gossamer::edge_type,uint64_t> m;
     for (uint64_t i = 1; i < N; ++i)
     {
-        Gossamer::edge_type v(gen());
+        Gossamer::edge_type v(dist(rng));
         x.insert(v);
         m[v]++;
     }
@@ -126,15 +124,14 @@ BOOST_AUTO_TEST_CASE(test5)
 BOOST_AUTO_TEST_CASE(test6)
 {
     const uint64_t M = (1ULL << 40) - 1;
-    mt19937 rng(17);
-    boost::uniform_int<uint64_t> d(0, M);;
-    variate_generator<mt19937&,boost::uniform_int<uint64_t> > gen(rng, d);
+    std::mt19937 rng(17);
+    std::uniform_int_distribution<uint64_t> d(0, M);;
 
     BackyardHash h(16, 40, (1ULL << 16) + (1ULL << 15));
 
     for (uint64_t i = 0; true; ++i)
     {
-        h.insert(BackyardHash::value_type(gen()));
+        h.insert(BackyardHash::value_type(d(rng)));
         if (h.spills() > 0)
         {
             cout << i << endl;
@@ -172,13 +169,12 @@ public:
     {
         const uint64_t M = (1ULL << 40) - 1;
         const uint64_t N = 50;
-        mt19937 rng(mSeed);
-        boost::uniform_int<uint64_t> d(0, M);;
-        variate_generator<mt19937&,boost::uniform_int<uint64_t> > gen(rng, d);
+        std::mt19937 rng(mSeed);
+        std::uniform_int_distribution<uint64_t> d(0, M);;
         vector<uint64_t> xs;
         for (uint64_t i = 0; i < N; ++i)
         {
-            xs.push_back(gen());
+            xs.push_back(dist(rng));
             mHash.insert(BackyardHash::value_type(xs.back()));
             BOOST_CHECK(mHash.count(BackyardHash::value_type(xs.back())) > 0);
             if (xs.size() > 997)
@@ -228,12 +224,11 @@ public:
     {
         const uint64_t M = (1ULL << 40) - 1;
         const uint64_t N = 50;
-        mt19937 rng(mSeed);
-        boost::uniform_int<uint64_t> d(0, M);;
-        variate_generator<mt19937&,boost::uniform_int<uint64_t> > gen(rng, d);
+        std::mt19937 rng(mSeed);
+        std::uniform_int_distribution<uint64_t> d(0, M);;
         for (uint64_t i = 0; i < N; ++i)
         {
-            uint64_t x = gen();
+            uint64_t x = d(rng);
             BOOST_CHECK(mHash.count(BackyardHash::value_type(x)) == 0);
             mHash.insert(BackyardHash::value_type(x));
             BOOST_CHECK(mHash.count(BackyardHash::value_type(x)) > 0);

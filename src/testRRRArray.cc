@@ -15,7 +15,7 @@
 #include <string>
 #include <iostream>
 #include <boost/dynamic_bitset.hpp>
-#include <boost/random.hpp>
+#include <random>
 
 
 using namespace boost;
@@ -34,12 +34,11 @@ BOOST_AUTO_TEST_CASE(testSecondSuperBlock)
         RRRRank::Builder b("x", fac);
 
         mt19937 rng(19);
-        uniform_real<> dist;
-        variate_generator<mt19937&,uniform_real<> > gen(rng, dist);
+        uniform_real_distribution<> dist;
 
         for (uint64_t i = 491520; i < N; ++i)
         {
-            bool bit = gen() < 0.5;
+            bool bit = dist(rng) < 0.5;
             if (bit)
             {
                 bits[i] = true;
@@ -73,12 +72,11 @@ BOOST_AUTO_TEST_CASE(test1)
         RRRRank::Builder b("x", fac);
 
         mt19937 rng(19);
-        uniform_real<> dist;
-        variate_generator<mt19937&,uniform_real<> > gen(rng, dist);
+        uniform_real_distribution<> dist;
 
         for (uint64_t i = 0; i < N; ++i)
         {
-            bool bit = gen() < static_cast<double>(i)/static_cast<double>(N);
+            bool bit = dist(rng) < static_cast<double>(i)/static_cast<double>(N);
             if (bit)
             {
                 bits[i] = true;
@@ -120,12 +118,11 @@ BOOST_AUTO_TEST_CASE(test2)
         RRRArray::Builder b("x", fac);
 
         mt19937 rng(17);
-        uniform_real<> dist;
-        variate_generator<mt19937&,uniform_real<> > gen(rng, dist);
+        uniform_real_distribution<> dist;
 
         for (uint64_t i = 0; i < N; ++i)
         {
-            bool bit = gen() < 0.1;
+            bool bit = dist(rng) < 0.1;
             if (bit)
             {
                 // std::cerr << "Setting " << i << '\n';
@@ -183,12 +180,11 @@ BOOST_AUTO_TEST_CASE(test3)
         RRRArray::Builder b("x", fac);
 
         mt19937 rng(17);
-        uniform_real<> dist;
-        variate_generator<mt19937&,uniform_real<> > gen(rng, dist);
+        uniform_real_distribution<> dist;
 
         for (uint64_t i = 0; i < N; ++i)
         {
-            bool bit = gen() < 0.05;
+            bool bit = dist(rng) < 0.05;
             if (bit)
             {
                 // std::cerr << "Setting " << i << '\n';
@@ -244,12 +240,11 @@ BOOST_AUTO_TEST_CASE(test4)
         RRRArray::Builder b("x", fac);
 
         mt19937 rng(17);
-        uniform_real<> dist;
-        variate_generator<mt19937&,uniform_real<> > gen(rng, dist);
+        uniform_real_distribution<> dist;
 
         for (uint64_t i = 0; i < N; ++i)
         {
-            bool bit = gen() < 0.001;
+            bool bit = dist(rng) < 0.001;
             if (bit)
             {
                 // std::cerr << "Setting " << i << '\n';
@@ -303,12 +298,11 @@ BOOST_AUTO_TEST_CASE(test5)
         RRRRank::Builder b("x", fac);
 
         mt19937 rng(17);
-        uniform_real<> dist;
-        variate_generator<mt19937&,uniform_real<> > gen(rng, dist);
+        uniform_real_distribution<> dist;
 
         for (uint64_t i = 0; i < N; ++i)
         {
-            bool bit = gen() < 0.05;
+            bool bit = dist(rng) < 0.05;
             if (bit)
             {
                 // std::cerr << "Setting " << i << '\n';

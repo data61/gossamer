@@ -34,6 +34,11 @@
 #define STD_THREAD
 #endif
 
+#ifndef STD_MUTEX
+#include <mutex>
+#define STD_MUTEX
+#endif
+
 #ifndef STD_IOSTREAM
 #include <iostream>
 #define STD_IOSTREAM

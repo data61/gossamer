@@ -14,9 +14,14 @@
 #define STD_THREAD
 #endif
 
-#ifndef STD_LIST
-#include <list>
-#define STD_LIST
+#ifndef STD_MUTEX
+#include <mutex>
+#define STD_MUTEX
+#endif
+
+#ifndef STD_DEQUE
+#include <deque>
+#define STD_DEQUE
 #endif
 
 #ifndef BOOST_NONCOPYABLE_HPP
@@ -60,7 +65,7 @@ public:
     }
 
 private:
-    std::list<std::thread*> mThreads;
+    std::deque<std::thread*> mThreads;
     mutable std::mutex mMut;
 };
 

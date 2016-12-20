@@ -968,11 +968,11 @@ SuperGraph::write(const string& pBaseName, FileFactory& pFactory) const
     }
 }
 
-auto_ptr<SuperGraph>
+unique_ptr<SuperGraph>
 SuperGraph::read(const string& pBaseName, FileFactory& pFactory)
 {
     string name = pBaseName + "-supergraph";
-    auto_ptr<SuperGraph> sg(new SuperGraph(pBaseName, pFactory));
+    unique_ptr<SuperGraph> sg(new SuperGraph(pBaseName, pFactory));
     
     // mHeader
     {
@@ -1060,10 +1060,10 @@ SuperGraph::read(const string& pBaseName, FileFactory& pFactory)
     return sg;
 }
 
-std::auto_ptr<SuperGraph>
+std::unique_ptr<SuperGraph>
 SuperGraph::create(const std::string& pBaseName, FileFactory& pFactory)
 {
-    auto_ptr<SuperGraph> sgPtr(new SuperGraph(pBaseName, pFactory));
+    unique_ptr<SuperGraph> sgPtr(new SuperGraph(pBaseName, pFactory));
     const EntryEdgeSet& entries(sgPtr->mEntries);
     const uint64_t n = entries.count();
     sgPtr->mSegs.resize(n+1);

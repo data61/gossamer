@@ -121,7 +121,7 @@ EdgeIndex::write(const std::string& pBaseName, FileFactory& pFactory) const
     }
 }
 
-auto_ptr<EdgeIndex>
+unique_ptr<EdgeIndex>
 EdgeIndex::read(const std::string& pBaseName, FileFactory& pFactory, const Graph& pGraph)
 {
     string name = pBaseName + "-edge-index";
@@ -151,7 +151,7 @@ EdgeIndex::read(const std::string& pBaseName, FileFactory& pFactory, const Graph
         }
     }
     
-    auto_ptr<EdgeIndex> ix(new EdgeIndex(pGraph, h.div));
+    unique_ptr<EdgeIndex> ix(new EdgeIndex(pGraph, h.div));
 
     // mSegmentIndex
     {
@@ -191,14 +191,14 @@ EdgeIndex::read(const std::string& pBaseName, FileFactory& pFactory, const Graph
     return ix;
 }
 
-auto_ptr<EdgeIndex>
+unique_ptr<EdgeIndex>
 EdgeIndex::create(const Graph& pGraph, const EntryEdgeSet& pEntryEdges,
                   const SuperGraph& pSuper, uint64_t pDiv, uint64_t pNumThreads, 
                   Logger& pLog)
 {
     BOOST_ASSERT(pEntryEdges.count() < numeric_limits<SegmentRank>::max());
 
-    auto_ptr<EdgeIndex> ix(new EdgeIndex(pGraph, pDiv));
+    unique_ptr<EdgeIndex> ix(new EdgeIndex(pGraph, pDiv));
     uint64_t numEdges = 1 + (pGraph.count() >> pDiv);
     ix->mSegmentIndex.resize(numEdges);
 

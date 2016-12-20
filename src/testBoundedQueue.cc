@@ -15,7 +15,7 @@
 #include "ThreadGroup.hh"
 #include <vector>
 #include <chrono>
-#include <boost/random.hpp>
+#include <random>
 
 
 using namespace boost;
@@ -31,14 +31,13 @@ public:
     void operator()()
     {
         mt19937 rng(mSeed);
-        uniform_int<> dist(1, 10);
-        variate_generator<mt19937&,uniform_int<> > gen(rng,dist);
+        uniform_int_distribution<> dist(1, 10);
 
         for (uint64_t i = 1; i < 10000; ++i)
         {
             mQueue.put(i);
 
-            std::this_thread::sleep_for(std::chrono::milliseconds(gen()));
+            std::this_thread::sleep_for(std::chrono::milliseconds(dist(rng)));
         }
         mQueue.finish();
     }
@@ -59,8 +58,7 @@ public:
     void operator()()
     {
         mt19937 rng(mSeed);
-        uniform_int<> dist(1, 10);
-        variate_generator<mt19937&,uniform_int<> > gen(rng,dist);
+        uniform_int_distribution<> dist(1, 10);
 
         uint64_t p = 0;
         uint64_t x = 0;
@@ -68,7 +66,7 @@ public:
         {
             BOOST_CHECK(p < x);
 
-            std::this_thread::sleep_for(std::chrono::milliseconds(gen()));
+            std::this_thread::sleep_for(std::chrono::milliseconds(dist(rng)));
         }
     }
 

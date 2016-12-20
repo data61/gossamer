@@ -406,6 +406,7 @@ BOOST_AUTO_TEST_CASE(testExample1)
 #endif
 
 
+#if 0
 static uint64_t
 sExample2[][2] = {
     { 1, 7627189804 },
@@ -42181,7 +42182,6 @@ sExample2[][2] = {
 };
 
 
-#if 0
 BOOST_AUTO_TEST_CASE(testExample2)
 {
     Logger log(std::cerr);
@@ -42204,6 +42204,7 @@ BOOST_AUTO_TEST_CASE(testExample2)
 #endif
 
 
+#if 0
 static uint64_t
 sBug1[][2] = {
     { 1, 437573250 },
@@ -44241,7 +44242,6 @@ sBug1[][2] = {
 };
 
 
-#if 0
 BOOST_AUTO_TEST_CASE(testBug1)
 {
     Logger log(std::cerr);

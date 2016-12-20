@@ -13,7 +13,7 @@
 #include <vector>
 #include <iostream>
 #include <string>
-#include <boost/random.hpp>
+#include <random>
 #include <boost/tuple/tuple.hpp>
 
 
@@ -35,14 +35,13 @@ BOOST_AUTO_TEST_CASE(test1)
         VariableWidthBitArray::Builder b("x", fac);
 
         mt19937 rng(17);
-        uniform_real<> dist;
-        variate_generator<mt19937&,uniform_real<> > gen(rng, dist);
+        uniform_real_distribution<> dist;
 
         uint64_t p = 0;
         for (uint64_t i = 0; i < N; ++i)
         {
-            uint64_t n = 16 * gen();
-            uint64_t j = gen() * (1ULL << n);
+            uint64_t n = 16 * dist(rng);
+            uint64_t j = dist(rng) * (1ULL << n);
             // cerr << p << '\t' << n << '\t' << j << endl;
             b.push_back(j, n);
             nums.push_back(Item(p,n,j));

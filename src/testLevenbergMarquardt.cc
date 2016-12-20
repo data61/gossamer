@@ -13,7 +13,7 @@
 #include <string>
 #include <iostream>
 #include <cmath>
-#include <boost/random.hpp>
+#include <random>
 #include <boost/math/special_functions.hpp>
 #include <boost/math/distributions/normal.hpp>
 #include <boost/math/distributions/poisson.hpp>
@@ -86,7 +86,7 @@ kmerModel(const LevenbergMarquardt::params_t& pParams,
 }
 
 
-#if 1
+#if 0
 BOOST_AUTO_TEST_CASE(testGaussianFit)
 {
     static uint64_t xmin = 1;
@@ -109,16 +109,15 @@ BOOST_AUTO_TEST_CASE(testGaussianFit)
     }
     vector<double> ys = gaussian(realParams, xs);
 
-    mt19937 rng(19);
-    boost::normal_distribution<> randist(0.0, 0.1);
-    variate_generator<mt19937&,boost::normal_distribution<> > gen(rng, randist);
+    std::mt19937 rng(19);
+    std::normal_distribution<> randist(0.0, 0.1);
 
     std::vector<std::pair<double,double> > data;
     double mass = 0.0;
     for (uint64_t i = 0; i < xs.size(); ++i)
     {
         double x = xs[i];
-        double y = ys[i] + gen();
+        double y = ys[i] + randist(rng);
         data.push_back(std::pair<double,double>(x, y));
         mass += y;
     }
@@ -1209,14 +1208,13 @@ BOOST_AUTO_TEST_CASE(testSimulatedKmerModelFit)
     }
     vector<double> ys = kmerModel(realParams, xs);
 
-    mt19937 rng(19);
-    boost::normal_distribution<> randist(0.0, 1.0);
-    variate_generator<mt19937&,boost::normal_distribution<> > gen(rng, randist);
+    std::mt19937 rng(19);
+    std::normal_distribution<> randist(0.0, 1.0);
 
     std::vector<std::pair<double,double> > data;
     for (uint64_t i = 0; i < xs.size(); ++i)
     {
-        data.push_back(std::pair<double,double>(xs[i], ys[i] + gen()));
+        data.push_back(std::pair<double,double>(xs[i], ys[i] + randist(rng)));
     }
 
     std::vector<double> guessParams(4);

@@ -8,6 +8,5 @@
 //
 #include "GossCmdReg.hh"
 
-using namespace std;
-
-map<string,GossCmdFactoryPtr>* GossCmdReg::cmds = NULL;
+std::map<std::string,GossCmdFactoryPtr>*
+GossCmdReg::cmds = NULL;

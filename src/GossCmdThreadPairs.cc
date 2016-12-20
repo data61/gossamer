@@ -786,7 +786,7 @@ GossCmdThreadPairs::operator()(const GossCmdContext& pCxt)
         }
     }
 
-    auto_ptr<SuperGraph> sgp(SuperGraph::read(mIn, fac));
+    auto sgp = SuperGraph::read(mIn, fac);
     SuperGraph& sg(*sgp);
     const EntryEdgeSet& entries(sg.entries());
     const uint64_t K(entries.K());
@@ -814,7 +814,7 @@ GossCmdThreadPairs::operator()(const GossCmdContext& pCxt)
                 << Gossamer::open_graph_name_info(mIn));
         }
 
-        auto_ptr<EdgeIndex> idxPtr(EdgeIndex::create(g, entries, sg, mCacheRate, mNumThreads, log));
+        auto idxPtr = EdgeIndex::create(g, entries, sg, mCacheRate, mNumThreads, log);
         EdgeIndex& idx(*idxPtr);
         const PairAligner alnr(g, entries, idx);
 

@@ -91,10 +91,6 @@ namespace // anonymous
         }
     }
 
-    void breakpoint()
-    {
-    }
-
     struct ContigInfo
     {
         struct Sentinel {};

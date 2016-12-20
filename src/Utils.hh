@@ -67,32 +67,57 @@
 // Identify the platform.  At the moment, we only have three
 // platforms:
 //
-//     - Linux x86-64 (here called GOSS_LINUX_X64)
-//     - Mac OSX x86-64 (here called GOSS_MACOSX_X64)
-//     - Windows x86-64 (here called GOSS_WINDOWS_X64)
+//     - Linux x86-64 (here called GOSS_LINUX_X64), GCC or Clang
+//     - Mac OSX x86-64 (here called GOSS_MACOSX_X64), Clang
+//     - Windows x86-64 (here called GOSS_WINDOWS_X64), MSVC (untested)
 
 #undef GOSS_WINDOWS_X64
 #undef GOSS_MACOSX_X64
 #undef GOSS_LINUX_X64
 
-#if defined(_WIN64)
+#if defined(GOSS_PLATFORM_WINDOWS)
+
+#ifndef GOSS_COMPILER_MSVC
+#warning "This appears to be a build on Windows with a compiler other than MSVC. This may not work."
+#endif
 
 #define GOSS_WINDOWS_X64
 #include "MachDepWindows.hh"
 
-#elif defined(__APPLE__) && defined(__MACH__) && defined(__x86_64__)
+#elif defined(GOSS_PLATFORM_OSX)
 
+#ifndef GOSS_COMPILER_CLANG
+#error "This appears to be a build on OS X with a compiler other than Clang. This is an untested combination."
+#endif
+
+#if defined(__x86_64__)
 #define GOSS_MACOSX_X64
 #include "MachDepMacOSX.hh"
+#else
+#error "This appears to be a build on non-Intel OS X."
+#endif
 
-#elif defined(__GNUC__) && defined(linux) // && defined(__x86_64__)
+#elif defined(GOSS_PLATFORM_UNIX)
+
+#if defined(linux) || defined(__linux__)
+#define GOSS_PLATFORM_LINUX
+#if !defined(GOSS_COMPILER_GNU) && !defined(GOSS_COMPILER_CLANG)
+#error "This appears to be a build on Linux with an unknown compiler."
+#endif
+#else
+#error "This appears to be a build on an unknown Unix-like OS. This is an untested combination."
+#endif
+
+#if !defined(__x86_64__)
+#error "This appears to be a build on a non-Intel Unix-like platform. This is an untested combination."
+#endif
 
 #define GOSS_LINUX_X64
 #include "MachDepLinux.hh"
 
 #else
 
-#error "Gossamer has not yet been ported to this platform"
+#error "Can't work out what platform this is. This build will probably fail."
 
 #endif
 

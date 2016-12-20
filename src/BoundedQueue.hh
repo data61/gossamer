@@ -14,6 +14,16 @@
 #define STD_THREAD
 #endif
 
+#ifndef STD_MUTEX
+#include <mutex>
+#define STD_MUTEX
+#endif
+
+#ifndef STD_CONDITION_VARIABLE
+#include <condition_variable>
+#define STD_CONDITION_VARIABLE
+#endif
+
 #ifndef BOOST_PTR_CONTAINER_PTR_DEQUE_HPP
 #include <boost/ptr_container/ptr_deque.hpp>
 #define BOOST_PTR_CONTAINER_PTR_DEQUE_HPP

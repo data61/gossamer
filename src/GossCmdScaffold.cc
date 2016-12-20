@@ -616,10 +616,10 @@ GossCmdScaffold::operator()(const GossCmdContext& pCxt)
     FileFactory& fac(pCxt.fac);
     Timer t;
 
-    auto_ptr<SuperGraph> sgP(SuperGraph::read(mIn, fac));
+    auto sgP = SuperGraph::read(mIn, fac);
     SuperGraph& sg(*sgP);
 
-    auto_ptr<ScaffoldGraph> scafP(ScaffoldGraph::read(mIn, fac, mMinLinkCount));
+    auto scafP = ScaffoldGraph::read(mIn, fac, mMinLinkCount);
     ScaffoldGraph& scaf(*scafP);
 
 /*

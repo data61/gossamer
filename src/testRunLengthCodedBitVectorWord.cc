@@ -12,7 +12,7 @@
 #include "DeltaCodec.hh"
 
 #include <boost/dynamic_bitset.hpp>
-#include <boost/random.hpp>
+#include <random>
 
 using namespace boost;
 using namespace std;
@@ -168,19 +168,18 @@ BOOST_AUTO_TEST_CASE(test4)
     static const double p = 1.0 / 1024.0;
     mt19937 rng(17);
     exponential_distribution<> dist(p);
-    variate_generator<mt19937&,exponential_distribution<> > gen(rng,dist);
 
 
     const uint64_t N = 40;
     dynamic_bitset<uint64_t> ns;
     std::vector<uint64_t> ws;
-    bool s = gen() * p > 0.5;
+    bool s = dist(rng) * p > 0.5;
     uint64_t w0 = 0;
     uint64_t k = 0;
     uint64_t w1 = 0;
     for (uint64_t i = 0; i < N; ++i, s = !s)
     {
-        uint64_t v = gen();
+        uint64_t v = dist(rng);
         for (uint64_t j = 0; j < v; ++j)
         {
             ns.push_back(s);
@@ -331,7 +330,6 @@ BOOST_AUTO_TEST_CASE(testAppend1)
 {
     uint64_t w0 = 0;
     uint64_t w1 = 0;
-    uint64_t p = 0;
     w1 = RunLengthCodedBitVectorWord<DeltaCodec>::append(w0, 1, true);
     BOOST_CHECK_EQUAL(w0, 3);
     BOOST_CHECK_EQUAL(w1, 0);
@@ -344,9 +342,7 @@ BOOST_AUTO_TEST_CASE(testAppend1)
     BOOST_CHECK_EQUAL(w0, 21);
     BOOST_CHECK_EQUAL(w1, 0);
 
-    p = w0;
     w0 = 0;
-
     w1 = RunLengthCodedBitVectorWord<DeltaCodec>::append(w0, 3, true);
     BOOST_CHECK_EQUAL(w0, 21);
     BOOST_CHECK_EQUAL(w1, 0);

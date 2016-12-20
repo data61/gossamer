@@ -1198,11 +1198,11 @@ GossCmdFixReads::operator()(const GossCmdContext& pCxt)
     GraphPtr gPtr(Graph::open(mIn, fac));
     const Graph& g(*gPtr);
     EntryEdgeSet ee(mIn + "-entries", fac);
-    auto_ptr<SuperGraph> sgPtr(SuperGraph::create(mIn, fac));
+    auto sgPtr = SuperGraph::create(mIn, fac);
     SuperGraph& sg = *sgPtr;
 
     log(info, "building edge index");
-    auto_ptr<EdgeIndex> eixPtr(EdgeIndex::create(g, ee, sg, 1, mNumThreads, log));
+    auto eixPtr = EdgeIndex::create(g, ee, sg, 1, mNumThreads, log);
     EdgeIndex& eix = *eixPtr;
     mutex mut;
 

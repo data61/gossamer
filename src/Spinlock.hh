@@ -25,12 +25,24 @@
 // not be guaranteed. Thankfully, it's backwards compatible with IA32,
 // since it's the same as rep ; nop.
 
+
+// OS X spinlocks changed in 10.12 Sierra.
+#if defined(GOSS_MACOSX_X64) && defined(OSSPINLOCK_DEPRECATED)
+#  include <os/lock.h>
+#endif
+
+
+
 class Spinlock
 {
 private:
 
 #if defined(GOSS_MACOSX_X64)
+#  if defined(OSSPINLOCK_DEPRECATED)
+    os_unfair_lock mLock;
+#  else
     OSSpinLock mLock;
+#  endif
 #elif defined(GOSS_WINDOWS_X64)
     int64_t mLock;
 #else
@@ -41,7 +53,11 @@ public:
     void lock()
     {
 #if defined(GOSS_MACOSX_X64)
+#  if defined(OSSPINLOCK_DEPRECATED)
+        os_unfair_lock_lock(&mLock);
+#  else
         OSSpinLockLock(&mLock);
+#  endif
 #elif defined(GOSS_WINDOWS_X64)
         while (_InterlockedCompareExchange64(&mLock, 1, 0) != 0)
         {
@@ -61,7 +77,11 @@ public:
     void unlock()
     {
 #if defined(GOSS_MACOSX_X64)
+#  if defined(OSSPINLOCK_DEPRECATED)
+        os_unfair_lock_unlock(&mLock);
+#  else
         OSSpinLockUnlock(&mLock);
+#  endif
 #elif defined(GOSS_WINDOWS_X64)
         _InterlockedExchange64(&mLock, 0);
 #else
@@ -72,7 +92,11 @@ public:
     Spinlock()
     {
 #ifdef GOSS_MACOSX_X64
+#  if defined(OSSPINLOCK_DEPRECATED)
+        mLock = OS_UNFAIR_LOCK_INIT;
+#  else
         mLock = OS_SPINLOCK_INIT;
+#  endif
 #else
         mLock = 0;
 #endif

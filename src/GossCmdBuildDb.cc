@@ -496,7 +496,7 @@ GossCmdBuildDb::operator()(const GossCmdContext& pCxt)
     db.exec("CREATE INDEX IF NOT EXISTS index_to ON " + linksTable + " (id_to);");
 
     log(info, "loading supergraph");
-    auto_ptr<SuperGraph> sgp(SuperGraph::read(mIn, fac));
+    auto sgp = SuperGraph::read(mIn, fac);
     SuperGraph& sg(*sgp);
 
     log(info, "loading graph");
@@ -597,7 +597,7 @@ GossCmdBuildDb::storeReadLinks(const GossCmdContext& pCxt, const Graph& pG, cons
     ExternalBufferSort sorter(1024ULL * 1024ULL * 1024ULL, fac);
     log(info, "constructing edge index");
 
-    auto_ptr<EdgeIndex> idxPtr(EdgeIndex::create(pG, entries, pSg, mCacheRate, mNumThreads, log));
+    auto idxPtr = EdgeIndex::create(pG, entries, pSg, mCacheRate, mNumThreads, log);
     EdgeIndex& idx(*idxPtr);
     const PairAligner alnr(pG, entries, idx);
 

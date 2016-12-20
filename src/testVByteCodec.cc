@@ -9,7 +9,7 @@
 #include "VByteCodec.hh"
 
 #include <boost/dynamic_bitset.hpp>
-#include <boost/random.hpp>
+#include <random>
 #include <vector>
 
 using namespace boost;

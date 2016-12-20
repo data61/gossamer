@@ -172,7 +172,7 @@ public:
     // True if there are any scaffold files associated with the supergraph basename.
     static bool existScafFiles(const GossCmdContext& pCxt, const std::string& pSgBaseName);
 
-    static std::auto_ptr<ScaffoldGraph> read(const std::string& pName, FileFactory& pFactory,
+    static std::unique_ptr<ScaffoldGraph> read(const std::string& pName, FileFactory& pFactory,
                                              uint64_t pMinLinkCount);
 
     void mergeRcs(const SuperGraph& pSg);
