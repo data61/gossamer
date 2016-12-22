@@ -1,5 +1,6 @@
 language: c++
 dist: trusty
+sudo: required
 install:
   - sudo add-apt-repository ppa:george-edison55/cmake-3.x --yes
   - sudo apt-get update -qq
@@ -8,4 +9,4 @@ script:
   - mkdir build
   - cd build
   - cmake ..
-  - make -j && make test
+  - make && make test
