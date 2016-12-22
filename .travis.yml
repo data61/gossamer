@@ -8,5 +8,4 @@ script:
   - mkdir build
   - cd build
   - cmake ..
-  - make
-  - make test
+  - make -j && make test
