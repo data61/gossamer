@@ -5,7 +5,7 @@ install:
   - sudo add-apt-repository ppa:george-edison55/cmake-3.x --yes
   - sudo add-apt-repository ppa:ostogvin/tjo-develop --yes
   - sudo apt-get update -qq
-  - sudo apt-get install g++ cmake boost libboost-all-dev pandoc zlib1g-dev libbz2-dev libsqlite3-dev
+  - sudo apt-get install g++ cmake libboost-all-dev pandoc zlib1g-dev libbz2-dev libsqlite3-dev
 script:
   - mkdir build
   - cd build
