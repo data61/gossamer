@@ -1,0 +1,2 @@
+%SystemRoot%\system32\WindowsPowerShell\v1.0\powershell.exe -inputformat none -ExecutionPolicy Bypass -NoLogo -NonInteractive -NoProfile -command "%~dp0/gossple.ps1 %0 %*; exit $LASTEXITCODE"
+exit %errorlevel%
