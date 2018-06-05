@@ -51,7 +51,7 @@ namespace // anonymous
         friend class ReadClassItr;
 
     public:
-        
+
         class ReadClassItr
         {
         public:
@@ -162,7 +162,7 @@ namespace // anonymous
                             }
                         }
                     }
-                    
+
                     if (good)
                     {
                         // cerr << "write\n";
@@ -195,7 +195,7 @@ namespace // anonymous
         }
 
     private:
-        
+
         static uint64_t pack(uint64_t pReadNum, uint8_t pClass)
         {
             return pReadNum << 4 | pClass;
@@ -238,7 +238,7 @@ namespace // anonymous
         bool mDone;
     };
 
-    class KmerSrc 
+    class KmerSrc
     {
     public:
         virtual bool valid() const = 0;
@@ -355,7 +355,7 @@ namespace // anonymous
             mClassWriter(mNum, pBlrg);
         }
 
-        Pair(uint64_t pK, uint64_t pNum, GossReadPtr pRead1, GossReadPtr pRead2, vector<Outs>& pOutputs, 
+        Pair(uint64_t pK, uint64_t pNum, GossReadPtr pRead1, GossReadPtr pRead2, vector<Outs>& pOutputs,
              ReadClassWriter& pClassWriter)
             : mK(pK), mNum(pNum), mRead1(pRead1), mRead2(pRead2),
               mItr1(*mRead1, mK), mItr2(*mRead2, mK),
@@ -546,7 +546,7 @@ namespace // anonymous
         return ss.str();
     }
 
-    string 
+    string
     neither(const string& pPrefix, const string& pSuffix, const string pHalf="")
     {
         return filename(pPrefix, pSuffix, pHalf, "neither");
@@ -576,7 +576,7 @@ namespace // anonymous
         return filename(pPrefix, pSuffix, pHalf, pName.size() ? pName : "host");
     }
 
-    void classReads(Logger& pLog, FileFactory& pFac, const string& pIn, uint64_t pNumPasses, 
+    void classReads(Logger& pLog, FileFactory& pFac, const string& pIn, uint64_t pNumPasses,
                     uint64_t pNumThreads, const ReadItems& pReadItems, bool pNoWrite,
                     ReadClassWriter& pClassWriter, uint64_t pK, vector<uint64_t>& pCounts,
                     const string& pPrefix, const string& pLhsName, const string& pRhsName, const string& pSuffix)
@@ -685,7 +685,7 @@ namespace // anonymous
         }
     }
 
-    void classPairs(Logger& pLog, FileFactory& pFac, const string& pIn, uint64_t pNumPasses, 
+    void classPairs(Logger& pLog, FileFactory& pFac, const string& pIn, uint64_t pNumPasses,
                     uint64_t pNumThreads, const ReadItems& pReadItems, bool pNoWrite,
                     ReadClassWriter& pClassWriter, uint64_t pK, vector<uint64_t>& pCounts,
                     const string& pPrefix, const string& pLhsName, const string& pRhsName, const string& pSuffix)
@@ -695,7 +695,7 @@ namespace // anonymous
         mutex lhsM;
         mutex rhsM;
         mutex ambiguousM;
-        FileFactory::OutHolderPtr neitherP_1, neitherP_2, bothP_1, bothP_2, 
+        FileFactory::OutHolderPtr neitherP_1, neitherP_2, bothP_1, bothP_2,
                      ambiguousP_1, ambiguousP_2, lhsP_1, lhsP_2, rhsP_1, rhsP_2;
         vector<Outs> outs;
 
@@ -806,6 +806,53 @@ namespace // anonymous
         }
     }
 
+    void printStats(vector<uint64_t> counts, bool mDontWriteReads, const string& mLhsName, const string& mRhsName)
+    {
+        uint64_t total = 0;
+        for (uint64_t i = 0; i < counts.size(); ++i)
+        {
+            total += counts[i];
+        }
+
+        const uint64_t graftC = counts[0x4] + counts[0x5] + counts[0xc] + counts[0xd];
+        const uint64_t hostC = counts[0x2] + counts[0x3] + counts[0xa] + counts[0xb];
+        const uint64_t bothC = counts[0x1] + counts[0x8] + counts[0x9];
+        const uint64_t neitherC = counts[0x0];
+        const uint64_t ambigC = counts[0x6] + counts[0x7] + counts[0xe] + counts[0xf];
+
+        if (mDontWriteReads)
+        {
+            cout << 100.0 * graftC / total << '\t'
+                 << 100.0 * hostC / total << '\t'
+                 << 100.0 * bothC / total << '\t'
+                 << 100.0 * neitherC / total << '\t'
+                 << 100.0 * ambigC / total << '\n';
+        }
+        else
+        {
+            cout << "Statistics\n";
+            cout << "B\tG\tH\tM\t" << "count\t" << "percent\t" << "class\n";
+            for (uint64_t i = 0; i < counts.size(); ++i)
+            {
+                cout << (i & 8 ? '1' : '0') << '\t';
+                cout << (i & 4 ? '1' : '0') << '\t';
+                cout << (i & 2 ? '1' : '0') << '\t';
+                cout << (i & 1 ? '1' : '0') << '\t';
+                cout << counts[i] << '\t';
+                cout << (100.0 * double(counts[i]) / total) << '\t';
+                cout << '"' << classStr(mLhsName, mRhsName, i) << '"' << '\n';
+            }
+
+            cout << "\nSummary\n";
+            cout << "count\t"       << "percent\t"                      << "class\n";
+            cout << graftC << '\t'  << 100.0 * graftC / total << '\t'   << mLhsName << '\n';
+            cout << hostC << '\t'   << 100.0 * hostC / total << '\t'    << mRhsName << '\n';
+            cout << bothC << '\t'   << 100.0 * bothC / total << '\t'    << "both" << '\n';
+            cout << neitherC << '\t'<< 100.0 * neitherC / total << '\t' << "neither" << '\n';
+            cout << ambigC << '\t'  << 100.0 * ambigC / total << '\t'   << "ambiguous" << '\n';
+        }
+    }
+
 } // namespace anonymous
 
 void
@@ -833,7 +880,7 @@ GossCmdGroupReads::operator()(const GossCmdContext& pCxt)
         const uint64_t refB = kmersB + lhsB + rhsB;
         numPasses = refB / maxB + 1;
     }
-    log(info, "performing " + lexical_cast<string>(numPasses) + 
+    log(info, "performing " + lexical_cast<string>(numPasses) +
               " pass" + (numPasses > 1 ? "es" : ""));
 
     fac.populate(numPasses == 1);
@@ -868,6 +915,9 @@ GossCmdGroupReads::operator()(const GossCmdContext& pCxt)
                 &umon, &log);
             classPairs(log, fac, mIn, numPasses, T, items, mDontWriteReads,
                 classWriter, K, counts, mPrefix, mLhsName, mRhsName, "txt");
+            printStats(counts, mDontWriteReads, mLhsName, mRhsName);
+            log(info, "total elapsed time: " + lexical_cast<string>(t.check()));
+            exit(0);
         }
 
         if (!mFastas.empty())
@@ -886,6 +936,9 @@ GossCmdGroupReads::operator()(const GossCmdContext& pCxt)
                 &umon, &log);
             classPairs(log, fac, mIn, numPasses, T, items, mDontWriteReads,
                 classWriter, K, counts, mPrefix, mLhsName, mRhsName, "fasta");
+            printStats(counts, mDontWriteReads, mLhsName, mRhsName);
+            log(info, "total elapsed time: " + lexical_cast<string>(t.check()));
+            exit(0);
         }
 
         if (!mFastqs.empty())
@@ -904,6 +957,9 @@ GossCmdGroupReads::operator()(const GossCmdContext& pCxt)
                 &umon, &log);
             classPairs(log, fac, mIn, numPasses, T, items, mDontWriteReads,
                 classWriter, K, counts, mPrefix, mLhsName, mRhsName, "fastq");
+            printStats(counts, mDontWriteReads, mLhsName, mRhsName);
+            log(info, "total elapsed time: " + lexical_cast<string>(t.check()));
+            exit(0);
         }
     }
     else
@@ -924,6 +980,9 @@ GossCmdGroupReads::operator()(const GossCmdContext& pCxt)
                 &umon, &log);
             classReads(log, fac, mIn, numPasses, T, items, mDontWriteReads,
                 classWriter, K, counts, mPrefix, mLhsName, mRhsName, "txt");
+            printStats(counts, mDontWriteReads, mLhsName, mRhsName);
+            log(info, "total elapsed time: " + lexical_cast<string>(t.check()));
+            exit(0);
         }
 
         if (!mFastas.empty())
@@ -942,6 +1001,9 @@ GossCmdGroupReads::operator()(const GossCmdContext& pCxt)
                 &umon, &log);
             classReads(log, fac, mIn, numPasses, T, items, mDontWriteReads,
                 classWriter, K, counts, mPrefix, mLhsName, mRhsName, "fasta");
+            printStats(counts, mDontWriteReads, mLhsName, mRhsName);
+            log(info, "total elapsed time: " + lexical_cast<string>(t.check()));
+            exit(0);
         }
 
         if (!mFastqs.empty())
@@ -960,53 +1022,13 @@ GossCmdGroupReads::operator()(const GossCmdContext& pCxt)
                 &umon, &log);
             classReads(log, fac, mIn, numPasses, T, items, mDontWriteReads,
                 classWriter, K, counts, mPrefix, mLhsName, mRhsName, "fastq");
+            printStats(counts, mDontWriteReads, mLhsName, mRhsName);
+            log(info, "total elapsed time: " + lexical_cast<string>(t.check()));
+            exit(0);
         }
     }
 
-    uint64_t total = 0;
-    for (uint64_t i = 0; i < counts.size(); ++i)
-    {
-        total += counts[i];
-    }
-
-    const uint64_t graftC = counts[0x4] + counts[0x5] + counts[0xc] + counts[0xd];
-    const uint64_t hostC = counts[0x2] + counts[0x3] + counts[0xa] + counts[0xb];
-    const uint64_t bothC = counts[0x1] + counts[0x8] + counts[0x9];
-    const uint64_t neitherC = counts[0x0];
-    const uint64_t ambigC = counts[0x6] + counts[0x7] + counts[0xe] + counts[0xf];
-
-    if (mDontWriteReads)
-    {
-        cout << 100.0 * graftC / total << '\t'
-             << 100.0 * hostC / total << '\t'
-             << 100.0 * bothC / total << '\t'
-             << 100.0 * neitherC / total << '\t'
-             << 100.0 * ambigC / total << '\n';
-    }
-    else
-    {
-        cout << "Statistics\n";
-        cout << "B\tG\tH\tM\t" << "count\t" << "percent\t" << "class\n";
-        for (uint64_t i = 0; i < counts.size(); ++i)
-        {
-            cout << (i & 8 ? '1' : '0') << '\t';
-            cout << (i & 4 ? '1' : '0') << '\t';
-            cout << (i & 2 ? '1' : '0') << '\t';
-            cout << (i & 1 ? '1' : '0') << '\t';
-            cout << counts[i] << '\t';
-            cout << (100.0 * double(counts[i]) / total) << '\t';
-            cout << '"' << classStr(mLhsName, mRhsName, i) << '"' << '\n';
-        }
-
-        cout << "\nSummary\n";
-        cout << "count\t"       << "percent\t"                      << "class\n";
-        cout << graftC << '\t'  << 100.0 * graftC / total << '\t'   << mLhsName << '\n';
-        cout << hostC << '\t'   << 100.0 * hostC / total << '\t'    << mRhsName << '\n';
-        cout << bothC << '\t'   << 100.0 * bothC / total << '\t'    << "both" << '\n';
-        cout << neitherC << '\t'<< 100.0 * neitherC / total << '\t' << "neither" << '\n';
-        cout << ambigC << '\t'  << 100.0 * ambigC / total << '\t'   << "ambiguous" << '\n';
-    }
-
+    printStats(counts, mDontWriteReads, mLhsName, mRhsName);
     log(info, "total elapsed time: " + lexical_cast<string>(t.check()));
 }
 
@@ -1055,7 +1077,7 @@ GossCmdFactoryGroupReads::create(App& pApp, const boost::program_options::variab
 
     chk.throwIfNecessary(pApp);
 
-    return GossCmdPtr(new GossCmdGroupReads(in, fastas, fastqs, lines, pairs, M, T, 
+    return GossCmdPtr(new GossCmdGroupReads(in, fastas, fastqs, lines, pairs, M, T,
                                             lhsName, rhsName, prefix, noOut, ord));
 }
 
