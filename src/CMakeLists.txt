@@ -95,9 +95,17 @@ ADD_LIBRARY(gossapp
 	GossCmdTrimGraph.cc
 	GossCmdTrimPaths.cc
 	#GossCmdUpgradeGraph.cc
-	${Boost_PROGRAM_OPTIONS_LIBRARY}
 )
 
+TARGET_LINK_LIBRARIES(gossapp
+        ${Boost_SYSTEM_LIBRARY}
+        ${Boost_IOSTREAMS_LIBRARY}
+        ${Boost_FILESYSTEM_LIBRARY}
+        ${ZLIB_LIBRARIES}
+        ${BZIP2_LIBRARIES}
+        ${SQLITE_LIBRARIES}
+        Threads::Threads
+)
 
 # goss
 
